@@ -185,6 +185,8 @@ DC4/backgrounds/SecondaryElectrons <br />
 DC4/backgrounds/SecondaryPositrons <br />
 DC4/backgrounds/SecondaryProtons <br />
 DC4/sources/511/Positrons_In_Flight_Annihilation <br />
+DC4/sources/511/Positrons_Thin_Disk_cont <br />
+DC4/sources/511/Positrons_Thin_Disk_line <br />
 
 ## Galactic Diffuse (Galdiff) <br />
 Galdiff/GalIC <br />

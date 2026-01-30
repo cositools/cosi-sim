@@ -1,0 +1,16 @@
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source PositronsThinDiskLine
+PositronsThinDiskLine.ParticleType 1
+PositronsThinDiskLine.Beam FarFieldNormalizedEnergyBeamFluxFunction Positrons_Thin_Disk_line.dat
+PositronsThinDiskLine.Spectrum NormalizedEnergyBeamFluxFunction
+PositronsThinDiskLine.Orientation Galactic Fixed 90 180
+PositronsThinDiskLine.EarthOccultation false
