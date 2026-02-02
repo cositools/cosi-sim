@@ -1,0 +1,31 @@
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+# Clump 1: Contains 2/3 of total 44Ti yield
+# Doppler shifted towards from the observer 
+# (blueshifted). Has peak energy higher than 1157 keV
+DataChallenge.Source		    FR_clump1
+FR_clump1.ParticleType               1
+FR_clump1.Beam                       FarFieldPointSource 0 0
+FR_clump1.Orientation                Galactic Fixed -2.129570 111.734745
+FR_clump1.Spectrum                   Gaussian 1160.89 3.85 3         
+FR_clump1.Flux                       0.0002
+FR_clump1.EarthOccultation false
+
+# Clump 2: Contains 1/3 of total 44Ti yield
+# Doppler shifted away from the observer 
+# (redshifted). Has peak energy lower than 1157 keV
+DataChallenge.Source		    FR_clump2
+FR_clump2.ParticleType               1
+FR_clump2.Beam                       FarFieldPointSource 0 0
+FR_clump2.Orientation                Galactic Fixed -2.129570 111.734745
+FR_clump2.Spectrum                   Gaussian 1149.35 3.85 3        
+FR_clump2.Flux                       0.0001
+FR_clump2.EarthOccultation false

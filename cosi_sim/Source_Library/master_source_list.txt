@@ -183,5 +183,7 @@
 'DC4/backgrounds/SecondaryProtons',
 'DC4/sources/511/Positrons_In_Flight_Annihilation',
 'DC4/sources/511/Positrons_Thin_Disk_cont',
-'DC4/sources/511/Positrons_Thin_Disk_line'
+'DC4/sources/511/Positrons_Thin_Disk_line',
+'DC4/sources/Ti44/CasAG16distribution',
+'DC4/sources/Ti44/CasAfullyresolved'
 ]

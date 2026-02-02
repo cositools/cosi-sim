@@ -1,0 +1,108 @@
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+# Clump 1: 
+DataChallenge.Source		    G16_clump1
+G16_clump1.ParticleType               1
+G16_clump1.Beam                       FarFieldPointSource 0 0
+G16_clump1.Orientation                Galactic Fixed -2.129570 111.734745
+G16_clump1.Spectrum                   Gaussian 1148.14 5 3          
+G16_clump1.Flux                       0.000026
+G16_clump1.EarthOccultation false
+
+# Clump 2: 
+DataChallenge.Source		    G16_clump2
+G16_clump2.ParticleType               1
+G16_clump2.Beam                       FarFieldPointSource 0 0
+G16_clump2.Orientation                Galactic Fixed -2.129570 111.734745
+G16_clump2.Spectrum                   Gaussian 1144.73 5 3         
+G16_clump2.Flux                       0.000036
+G16_clump2.EarthOccultation false
+
+# Clump 3: 
+DataChallenge.Source		    G16_clump3
+G16_clump3.ParticleType               1
+G16_clump3.Beam                       FarFieldPointSource 0 0
+G16_clump3.Orientation                Galactic Fixed -2.129570 111.734745
+G16_clump3.Spectrum                   Gaussian 1184.7871 15 3         
+G16_clump3.Flux                       0.000051
+G16_clump3.EarthOccultation false
+
+# Clump 4: 
+DataChallenge.Source		    G16_clump4
+G16_clump4.ParticleType               1
+G16_clump4.Beam                       FarFieldPointSource 0 0
+G16_clump4.Orientation                Galactic Fixed -2.129570 111.734745
+G16_clump4.Spectrum                   Gaussian 1135.35 10 3         
+G16_clump4.Flux                       0.000033
+G16_clump4.EarthOccultation false
+
+# Clump 5: 
+DataChallenge.Source		    G16_clump5
+G16_clump5.ParticleType               1
+G16_clump5.Beam                       FarFieldPointSource 0 0
+G16_clump5.Orientation                Galactic Fixed -2.129570 111.734745
+G16_clump5.Spectrum                   Gaussian 1152.40 15 3         
+G16_clump5.Flux                       0.000023
+G16_clump5.EarthOccultation false
+
+# Clump 6: 
+DataChallenge.Source		    G16_clump6
+G16_clump6.ParticleType               1
+G16_clump6.Beam                       FarFieldPointSource 0 0
+G16_clump6.Orientation                Galactic Fixed -2.129570 111.734745
+G16_clump6.Spectrum                   Gaussian 1155.81 12 3         
+G16_clump6.Flux                       0.000037
+G16_clump6.EarthOccultation false
+
+# Clump 7: 
+DataChallenge.Source		    G16_clump7
+G16_clump7.ParticleType               1
+G16_clump7.Beam                       FarFieldPointSource 0 0
+G16_clump7.Orientation                Galactic Fixed -2.129570 111.734745
+G16_clump7.Spectrum                   Gaussian 1155.81 12 3         
+G16_clump7.Flux                       0.000031
+G16_clump7.EarthOccultation false
+
+# Clump 8: 
+DataChallenge.Source		    G16_clump8
+G16_clump8.ParticleType               1
+G16_clump8.Beam                       FarFieldPointSource 0 0
+G16_clump8.Orientation                Galactic Fixed -2.129570 111.734745
+G16_clump8.Spectrum                   Gaussian 1138.76 10 3         
+G16_clump8.Flux                       0.000019
+G16_clump8.EarthOccultation false
+
+# Clump 9: 
+DataChallenge.Source		    G16_clump9
+G16_clump9.ParticleType               1
+G16_clump9.Beam                       FarFieldPointSource 0 0
+G16_clump9.Orientation                Galactic Fixed -2.129570 111.734745
+G16_clump9.Spectrum                   Gaussian 1148.99 11 3         
+G16_clump9.Flux                       0.000043
+G16_clump9.EarthOccultation false
+
+# Clump 10: 
+DataChallenge.Source		    G16_clump10
+G16_clump10.ParticleType               1
+G16_clump10.Beam                       FarFieldPointSource 0 0
+G16_clump10.Orientation                Galactic Fixed -2.129570 111.734745
+G16_clump10.Spectrum                   Gaussian 1152.40 7 3         
+G16_clump10.Flux                       0.000028
+G16_clump10.EarthOccultation false
+
+# Clump 11: 
+DataChallenge.Source		    G16_clump11
+G16_clump11.ParticleType               1
+G16_clump11.Beam                       FarFieldPointSource 0 0
+G16_clump11.Orientation                Galactic Fixed -2.129570 111.734745
+G16_clump11.Spectrum                   Gaussian 1143.87 5 3         
+G16_clump11.Flux                       0.000022
+G16_clump11.EarthOccultation false
