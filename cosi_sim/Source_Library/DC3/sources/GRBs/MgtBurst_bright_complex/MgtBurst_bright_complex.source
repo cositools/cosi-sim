@@ -17,4 +17,4 @@ Burst.Lightcurve		File false MgtBurst_complex_lc.dat
 Burst.Flux				0.314537
 
 # Earth occultation:
-bn090424592.EarthOccultation false
+Burst.EarthOccultation false
