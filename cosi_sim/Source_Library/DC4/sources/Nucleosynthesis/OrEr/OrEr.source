@@ -1,0 +1,36 @@
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+# 26Al line:
+DataChallenge.Source                   OrEr_26Al
+OrEr_26Al.ParticleType                     1
+OrEr_26Al.Beam                             FarFieldAssymetricGaussian 0 0 5 5 0
+OrEr_26Al.Orientation                      Galactic Fixed -22.0 163.0
+OrEr_26Al.Spectrum                         Gaussian 1868.68 1.2 5
+OrEr_26Al.Flux                             0.00003
+OrEr_26Al.EarthOccultation false
+
+# 60Fe line high:
+DataChallenge.Source                   OrEr_60Fe_high
+OrEr_60Fe_high.ParticleType                     1
+OrEr_60Fe_high.Beam                             FarFieldAssymetricGaussian 0 0 5 5 0
+OrEr_60Fe_high.Orientation                      Galactic Fixed -22.0 163.0
+OrEr_60Fe_high.Spectrum                         Gaussian 1332.5 0.89 5
+OrEr_60Fe_high.Flux                             0.00003
+OrEr_60Fe_high.EarthOccultation false
+
+# 60Fe line low:
+DataChallenge.Source                   OrEr_60Fe_low
+OrEr_60Fe_low.ParticleType                     1
+OrEr_60Fe_low.Beam                             FarFieldAssymetricGaussian 0 0 5 5 0
+OrEr_60Fe_low.Orientation                      Galactic Fixed -22.0 163.0
+OrEr_60Fe_low.Spectrum                         Gaussian 1173.23 0.78 5
+OrEr_60Fe_low.Flux                             0.00003
+OrEr_60Fe_low.EarthOccultation false

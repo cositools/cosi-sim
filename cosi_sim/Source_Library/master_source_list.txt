@@ -184,6 +184,14 @@
 'DC4/sources/511/Positrons_In_Flight_Annihilation',
 'DC4/sources/511/Positrons_Thin_Disk_cont',
 'DC4/sources/511/Positrons_Thin_Disk_line',
-'DC4/sources/Ti44/CasAG16distribution',
-'DC4/sources/Ti44/CasAfullyresolved'
+'DC4/sources/Nucleosynthesis/CasAG16distribution',
+'DC4/sources/Nucleosynthesis/CasAfullyresolved',
+'DC4/sources/Nucleosynthesis/OrEr',
+'DC4/sources/Nucleosynthesis/USco',
+'DC4/sources/Nucleosynthesis/Tycho',
+'DC4/sources/Nucleosynthesis/SN1987A',
+'DC4/sources/Nucleosynthesis/Kepler',
+'DC4/sources/Nucleosynthesis/VelaJr_44Ti',
+'DC4/sources/Nucleosynthesis/G1903',
+'DC4/sources/Galactic/cygX3'
 ]

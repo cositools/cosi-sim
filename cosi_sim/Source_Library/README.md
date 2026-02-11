@@ -187,8 +187,16 @@ DC4/backgrounds/SecondaryProtons <br />
 DC4/sources/511/Positrons_In_Flight_Annihilation <br />
 DC4/sources/511/Positrons_Thin_Disk_cont <br />
 DC4/sources/511/Positrons_Thin_Disk_line <br />
-DC4/sources/Ti44/CasAG16distribution <br />
-DC4/sources/Ti44/CasAfullyresolved <br />
+DC4/sources/Nucleosynthesis/CasAG16distribution <br />
+DC4/sources/Nucleosynthesis/CasAfullyresolved <br />
+DC4/sources/Nucleosynthesis/OrEr <br />
+DC4/sources/Nucleosynthesis/USco <br />
+DC4/sources/Nucleosynthesis/Tycho <br />
+DC4/sources/Nucleosynthesis/SN1987A <br />
+DC4/sources/Nucleosynthesis/Kepler <br />
+DC4/sources/Nucleosynthesis/VelaJr_44Ti <br /> 
+DC4/sources/Nucleosynthesis/G1903 <br />
+DC4/sources/Galactic/cygX3 <br />
 
 ## Galactic Diffuse (Galdiff) <br />
 Galdiff/GalIC <br />

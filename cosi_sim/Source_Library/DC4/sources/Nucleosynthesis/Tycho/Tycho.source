@@ -1,0 +1,17 @@
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source                   tycho
+tycho.ParticleType                     1
+tycho.Beam                             FarFieldPointSource 0 0
+tycho.Orientation                      Galactic Fixed 1.4 120.1
+tycho.Spectrum                         Gaussian 1157.02 15.4 3
+tycho.Flux                             0.000016
+tycho.EarthOccultation false
