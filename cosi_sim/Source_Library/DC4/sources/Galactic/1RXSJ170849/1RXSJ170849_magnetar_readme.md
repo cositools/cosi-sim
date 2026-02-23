@@ -38,8 +38,8 @@ The assumed parameters for the generic magnetar are:
 The Polarization:
 -----------------
 For this challenge the polarization is assumed energy independent in the COSI band with a phase-integrated polarization degree of 
-1. 80% (PA=-60 deg) for 1RXS
-2. 40% (PA=-60 deg) for the generic magnetar
+1. 80% (PA=-30 deg in Galactic coordinates) for 1RXS
+2. 40% (PA=-75 deg in Galactic coordinates) for the generic magnetar
 
 The Lightcurve:
 ---------------
