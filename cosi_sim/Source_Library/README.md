@@ -198,6 +198,7 @@ DC4/sources/Nucleosynthesis/Kepler <br />
 DC4/sources/Nucleosynthesis/VelaJr_44Ti <br /> 
 DC4/sources/Nucleosynthesis/G1903 <br />
 DC4/sources/Galactic/cygX3 <br />
+DC4/sources/Galactic/1RXSJ170849 <br />
 DC4/sources/Extragalactic/NGC_4151 <br />
 DC4/sources/Extragalactic/NGC_1068 <br />
 
