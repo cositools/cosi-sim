@@ -1,0 +1,18 @@
+# Define DC4 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source          3C454p3_low
+3C454p3_low.ParticleType               1
+3C454p3_low.Beam                       FarFieldPointSource 0 0
+3C454p3_low.Orientation                Galactic Fixed  -38.183817 86.111069
+3C454p3_low.Spectrum                   File 3C454p3_low_spectrum.dat 
+3C454p3_low.Flux                       0.00029
+3C454p3_low.Lightcurve	 	   File false 3C454p3_low_lightcurve.dat
+3C454p3_low.EarthOccultation false

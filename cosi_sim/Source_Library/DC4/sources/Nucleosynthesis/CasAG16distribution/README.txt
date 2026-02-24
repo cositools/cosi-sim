@@ -1,22 +1,2 @@
-From Anaya
-
-CasAG16distribution.source should be a part of the main DC4 dataset.
-
-# Author: Anaya Valluvan
-#
-# Extra data challenge exploring NuSTAR-observed 
-# range of Doppler red- and blue-shifts condensed
-# into a single point-like source
-# Reference: Grefenstette et al. 2016 (DOI 10.3847/1538-4357/834/1/19)
-# Bulk centre of motion
-# is not at rest. 
-# Extremely minimal Doppler broadening of ~250 km/s. 
-# This data challenge is more focussed on exploring
-# the range of Doppler shifts we can measure with 
-# the current response files. 
-
-# There are 11 clumps in total with varying fluxes
-# 10 redshifted, 1 blueshifted
-
-# The expectation is that at least 3 spectral peaks 
-# will be identifiable in the data
+Based on Grefenstette et al. 2017: THE DISTRIBUTION OF RADIOACTIVE 44Ti IN CASSIOPEIA A.
+NuSTAR observed the Cassiopeia A supernova remnant for 2.4 Ms. This model simulates the spectral structure that will be observable by COSI after spatially-integrating the NuSTAR observations. The photopeak and Doppler-shifts have been shifted from 68 keV to 1157 keV. As spatial-spectral mixing effects were not accounted for, the sum of clump fluxes does not match the total flux from the source. The total flux has been scaled to 3 x 10-4 ph cm-2 s-1 (10x the value reported in Weinberger et al. 2020). The minimum clump broadening is set to 5 keV (1-sigma), or equivalently 1300 km/s to match NuSTAR’s spectral resolving power. 
