@@ -37,6 +37,7 @@ run_type: "array_jobs" # "mult_nodes", "array_jobs", "array_jobs-parallel", "slu
 
 # Option to use a lightcurve in your sim with parallel time bins:
 # Note: If True, LC and ori files must have same time binning. 
+# Note: In the source file, need to change name of LC file to lightcurve.dat.
 lightcurve: False # True or False
 lightcurve_file: "/full/path/Lightcurve.dat" # full path
 
