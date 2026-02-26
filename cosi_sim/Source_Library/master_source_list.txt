@@ -196,6 +196,7 @@
 'DC4/sources/Nucleosynthesis/G1903',
 'DC4/sources/Galactic/cygX3',
 'DC4/sources/Galactic/1RXSJ170849',
+'DC4/sources/Galactic/magnetar2',
 'DC4/sources/Extragalactic/NGC_4151',
 'DC4/sources/Extragalactic/NGC_1068',
 'DC4/sources/Extragalactic/4C71p07',
