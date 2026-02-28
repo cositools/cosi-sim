@@ -200,11 +200,13 @@ DC4/sources/Nucleosynthesis/G1903 <br />
 DC4/sources/Galactic/cygX3 <br />
 DC4/sources/Galactic/1RXSJ170849 <br />
 DC4/sources/Galactic/magnetar2 <br />
+DC4/sources/Galactic/Crab <br />
 DC4/sources/Extragalactic/NGC_4151 <br />
 DC4/sources/Extragalactic/NGC_1068 <br />
 DC4/sources/Extragalactic/4C71p07 <br />
 DC4/sources/Extragalactic/3C454p3_low <br />
 DC4/sources/Extragalactic/3C454p3_high <br />
+DC4/sources/Extragalactic/CenA <br />
 
 ## Galactic Diffuse (Galdiff) <br />
 Galdiff/GalIC <br />
