@@ -13,7 +13,7 @@ DataChallenge.Source                   OrEr_26Al
 OrEr_26Al.ParticleType                     1
 OrEr_26Al.Beam                             FarFieldAssymetricGaussian 0 0 5 5 0
 OrEr_26Al.Orientation                      Galactic Fixed -22.0 163.0
-OrEr_26Al.Spectrum                         Gaussian 1868.68 1.2 5
+OrEr_26Al.Spectrum                         Gaussian 1808.68 1.2 5
 OrEr_26Al.Flux                             0.00003
 OrEr_26Al.EarthOccultation false
 

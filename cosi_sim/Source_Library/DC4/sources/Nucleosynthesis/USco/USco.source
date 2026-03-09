@@ -13,7 +13,7 @@ DataChallenge.Source                   USco_26Al
 USco_26Al.ParticleType                     1
 USco_26Al.Beam                             FarFieldAssymetricGaussian 0 0 9 9 0
 USco_26Al.Orientation                      Galactic Fixed 22.5 348.5
-USco_26Al.Spectrum                         Gaussian 1868.68 1.2 5
+USco_26Al.Spectrum                         Gaussian 1808.68 1.2 5
 USco_26Al.Flux                             0.00006
 USco_26Al.EarthOccultation false
 
