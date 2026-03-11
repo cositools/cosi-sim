@@ -1,0 +1,52 @@
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+# Crab nebula
+DataChallenge.Source Crab_Nebula
+Crab_Nebula.ParticleType		1
+Crab_Nebula.Beam				FarFieldPointSource 0 0
+Crab_Nebula.Orientation			Galactic Fixed -5.78434 184.5575
+Crab_Nebula.Spectrum			File Crab_Ne_spec.dat
+Crab_Nebula.Polarization		galactic 0.40 160
+Crab_Nebula.Flux				0.033197515
+Crab_Nebula.EarthOccultation false
+
+# Phase Peak1
+DataChallenge.Source Crab_P1
+Crab_P1.ParticleType		1
+Crab_P1.Beam				FarFieldPointSource 0 0
+Crab_P1.Orientation			Galactic Fixed -5.78434 184.5575
+Crab_P1.Spectrum			File Crab_P1_spec.dat
+Crab_P1.Lightcurve			File True Crab_P1_lc.dat
+Crab_P1.Polarization		galactic 0.20 145
+Crab_P1.Flux				0.002380673782066656
+Crab_P1.EarthOccultation false
+                                                
+# Phase Bridge
+DataChallenge.Source Crab_Brg
+Crab_Brg.ParticleType		1
+Crab_Brg.Beam				FarFieldPointSource 0 0
+Crab_Brg.Orientation		Galactic Fixed -5.78434 184.5575
+Crab_Brg.Spectrum			File Crab_Brg_spec.dat
+Crab_Brg.Lightcurve			File True Crab_Brg_lc.dat
+Crab_Brg.Polarization		galactic 0.20 145
+Crab_Brg.Flux				0.0006280494007254569
+Crab_Brg.EarthOccultation false
+                                                    
+# Phase Peak2
+DataChallenge.Source Crab_P2
+Crab_P2.ParticleType		1
+Crab_P2.Beam				FarFieldPointSource 0 0
+Crab_P2.Orientation			Galactic Fixed -5.78434 184.5575
+Crab_P2.Spectrum			File Crab_P2_spec.dat
+Crab_P2.Lightcurve			File True Crab_P2_lc.dat
+Crab_P2.Polarization		galactic 0.20 145
+Crab_P2.Flux				0.0032012384701172636
+Crab_P2.EarthOccultation false      
