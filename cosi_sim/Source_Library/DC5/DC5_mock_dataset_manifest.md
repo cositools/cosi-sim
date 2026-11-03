@@ -74,6 +74,7 @@ Every component of the DC5 mock dataset, its origin in the DC4 mock dataset, the
 | new | MeV_blazar | `DC5/sources/Extragalactic/MeV_blazar` | simulate DC5 source file |
 | new | Seyfert_new | `DC5/sources/Extragalactic/Seyfert_new` | simulate DC5 source file |
 | new | 26Al_new_region | `DC5/sources/Nucleosynthesis/26Al_new_region` | simulate DC5 source file |
+| new | Annihilation_eeg_NFW | `DC5/sources/DarkMatter/Annihilation_eeg_NFW` | simulate DC5 source file |
 | GRB (modified) | GRB_bn081207680 | `DC5/sources/GRBs/bn081207680` | simulate DC5 source file (day 4.15, off-axis 17.7 deg) |
 | GRB (modified) | GRB_bn090424592 | `DC5/sources/GRBs/bn090424592` | simulate DC5 source file (day 7.75, off-axis 1.2 deg) |
 | GRB (modified) | GRB_bn100612726 | `DC5/sources/GRBs/bn100612726` | simulate DC5 source file (day 5.58, off-axis 6.6 deg) |

@@ -68,7 +68,7 @@ Files:
 - `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim ({sum(1 for r in rows if r[0] != 'removed' and r[2].startswith('DC')) + sum(r[2].count(',') for r in rows if r[0] != 'removed' and r[2].startswith('DC'))} entries; checked with `Setup.setup_srcs()`).
 - `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do (simulate / re-simulate / reuse the existing DC3/DC4 event file).
 - `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json` — machine-readable record of the draws and of every change.
-- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_dc5_readme.py` (this file).
+- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate).
 - `sources/` — one directory per modified, bug-fixed or new source, each with a `README_DC5.md` describing the model, the change, and references.
 
 ## Reused sources (same source files)
@@ -91,6 +91,12 @@ Files:
 | Name | Origin | Position | Model |
 |---|---|---|---|
 {chr(10).join(new)}
+
+## Dark matter (Request 6)
+
+New in the DC5 mock dataset: annihilating MeV dark matter, χχ → e⁺e⁻γ (final-state radiation), with an NFW halo (`DC5/sources/DarkMatter/Annihilation_eeg_NFW`). It is the DC4 model (not included in the DC4 mock dataset) with a new mass and cross section: **m = 17.3 MeV, ⟨σv⟩ = 3.9 × 10⁻²⁸ cm³ s⁻¹** (DC4: 30 MeV, 10⁻²⁵ cm³ s⁻¹), giving 5.9 × 10⁻⁴ ph cm⁻² s⁻¹ in 100 keV–10 MeV. The map keeps the DC4 spatial template and grid, with each energy node rescaled.
+
+The expected significance in the 3-month dataset is **~5σ**. This is estimated from the DC4 total-background and Crab count spectra (effective exposure from the Crab, NFW-weighted exposure from the orientation file, Compton-cone ROI background fraction), calibrated against COSI's published 1809 keV line sensitivity, and is uncertain by about a factor of 2. It is statistics-only: the signal is ~0.07% of the background in the best ROI, so detecting it requires an accurate background model. Details, caveats and references are in the source's `README_DC5.md`. The scripts are in `scripts/dm/`.
 
 ## GRBs (Request 5)
 

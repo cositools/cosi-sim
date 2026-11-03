@@ -65,6 +65,7 @@
 'DC5/sources/Extragalactic/MeV_blazar',
 'DC5/sources/Extragalactic/Seyfert_new',
 'DC5/sources/Nucleosynthesis/26Al_new_region',
+'DC5/sources/DarkMatter/Annihilation_eeg_NFW',
 'DC5/sources/GRBs/bn081207680',
 'DC5/sources/GRBs/bn090424592',
 'DC5/sources/GRBs/bn100612726',

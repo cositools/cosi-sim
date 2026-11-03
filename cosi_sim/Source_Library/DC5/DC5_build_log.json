@@ -226,5 +226,11 @@
   "b": -0.02,
   "flux": 1.5e-05,
   "change": "additional massive-star region: 4 deg Gaussian 1809 keV source, 1.5e-5 ph/cm2/s (similar to Carina / ~40% of Cygnus)"
+ },
+ "Annihilation_eeg_NFW": {
+  "status": "new (dark matter)",
+  "origin": "DC4/sources/DarkMatter/Annihilation_eeg_NFW",
+  "change": "annihilating DM, chi chi -> e+ e- gamma (FSR), NFW: m = 17.3 MeV, <sigma v> = 3.9e-28 cm3/s (DC4: 30 MeV, 1e-25); 5.9e-4 ph/cm2/s in 0.1-10 MeV, ~5 sigma expected in 3 months",
+  "skip_readme": true
  }
 }

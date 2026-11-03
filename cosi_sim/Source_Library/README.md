@@ -264,6 +264,7 @@ DC5/sources/GRBs/bn161004964 <br />
 DC5/sources/GRBs/bn170405777 <br />
 DC5/sources/GRBs/bn180504136 <br />
 DC5/sources/GRBs/bn180703876 <br />
+DC5/sources/DarkMatter/Annihilation_eeg_NFW <br />
 
 ## Galactic Diffuse (Galdiff) <br />
 Galdiff/GalIC <br />

@@ -9,19 +9,19 @@ The DC5 mock dataset starts from the DC4 mock dataset (3 months, same orbit, ori
 | Reused (same source files; 2 of these carry only the 511 keV bug fix) | 27 | 51% |
 | Modified | 21 | 40% |
 | Removed | 5 | 9% |
-| **New** (relative to the ~71 DC4 components) | 17 | 24% |
+| **New** (relative to the ~71 DC4 components) | 18 | 25% |
 | GRBs (`GRB_bn*`): new time, spectrum and polarization | 11 | all |
 | Magnetar bursts (`MGF*`, `MgtBurst*`): unchanged, half kept | 4 kept, 3 removed | |
 
-Percentages refer to the non-GRB DC4 components. DC5 therefore has 65 non-GRB components, 11 GRBs and 4 magnetar bursts.
+Percentages refer to the non-GRB DC4 components. DC5 therefore has 66 non-GRB components, 11 GRBs and 4 magnetar bursts.
 
 **How the split was made.** Components that belong to one physical source (e.g. line + continuum maps, flare + quiescent states, the three nova components) were grouped, and the groups were shuffled with a random seed (3891814211, recorded in `DC5_draw.json`). Groups were assigned to *removed* (≈10% of files, only from sources that are not well-known detections: the Crab, Cyg X-1/X-3, Cen A, NGC 4151, the 511 keV bulge/disk, Galactic 26Al/60Fe, Cas A, etc. were protected), then *modified* (≈40%), with the rest *reused*. The modification applied to each drawn source was then chosen by hand from the literature (alternative library model where one exists, otherwise a simple flux/width/state change within the published range). Positions of the arbitrary new sources are drawn from the same seed. The GRB draw uses its own seed (3662968627, `DC5_grb_draw.json`). Running `scripts/draw_dc5.py` or `scripts/draw_dc5_grbs.py` without a seed gives a different realisation.
 
 Files:
-- `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (79 entries; checked with `Setup.setup_srcs()`).
+- `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (80 entries; checked with `Setup.setup_srcs()`).
 - `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do (simulate / re-simulate / reuse the existing DC3/DC4 event file).
 - `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json` — machine-readable record of the draws and of every change.
-- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_dc5_readme.py` (this file).
+- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate).
 - `sources/` — one directory per modified, bug-fixed or new source, each with a `README_DC5.md` describing the model, the change, and references.
 
 ## Reused sources (same source files)
@@ -109,6 +109,13 @@ Files:
 | MeV_blazar | (arbitrary) | l=330.525, b=-30.528 | high-redshift FSRQ with nuFnu peak at 1 MeV: log-parabola alpha=2.0, beta=0.2 at 1 MeV, 3e-4 ph/cm2/s (between 4C 71.07 and 3C 279), 15% polarisation |
 | Seyfert_new | (arbitrary) | l=31.746, b=-21.833 | Seyfert galaxy with Gamma=1.8, Ecut=300 keV, 3e-4 ph/cm2/s (a few times fainter than NGC 4151) |
 | 26Al_new_region | (arbitrary) | l=316.177, b=-0.02 | additional massive-star region: 4 deg Gaussian 1809 keV source, 1.5e-5 ph/cm2/s (similar to Carina / ~40% of Cygnus) |
+| Annihilation_eeg_NFW | (dark matter) |  | annihilating DM, chi chi -> e+ e- gamma (FSR), NFW: m = 17.3 MeV, <sigma v> = 3.9e-28 cm3/s (DC4: 30 MeV, 1e-25); 5.9e-4 ph/cm2/s in 0.1-10 MeV, ~5 sigma expected in 3 months |
+
+## Dark matter (Request 6)
+
+New in the DC5 mock dataset: annihilating MeV dark matter, χχ → e⁺e⁻γ (final-state radiation), with an NFW halo (`DC5/sources/DarkMatter/Annihilation_eeg_NFW`). It is the DC4 model (not included in the DC4 mock dataset) with a new mass and cross section: **m = 17.3 MeV, ⟨σv⟩ = 3.9 × 10⁻²⁸ cm³ s⁻¹** (DC4: 30 MeV, 10⁻²⁵ cm³ s⁻¹), giving 5.9 × 10⁻⁴ ph cm⁻² s⁻¹ in 100 keV–10 MeV. The map keeps the DC4 spatial template and grid, with each energy node rescaled.
+
+The expected significance in the 3-month dataset is **~5σ**. This is estimated from the DC4 total-background and Crab count spectra (effective exposure from the Crab, NFW-weighted exposure from the orientation file, Compton-cone ROI background fraction), calibrated against COSI's published 1809 keV line sensitivity, and is uncertain by about a factor of 2. It is statistics-only: the signal is ~0.07% of the background in the best ROI, so detecting it requires an accurate background model. Details, caveats and references are in the source's `README_DC5.md`. The scripts are in `scripts/dm/`.
 
 ## GRBs (Request 5)
 
