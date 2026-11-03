@@ -35,8 +35,10 @@ for n, g in sorted(gd["grbs"].items(), key=lambda kv: kv[1]["dc5"]["t0"]):
         s5 = f"Band {float(d5['spectrum'][3]):.2f} / {float(d5['spectrum'][4]):.2f} / {float(d5['spectrum'][5]):.0f}"
     else:
         s4 = f"PL {float(d4['spectrum'][3]):.2f}"; s5 = f"PL {float(d5['spectrum'][3]):.2f}"
-    g_rows.append(f"| {n} | {g['duration_s']:.1f} | {d4['day']:.2f} → **{d5['day']:.2f}** | {d4['offaxis']:.1f} → **{d5['offaxis']:.1f}** | "
-                  f"{d5['zenith']:.1f} | {s4} → **{s5}** | {d4['pol'][0]:.2f}, {d4['pol'][1]:.0f}° → **{d5['pol'][0]:.2f}, {d5['pol'][1]:.0f}°** |")
+    g_rows.append(f"| {n} | {g['duration_s']:.1f} | {d4['day']:.2f} → **{d5['day']:.2f}** | **{d5['t_end']:.1f}** | "
+                  f"({d4['l']:.1f}, {d4['b']:.1f}) → **({d5['l']:.1f}, {d5['b']:.1f})** | {d4['offaxis']:.1f} → **{d5['offaxis']:.1f}** | "
+                  f"{d5['zenith']:.1f} | {d4['flux']:.3g} → **{d5['flux']:.3g}** | {s4} → **{s5}** | "
+                  f"{d4['pol'][0]:.2f}, {d4['pol'][1]:.0f}° → **{d5['pol'][0]:.2f}, {d5['pol'][1]:.0f}°** |")
 oa4 = np.sort([g["dc4"]["offaxis"] for g in gd["grbs"].values()])
 oa5 = np.sort([g["dc5"]["offaxis"] for g in gd["grbs"].values()])
 pf4 = np.sort([g["dc4"]["pol"][0] for g in gd["grbs"].values()])
@@ -92,15 +94,17 @@ Files:
 
 ## GRBs (Request 5)
 
-All 11 DC4 `GRB_bn` bursts keep their sky position, light-curve shape and 100 keV–10 MeV photon flux. Their trigger time, spectral parameters and polarization are new. Sources: `DC5/sources/GRBs/<name>`; the light-curve files are the DC3 ones with every time stamp shifted to the new trigger time.
+All 11 DC4 `GRB_bn` bursts keep their light-curve shape and spectral model. Their trigger time, sky position, flux, spectral parameters and polarization are new. Sources: `DC5/sources/GRBs/<name>`; the light-curve files are the DC3 ones with every time stamp shifted to the new trigger time.
 
-| GRB | Duration (s) | Day (DC4 → DC5) | Off-axis (deg) | Zenith (deg, DC5) | Spectrum α / β / Epeak (keV) | Pol. fraction, angle |
-|---|---|---|---|---|---|---|
+| GRB | Duration (s) | Day (DC4 → DC5) | DC5 end time (unix s) | (l, b) deg | Off-axis (deg) | Zenith (deg, DC5) | Flux 0.1–10 MeV (ph/cm²/s) | Spectrum α / β / Epeak (keV) | Pol. fraction, angle |
+|---|---|---|---|---|---|---|---|---|---|
 {chr(10).join(g_rows)}
 
-**Timing.** All DC5 GRBs fall on days {min(days5):.2f}–{max(days5):.2f}, i.e. 3–7 days after the start of the DC4 orientation file (unix {gd['orientation_start']:.0f}), within the first week covered by the ACS background simulations and after several days of activation build-up. Consecutive bursts are at least 1 h apart, and each burst has livetime > 0 (no SAA) from 5 min before to 5 min after.
+**Timing.** All DC5 GRBs fall on days {min(days5):.2f}–{max(days5):.2f}, i.e. 3–7 days after the start of the DC4 orientation file (unix {gd['orientation_start']:.0f}), within the first week covered by the ACS background simulations and after several days of activation build-up. Every burst, including a 5 min margin after its last light-curve time stamp, ends before {gd['t_end_max']:.1f} (start + 7 days); the latest burst ends at {max(g['dc5']['t_end'] for g in gd['grbs'].values()):.1f}. Consecutive bursts are at least 1 h apart, and each burst has livetime > 0 (no SAA) from 5 min before to 5 min after.
 
-**Off-axis angles and field of view.** The off-axis angle is the angle between the COSI z-axis (from the orientation file, same column convention as `cosipy.spacecraftfile.SpacecraftHistory`) and the GRB position. DC4: {', '.join(f'{x:.1f}' for x in oa4)} deg (median {np.median(oa4):.1f}). DC5: {', '.join(f'{x:.1f}' for x in oa5)} deg (median {np.median(oa5):.1f}). The DC5 times were drawn so that each burst lands within ±2 deg of a target angle (the DC4 set jittered by ±3 deg and randomly reassigned), with the off-axis angle ≤ 60 deg and the zenith angle ≤ 100 deg (Earth occultation sets in at ~113 deg) for the full burst, and no slew during the burst.
+**Off-axis angles and field of view.** The off-axis angle is the angle between the COSI z-axis (from the orientation file, same column convention as `cosipy.spacecraftfile.SpacecraftHistory`) and the GRB position. DC4: {', '.join(f'{x:.1f}' for x in oa4)} deg (median {np.median(oa4):.1f}). DC5: {', '.join(f'{x:.1f}' for x in oa5)} deg (median {np.median(oa5):.1f}). Each DC5 burst is placed at a target angle (the DC4 set jittered by ±3 deg and randomly reassigned) from the z-axis at its trigger time, at a random azimuth around the z-axis. The off-axis angle stays ≤ 60 deg and the zenith angle ≤ 100 deg (Earth occultation sets in at ~113 deg) for the full burst, and there is no slew during the burst.
+
+**Flux.** The time-averaged photon flux (100 keV–10 MeV) is the DC4 value times a log-uniform factor in [0.5, 2]. For bn090424592 and bn080802386, which DC3/DC4 had already made artificially bright (> 100 ph/cm²/s), the factor is in [0.5, 1] so they do not get brighter.
 
 **Spectra.** Same spectral model as in DC4 (10 Band, 1 power law). Band parameters are drawn from the Fermi GBM 10-year spectral catalog (Poolakkil et al. 2021, fluence spectra): long bursts α ~ N(−0.84, 0.35) in [−1.5, −0.3], log Epeak ~ N(log 144 keV, 0.38 dex) in [60, 1200] keV; the short burst bn080802386 α ~ N(−0.46, 0.45), log Epeak ~ N(log 413 keV, 0.35 dex); β ~ N(−2.3, 0.3) in [−3.2, −1.95]. The power-law index of bn100612726 follows the high-energy slope distribution, N(2.3, 0.25) in [1.9, 2.9], because COSI only sees the spectrum above 100 keV.
 

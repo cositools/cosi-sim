@@ -15,7 +15,7 @@ The DC5 mock dataset starts from the DC4 mock dataset (3 months, same orbit, ori
 
 Percentages refer to the non-GRB DC4 components. DC5 therefore has 65 non-GRB components, 11 GRBs and 4 magnetar bursts.
 
-**How the split was made.** Components that belong to one physical source (e.g. line + continuum maps, flare + quiescent states, the three nova components) were grouped, and the groups were shuffled with a random seed (3891814211, recorded in `DC5_draw.json`). Groups were assigned to *removed* (≈10% of files, only from sources that are not well-known detections: the Crab, Cyg X-1/X-3, Cen A, NGC 4151, the 511 keV bulge/disk, Galactic 26Al/60Fe, Cas A, etc. were protected), then *modified* (≈40%), with the rest *reused*. The modification applied to each drawn source was then chosen by hand from the literature (alternative library model where one exists, otherwise a simple flux/width/state change within the published range). Positions of the arbitrary new sources are drawn from the same seed. The GRB draw uses its own seed (2367866795, `DC5_grb_draw.json`). Running `scripts/draw_dc5.py` or `scripts/draw_dc5_grbs.py` without a seed gives a different realisation.
+**How the split was made.** Components that belong to one physical source (e.g. line + continuum maps, flare + quiescent states, the three nova components) were grouped, and the groups were shuffled with a random seed (3891814211, recorded in `DC5_draw.json`). Groups were assigned to *removed* (≈10% of files, only from sources that are not well-known detections: the Crab, Cyg X-1/X-3, Cen A, NGC 4151, the 511 keV bulge/disk, Galactic 26Al/60Fe, Cas A, etc. were protected), then *modified* (≈40%), with the rest *reused*. The modification applied to each drawn source was then chosen by hand from the literature (alternative library model where one exists, otherwise a simple flux/width/state change within the published range). Positions of the arbitrary new sources are drawn from the same seed. The GRB draw uses its own seed (3662968627, `DC5_grb_draw.json`). Running `scripts/draw_dc5.py` or `scripts/draw_dc5_grbs.py` without a seed gives a different realisation.
 
 Files:
 - `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (79 entries; checked with `Setup.setup_srcs()`).
@@ -112,29 +112,31 @@ Files:
 
 ## GRBs (Request 5)
 
-All 11 DC4 `GRB_bn` bursts keep their sky position, light-curve shape and 100 keV–10 MeV photon flux. Their trigger time, spectral parameters and polarization are new. Sources: `DC5/sources/GRBs/<name>`; the light-curve files are the DC3 ones with every time stamp shifted to the new trigger time.
+All 11 DC4 `GRB_bn` bursts keep their light-curve shape and spectral model. Their trigger time, sky position, flux, spectral parameters and polarization are new. Sources: `DC5/sources/GRBs/<name>`; the light-curve files are the DC3 ones with every time stamp shifted to the new trigger time.
 
-| GRB | Duration (s) | Day (DC4 → DC5) | Off-axis (deg) | Zenith (deg, DC5) | Spectrum α / β / Epeak (keV) | Pol. fraction, angle |
-|---|---|---|---|---|---|---|
-| bn100612726 | 10.8 | 48.80 → **4.17** | 23.5 → **39.3** | 39.9 | PL 2.49 → **PL 2.90** | 0.20, 35° → **0.78, 145°** |
-| bn180703876 | 19.5 | 37.64 → **4.23** | 24.8 → **21.1** | 40.5 | Band -0.78 / -1.97 / 287 → **Band -1.26 / -2.30 / 95** | 0.90, 25° → **0.30, 176°** |
-| bn180504136 | 25.6 | 18.34 → **4.41** | 12.6 → **13.8** | 23.6 | Band -0.74 / -2.12 / 113 → **Band -0.78 / -2.47 / 422** | 0.80, 45° → **0.46, 105°** |
-| bn110605183 | 44.3 | 75.18 → **4.62** | 39.8 → **14.0** | 20.9 | Band -0.61 / -2.22 / 109 → **Band -1.07 / -2.53 / 523** | 0.30, 50° → **0.73, 48°** |
-| bn080802386 | 0.5 | 1.07 → **6.19** | 20.6 → **6.1** | 27.2 | Band -0.74 / -2.10 / 622 → **Band -0.92 / -2.41 / 635** | 0.80, 90° → **0.16, 169°** |
-| bn161004964 | 19.0 | 87.36 → **6.41** | 15.0 → **58.5** | 59.2 | Band -0.81 / -2.39 / 114 → **Band -0.83 / -2.28 / 72** | 0.60, 10° → **0.18, 76°** |
-| bn081207680 | 89.0 | 12.68 → **6.71** | 5.3 → **4.3** | 25.9 | Band -0.59 / -2.10 / 298 → **Band -0.66 / -1.99 / 134** | 0.00, 0° → **0.83, 91°** |
-| bn131122490 | 32.9 | 77.81 → **6.75** | 0.0 → **0.4** | 21.9 | Band -0.90 / -2.29 / 258 → **Band -0.41 / -1.95 / 443** | 0.40, 175° → **0.65, 65°** |
-| bn090424592 | 9.9 | 24.38 → **7.19** | 20.6 → **23.5** | 35.8 | Band -1.02 / -2.76 / 164 → **Band -0.32 / -2.29 / 64** | 0.10, 110° → **0.03, 98°** |
-| bn140329295 | 7.9 | 26.08 → **7.82** | 8.2 → **23.4** | 27.4 | Band -0.81 / -2.25 / 193 → **Band -0.40 / -2.24 / 205** | 0.50, 95° → **0.50, 92°** |
-| bn170405777 | 88.1 | 75.40 → **7.96** | 59.7 → **23.2** | 44.1 | Band -0.80 / -2.35 / 222 → **Band -1.17 / -2.07 / 103** | 0.70, 160° → **0.39, 47°** |
+| GRB | Duration (s) | Day (DC4 → DC5) | DC5 end time (unix s) | (l, b) deg | Off-axis (deg) | Zenith (deg, DC5) | Flux 0.1–10 MeV (ph/cm²/s) | Spectrum α / β / Epeak (keV) | Pol. fraction, angle |
+|---|---|---|---|---|---|---|---|---|---|
+| bn081207680 | 89.0 | 12.68 → **4.15** | **1835759702.1** | (177.4, -9.4) → **(208.6, -20.9)** | 5.3 → **17.7** | 9.5 | 0.0785 → **0.108** | Band -0.59 / -2.10 / 298 → **Band -0.55 / -2.39 / 196** | 0.00, 0° → **0.65, 132°** |
+| bn170405777 | 88.1 | 75.40 → **4.27** | **1835770152.1** | (70.1, 24.3) → **(51.6, -44.6)** | 59.7 → **15.5** | 7.4 | 0.576 → **0.289** | Band -0.80 / -2.35 / 222 → **Band -0.36 / -2.33 / 1046** | 0.70, 160° → **0.88, 13°** |
+| bn140329295 | 7.9 | 26.08 → **4.77** | **1835813092.5** | (49.4, -0.1) → **(70.0, -28.2)** | 8.2 → **7.7** | 15.3 | 0.242 → **0.356** | Band -0.81 / -2.25 / 193 → **Band -0.77 / -2.08 / 141** | 0.50, 95° → **0.00, 73°** |
+| bn161004964 | 19.0 | 87.36 → **4.85** | **1835819905.8** | (190.8, -48.9) → **(91.0, -29.1)** | 15.0 → **25.0** | 36.7 | 0.857 → **1.17** | Band -0.81 / -2.39 / 114 → **Band -0.62 / -2.31 / 60** | 0.60, 10° → **0.41, 23°** |
+| bn100612726 | 10.8 | 48.80 → **5.58** | **1835883013.4** | (338.4, 46.7) → **(189.5, 17.7)** | 23.5 → **6.6** | 28.4 | 1.02 → **2.02** | PL 2.49 → **PL 2.67** | 0.20, 35° → **0.56, 141°** |
+| bn180504136 | 25.6 | 18.34 → **5.71** | **1835894655.6** | (27.4, -33.7) → **(135.2, 26.8)** | 12.6 → **59.0** | 80.7 | 0.418 → **0.553** | Band -0.74 / -2.12 / 113 → **Band -0.90 / -2.27 / 236** | 0.80, 45° → **0.09, 150°** |
+| bn180703876 | 19.5 | 37.64 → **5.78** | **1835899952.3** | (269.7, 14.2) → **(162.5, -53.6)** | 24.8 → **23.2** | 13.0 | 0.354 → **0.514** | Band -0.78 / -1.97 / 287 → **Band -0.73 / -2.26 / 590** | 0.90, 25° → **0.34, 92°** |
+| bn131122490 | 32.9 | 77.81 → **6.85** | **1835992884.9** | (59.7, -3.5) → **(202.8, -23.2)** | 0.0 → **24.8** | 6.9 | 0.965 → **1.09** | Band -0.90 / -2.29 / 258 → **Band -0.51 / -2.60 / 79** | 0.40, 175° → **0.66, 124°** |
+| bn110605183 | 44.3 | 75.18 → **6.94** | **1836000254.4** | (41.6, 19.2) → **(240.6, 53.1)** | 39.8 → **22.7** | 18.7 | 1.56 → **2.28** | Band -0.61 / -2.22 / 109 → **Band -0.30 / -2.36 / 774** | 0.30, 50° → **0.31, 11°** |
+| bn090424592 | 9.9 | 24.38 → **7.75** | **1836070343.2** | (21.3, -42.4) → **(57.3, 1.7)** | 20.6 → **1.2** | 22.4 | 245 → **171** | Band -1.02 / -2.76 / 164 → **Band -0.32 / -2.71 / 148** | 0.10, 110° → **0.74, 159°** |
+| bn080802386 | 0.5 | 1.07 → **7.85** | **1836078836.4** | (23.5, -53.4) → **(219.5, -14.7)** | 20.6 → **39.3** | 23.1 | 150 → **88.8** | Band -0.74 / -2.10 / 622 → **Band -0.65 / -2.09 / 955** | 0.80, 90° → **0.22, 126°** |
 
-**Timing.** All DC5 GRBs fall on days 4.17–7.96, i.e. 3–7 days after the start of the DC4 orientation file (unix 1835487300), within the first week covered by the ACS background simulations and after several days of activation build-up. Consecutive bursts are at least 1 h apart, and each burst has livetime > 0 (no SAA) from 5 min before to 5 min after.
+**Timing.** All DC5 GRBs fall on days 4.15–7.85, i.e. 3–7 days after the start of the DC4 orientation file (unix 1835487300), within the first week covered by the ACS background simulations and after several days of activation build-up. Every burst, including a 5 min margin after its last light-curve time stamp, ends before 1836092100.0 (start + 7 days); the latest burst ends at 1836078836.4. Consecutive bursts are at least 1 h apart, and each burst has livetime > 0 (no SAA) from 5 min before to 5 min after.
 
-**Off-axis angles and field of view.** The off-axis angle is the angle between the COSI z-axis (from the orientation file, same column convention as `cosipy.spacecraftfile.SpacecraftHistory`) and the GRB position. DC4: 0.0, 5.3, 8.2, 12.6, 15.0, 20.6, 20.6, 23.5, 24.8, 39.8, 59.7 deg (median 20.6). DC5: 0.4, 4.3, 6.1, 13.8, 14.0, 21.1, 23.2, 23.4, 23.5, 39.3, 58.5 deg (median 21.1). The DC5 times were drawn so that each burst lands within ±2 deg of a target angle (the DC4 set jittered by ±3 deg and randomly reassigned), with the off-axis angle ≤ 60 deg and the zenith angle ≤ 100 deg (Earth occultation sets in at ~113 deg) for the full burst, and no slew during the burst.
+**Off-axis angles and field of view.** The off-axis angle is the angle between the COSI z-axis (from the orientation file, same column convention as `cosipy.spacecraftfile.SpacecraftHistory`) and the GRB position. DC4: 0.0, 5.3, 8.2, 12.6, 15.0, 20.6, 20.6, 23.5, 24.8, 39.8, 59.7 deg (median 20.6). DC5: 1.2, 6.6, 7.7, 15.5, 17.7, 22.7, 23.2, 24.8, 25.0, 39.3, 59.0 deg (median 22.7). Each DC5 burst is placed at a target angle (the DC4 set jittered by ±3 deg and randomly reassigned) from the z-axis at its trigger time, at a random azimuth around the z-axis. The off-axis angle stays ≤ 60 deg and the zenith angle ≤ 100 deg (Earth occultation sets in at ~113 deg) for the full burst, and there is no slew during the burst.
+
+**Flux.** The time-averaged photon flux (100 keV–10 MeV) is the DC4 value times a log-uniform factor in [0.5, 2]. For bn090424592 and bn080802386, which DC3/DC4 had already made artificially bright (> 100 ph/cm²/s), the factor is in [0.5, 1] so they do not get brighter.
 
 **Spectra.** Same spectral model as in DC4 (10 Band, 1 power law). Band parameters are drawn from the Fermi GBM 10-year spectral catalog (Poolakkil et al. 2021, fluence spectra): long bursts α ~ N(−0.84, 0.35) in [−1.5, −0.3], log Epeak ~ N(log 144 keV, 0.38 dex) in [60, 1200] keV; the short burst bn080802386 α ~ N(−0.46, 0.45), log Epeak ~ N(log 413 keV, 0.35 dex); β ~ N(−2.3, 0.3) in [−3.2, −1.95]. The power-law index of bn100612726 follows the high-energy slope distribution, N(2.3, 0.25) in [1.9, 2.9], because COSI only sees the spectrum above 100 keV.
 
-**Polarization.** The DC4 polarization fractions are spread uniformly between 0 and 0.9 (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.8, 0.9). The DC5 fractions are drawn from the same distribution, stratified uniform on [0, 0.9] (0.03, 0.16, 0.18, 0.30, 0.39, 0.46, 0.50, 0.65, 0.73, 0.78, 0.83). Angles are uniform in [0, 180) deg.
+**Polarization.** The DC4 polarization fractions are spread uniformly between 0 and 0.9 (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.8, 0.9). The DC5 fractions are drawn from the same distribution, stratified uniform on [0, 0.9] (0.00, 0.09, 0.22, 0.31, 0.34, 0.41, 0.56, 0.65, 0.66, 0.74, 0.88). Angles are uniform in [0, 180) deg.
 
 **Fix.** The DC3 bn180703876 source file declared `EarthOccultation` for the wrong component (`bn090424592`); the DC5 file uses the correct name.
 
@@ -146,7 +148,7 @@ All 11 DC4 `GRB_bn` bursts keep their sky position, light-curve shape and 100 ke
 | GRB_MGF200415A | `DC3/sources/GRBs/MGF200415A` | reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF200415A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | MgtBurst_bright_complex | `DC3/sources/GRBs/MgtBurst_bright_complex` | reuse event file COSI-SMEX/DC4/Data/Sources/MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz |
 
-Not included in DC5 (random draw, seed 2367866795): GRB_MGF070201, GRB_MGF070222, GRB_MGF231115A. Four of the seven DC4 magnetar bursts are kept (half, rounded up).
+Not included in DC5 (random draw, seed 3662968627): GRB_MGF070201, GRB_MGF070222, GRB_MGF231115A. Four of the seven DC4 magnetar bursts are kept (half, rounded up).
 
 ## Light-curve bugs — what needs to be re-simulated
 From the [bug report](https://github.com/cositools/cosi-data-challenges/blob/develop/README.md#bug-report):

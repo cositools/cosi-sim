@@ -1,32 +1,35 @@
 # bn170405777 — DC5
 
-**DC5 status:** modified (time, spectral and polarization parameters)
+**DC5 status:** modified (time, position, flux, spectral and polarization parameters)
 **Based on:** `DC3/sources/GRBs/bn170405777` (included in the DC4 mock dataset)
-**Position:** unchanged, l = 70.1146 deg, b = 24.2911 deg
 **Duration (light-curve span):** 88.08 s
 
 ## Changes relative to the DC4 mock dataset
 
 | Parameter | DC4 | DC5 |
 |---|---|---|
-| Trigger time (unix s) | 1841915858.000 | 1836088611.058 |
-| Day of the observation | 75.40 | 7.96 |
-| Off-axis angle at trigger (deg) | 59.7 | 23.2 (end of burst: 25.5) |
-| Zenith angle at trigger (deg) | 74.2 | 44.1 |
+| Trigger time (unix s) | 1841915858.000 | 1835770064.028 |
+| End of burst (unix s) | 1841915946.084 | 1835770152.112 (limit 1836092100.0) |
+| Day of the observation | 75.40 | 4.27 |
+| Position l, b (deg) | 70.1146, 24.2911 | 51.6392, -44.5965 |
+| Off-axis angle at trigger (deg) | 59.7 | 15.5 (end of burst: 15.3) |
+| Zenith angle at trigger (deg) | 74.2 | 7.4 |
 | Spectral model | Band | Band (unchanged) |
-| Band alpha | -0.799 | -1.1672 |
-| Band beta | -2.354 | -2.0662 |
-| Epeak (keV) | 222.4 | 103.4 |
-| Photon flux 100 keV-10 MeV (ph/cm2/s) | 0.575951 | 0.575951 (unchanged) |
-| Polarization fraction | 0.70 | 0.39 |
-| Polarization angle (deg, galactic) | 160.0 | 46.8 |
+| Band alpha | -0.799 | -0.3612 |
+| Band beta | -2.354 | -2.3324 |
+| Epeak (keV) | 222.4 | 1046.5 |
+| Photon flux 100 keV-10 MeV (ph/cm2/s) | 0.575951 | 0.288924 (x0.50) |
+| Polarization fraction | 0.70 | 0.88 |
+| Polarization angle (deg, galactic) | 160.0 | 13.4 |
 
-The light curve is the DC3 light curve, unchanged in shape, with every time stamp shifted by -5827246.942 s.
+The light curve is the DC3 light curve, unchanged in shape, with every time stamp shifted by -6145793.972 s.
 
 ## How the DC5 values were chosen
 
-- **Time:** all DC5 GRBs fall in days 4-7 of the observation (3-7 days after the start of the DC4 orientation file), so they overlap the week of background simulations with ACS data and come after the activation build-up. The time was drawn so that the off-axis angle (angle between the COSI z-axis and the source) reproduces the DC4 GRB off-axis distribution (target 25.0 deg: a DC4 value jittered by up to +-3 deg and randomly reassigned). Required: off-axis angle <= 60 deg during the whole burst, zenith angle <= 100 deg (well above the ~113 deg Earth-occultation limit), livetime > 0 (no SAA) from 5 min before to 5 min after the burst, an off-axis change < 3 deg during the burst (no slew), and >= 1 h separation from any other DC5 GRB.
-- **Spectrum:** same spectral model as DC4; parameters drawn from the Fermi GBM 10-year catalog fluence-spectrum distributions (long GRBs): alpha and log10(Epeak) Gaussian around the catalog medians (long: alpha = -0.84, Epeak = 144 keV; short: alpha = -0.46, Epeak = 413 keV), beta Gaussian around -2.3 (sigma 0.3), with cuts to keep alpha > beta and Epeak in a range COSI can constrain. For power-law bursts the index follows the high-energy (beta) distribution, since COSI only sees the spectrum above 100 keV. The photon flux in 100 keV-10 MeV is unchanged.
+- **Time:** all DC5 GRBs fall in days 4-7 of the observation (3-7 days after the start of the DC4 orientation file), so they overlap the week of background simulations with ACS data and come after the activation build-up. The whole burst plus a 5 min margin ends before 1836092100.0 (7 days after the start of the orientation file). The time is random within the window, with >= 1 h separation from any other DC5 GRB.
+- **Position:** placed at a target off-axis angle (angle between the COSI z-axis and the source) of 15.5 deg, at a random azimuth around the z-axis at the trigger time. The targets are the DC4 GRB off-axis values jittered by up to +-3 deg and randomly reassigned, so the DC5 set reproduces the DC4 distribution. Required: off-axis angle <= 60 deg during the whole burst, zenith angle <= 100 deg (well above the ~113 deg Earth-occultation limit), livetime > 0 (no SAA) from 5 min before to 5 min after the burst, and an off-axis change < 3 deg during the burst (no slew).
+- **Flux:** DC4 photon flux (100 keV-10 MeV, time-averaged over the light curve) times a log-uniform factor in [0.5, 2]. For the two DC4 bursts above 100 ph/cm2/s, which are already artificially bright, the factor is in [0.5, 1].
+- **Spectrum:** same spectral model as DC4; parameters drawn from the Fermi GBM 10-year catalog fluence-spectrum distributions (long GRBs): alpha and log10(Epeak) Gaussian around the catalog medians (long: alpha = -0.84, Epeak = 144 keV; short: alpha = -0.46, Epeak = 413 keV), beta Gaussian around -2.3 (sigma 0.3), with cuts to keep alpha > beta and Epeak in a range COSI can constrain. For power-law bursts the index follows the high-energy (beta) distribution, since COSI only sees the spectrum above 100 keV.
 - **Polarization:** the DC4 GRB polarization fractions are spread uniformly between 0 and 0.9; DC5 fractions are drawn from the same distribution (stratified uniform on [0, 0.9]). The angle is uniform in [0, 180) deg.
 
 ## References

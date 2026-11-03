@@ -14,16 +14,16 @@ bn090424592.ParticleType    1
 bn090424592.Beam            FarFieldPointSource 0.0 0.0
 
 # Orientation: Latitude b [deg], Longitude l [deg]
-bn090424592.Orientation     Galactic Fixed -42.384846594045484 21.293418951586656
+bn090424592.Orientation     Galactic Fixed 1.6791 57.3155
 
 # Spectrum 
-bn090424592.Spectrum        Band 100 10000 -0.3242 -2.2907 64.24
+bn090424592.Spectrum        Band 100 10000 -0.3156 -2.7084 147.98
 
 # Average photon flux in photon/cm2/s
-bn090424592.Flux            244.79957010847312
+bn090424592.Flux            171.457
 
 # Polarization: fraction in [0,1], angle in [0,180]
-bn090424592.Polarization       		galactic 0.03 97.8
+bn090424592.Polarization       		galactic 0.74 158.6
 
 # Lightcurve
 bn090424592.Lightcurve      File false bn090424592_lightcurve.dat

@@ -74,17 +74,17 @@ Every component of the DC5 mock dataset, its origin in the DC4 mock dataset, the
 | new | MeV_blazar | `DC5/sources/Extragalactic/MeV_blazar` | simulate DC5 source file |
 | new | Seyfert_new | `DC5/sources/Extragalactic/Seyfert_new` | simulate DC5 source file |
 | new | 26Al_new_region | `DC5/sources/Nucleosynthesis/26Al_new_region` | simulate DC5 source file |
-| GRB (modified) | GRB_bn081207680 | `DC5/sources/GRBs/bn081207680` | simulate DC5 source file (day 6.71, off-axis 4.3 deg) |
-| GRB (modified) | GRB_bn090424592 | `DC5/sources/GRBs/bn090424592` | simulate DC5 source file (day 7.19, off-axis 23.5 deg) |
-| GRB (modified) | GRB_bn100612726 | `DC5/sources/GRBs/bn100612726` | simulate DC5 source file (day 4.17, off-axis 39.3 deg) |
-| GRB (modified) | GRB_bn110605183 | `DC5/sources/GRBs/bn110605183` | simulate DC5 source file (day 4.62, off-axis 14.0 deg) |
-| GRB (modified) | GRB_bn131122490 | `DC5/sources/GRBs/bn131122490` | simulate DC5 source file (day 6.75, off-axis 0.4 deg) |
-| GRB (modified) | GRB_bn140329295 | `DC5/sources/GRBs/bn140329295` | simulate DC5 source file (day 7.82, off-axis 23.4 deg) |
-| GRB (modified) | GRB_bn161004964 | `DC5/sources/GRBs/bn161004964` | simulate DC5 source file (day 6.41, off-axis 58.5 deg) |
-| GRB (modified) | GRB_bn170405777 | `DC5/sources/GRBs/bn170405777` | simulate DC5 source file (day 7.96, off-axis 23.2 deg) |
-| GRB (modified) | GRB_bn180504136 | `DC5/sources/GRBs/bn180504136` | simulate DC5 source file (day 4.41, off-axis 13.8 deg) |
-| GRB (modified) | GRB_bn180703876 | `DC5/sources/GRBs/bn180703876` | simulate DC5 source file (day 4.23, off-axis 21.1 deg) |
-| GRB (modified) | GRB_bn080802386_flux150 | `DC5/sources/GRBs/bn080802386` | simulate DC5 source file (day 6.19, off-axis 6.1 deg) |
+| GRB (modified) | GRB_bn081207680 | `DC5/sources/GRBs/bn081207680` | simulate DC5 source file (day 4.15, off-axis 17.7 deg) |
+| GRB (modified) | GRB_bn090424592 | `DC5/sources/GRBs/bn090424592` | simulate DC5 source file (day 7.75, off-axis 1.2 deg) |
+| GRB (modified) | GRB_bn100612726 | `DC5/sources/GRBs/bn100612726` | simulate DC5 source file (day 5.58, off-axis 6.6 deg) |
+| GRB (modified) | GRB_bn110605183 | `DC5/sources/GRBs/bn110605183` | simulate DC5 source file (day 6.94, off-axis 22.7 deg) |
+| GRB (modified) | GRB_bn131122490 | `DC5/sources/GRBs/bn131122490` | simulate DC5 source file (day 6.85, off-axis 24.8 deg) |
+| GRB (modified) | GRB_bn140329295 | `DC5/sources/GRBs/bn140329295` | simulate DC5 source file (day 4.77, off-axis 7.7 deg) |
+| GRB (modified) | GRB_bn161004964 | `DC5/sources/GRBs/bn161004964` | simulate DC5 source file (day 4.85, off-axis 25.0 deg) |
+| GRB (modified) | GRB_bn170405777 | `DC5/sources/GRBs/bn170405777` | simulate DC5 source file (day 4.27, off-axis 15.5 deg) |
+| GRB (modified) | GRB_bn180504136 | `DC5/sources/GRBs/bn180504136` | simulate DC5 source file (day 5.71, off-axis 59.0 deg) |
+| GRB (modified) | GRB_bn180703876 | `DC5/sources/GRBs/bn180703876` | simulate DC5 source file (day 5.78, off-axis 23.2 deg) |
+| GRB (modified) | GRB_bn080802386_flux150 | `DC5/sources/GRBs/bn080802386` | simulate DC5 source file (day 7.85, off-axis 39.3 deg) |
 | magnetar burst (unchanged) | GRB_MGF051103 | `DC3/sources/GRBs/MGF051103` | reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF051103_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | removed | GRB_MGF070201 | `-` | magnetar burst not included in DC5 (half of the DC4 magnetar bursts kept) |
 | removed | GRB_MGF070222 | `-` | magnetar burst not included in DC5 (half of the DC4 magnetar bursts kept) |
