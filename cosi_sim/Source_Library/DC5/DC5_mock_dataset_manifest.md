@@ -22,13 +22,13 @@ Every component of the DC5 mock dataset, its origin in the DC4 mock dataset, the
 | reused | Virgo_511 | `(no library file)` | reuse DC4 event file COSI-SMEX/DC4/Data/Sources/Virgo_511_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | reused | NGC_1068 | `DC4/sources/Extragalactic/NGC_1068` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/NGC_1068_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | modified | NGC_4151 | `DC5/sources/Extragalactic/NGC_4151` | simulate DC5 source file |
-| modified | 1RXSJ170849 | `DC5/sources/Galactic/1RXSJ170849` | simulate DC5 source file |
-| modified | magnetar2 | `DC5/sources/Galactic/magnetar2` | simulate DC5 source file |
+| modified | 1RXSJ170849 | `DC5/sources/Galactic/1RXSJ170849` | simulate DC5 source file — light curve trimmed to whole pulse periods (period bug fixed in the DC5 file) |
+| modified | magnetar2 | `DC5/sources/Galactic/magnetar2` | simulate DC5 source file — light curve trimmed to whole pulse periods (period bug fixed in the DC5 file) |
 | reused | 4C71p07 | `DC4/sources/Extragalactic/4C71p07` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/4C71p07_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| reused | 3C454p3_low | `DC4/sources/Extragalactic/3C454p3_low` | re-simulate with the same source file (light-curve bug) |
-| reused | 3C454p3_high | `DC4/sources/Extragalactic/3C454p3_high` | re-simulate with the same source file (light-curve bug) |
+| reused | 3C454p3_low | `DC4/sources/Extragalactic/3C454p3_low` | re-simulate with the same source file (time-chunk light-curve bug) |
+| reused | 3C454p3_high | `DC4/sources/Extragalactic/3C454p3_high` | re-simulate with the same source file (time-chunk light-curve bug) |
 | reused | CenA | `DC4/sources/Extragalactic/CenA` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/CenA_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| reused | Crab_DC4 | `DC4/sources/Galactic/Crab` | re-simulate with the same source file (light-curve bug) |
+| reused | Crab_DC4 | `DC4/sources/Galactic/Crab` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/Crab_DC4_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | reused | Globular_Cluster_Tuc_47 | `DC3/sources/511/Globular_Cluster_Tuc_47` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_Tuc_47_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | reused | Globular_Cluster_Omega_Cen | `DC3/sources/511/Globular_Cluster_Omega_Cen` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_Omega_Cen_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | reused | Globular_Cluster_NGC_6397 | `DC3/sources/511/Globular_Cluster_NGC_6397` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_NGC_6397_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
@@ -40,18 +40,18 @@ Every component of the DC5 mock dataset, its origin in the DC4 mock dataset, the
 | reused (bug-fixed) | Narrow_Bulge_511 | `DC5/sources/511/NB_511` | re-simulate (511 keV map bug fixed) |
 | modified | Broad_Bulge_511 | `DC5/sources/511/BB_511` | simulate DC5 source file |
 | reused (bug-fixed) | Vela_SNR_511 | `DC5/sources/511/Vela_SNR_511` | re-simulate (511 keV map bug fixed) |
-| modified | nova_co_511keV | `DC5/sources/Galactic/nova_co_511keV` | simulate DC5 source file |
-| modified | nova_co_continuum | `DC5/sources/Galactic/nova_co_continuum` | simulate DC5 source file |
-| modified | nova_co_478keV | `DC5/sources/Galactic/nova_co_478keV` | simulate DC5 source file |
-| modified | 4C21p35_noflare | `DC5/sources/Extragalactic/4C21p35_noflare` | simulate DC5 source file |
-| modified | 4C21p35_flare | `DC5/sources/Extragalactic/4C21p35_flare` | simulate DC5 source file |
-| reused | PSRB1259 | `DC3/sources/Galactic/PSRB1259` | re-simulate with the same source file (light-curve bug) |
+| modified | nova_co_511keV | `DC5/sources/Galactic/nova_co_511keV` | simulate DC5 source file — light curve: use the fixed time-chunk flux normalisation |
+| modified | nova_co_continuum | `DC5/sources/Galactic/nova_co_continuum` | simulate DC5 source file — light curve: use the fixed time-chunk flux normalisation |
+| modified | nova_co_478keV | `DC5/sources/Galactic/nova_co_478keV` | simulate DC5 source file — light curve: use the fixed time-chunk flux normalisation |
+| modified | 4C21p35_noflare | `DC5/sources/Extragalactic/4C21p35_noflare` | simulate DC5 source file — light curve: use the fixed time-chunk flux normalisation |
+| modified | 4C21p35_flare | `DC5/sources/Extragalactic/4C21p35_flare` | simulate DC5 source file — light curve: use the fixed time-chunk flux normalisation |
+| reused | PSRB1259 | `DC3/sources/Galactic/PSRB1259` | re-simulate with the same source file (time-chunk light-curve bug) |
 | modified | 1E1740_compow | `DC5/sources/Galactic/1E1740_twocompt` | simulate DC5 source file |
 | modified | cygX1_hard | `DC5/sources/Galactic/cygX1_soft` | simulate DC5 source file |
 | modified | GRS1758 | `DC5/sources/Galactic/GRS1758` | simulate DC5 source file |
-| reused | LS5039 | `DC3/sources/Galactic/LS5039` | re-simulate with the same source file (light-curve bug) |
+| reused | LS5039 | `DC3/sources/Galactic/LS5039` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/LS5039_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | removed | PSRJ1846 | `-` | not included in DC5 |
-| modified | MAXIJ1820 | `DC5/sources/Galactic/MAXIJ1820` | simulate DC5 source file |
+| modified | MAXIJ1820 | `DC5/sources/Galactic/MAXIJ1820` | simulate DC5 source file — light curve: use the fixed time-chunk flux normalisation |
 | removed | MAXIJ1348 | `-` | not included in DC5 |
 | modified | 26Al_Cyg_Region | `DC5/sources/Nucleosynthesis/26Al_Cyg_Region` | simulate DC5 source file |
 | reused | 26Al_NE2001 | `DC3/sources/Al26/26Al_NE2001` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/26Al_NE2001_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
@@ -74,21 +74,21 @@ Every component of the DC5 mock dataset, its origin in the DC4 mock dataset, the
 | new | MeV_blazar | `DC5/sources/Extragalactic/MeV_blazar` | simulate DC5 source file |
 | new | Seyfert_new | `DC5/sources/Extragalactic/Seyfert_new` | simulate DC5 source file |
 | new | 26Al_new_region | `DC5/sources/Nucleosynthesis/26Al_new_region` | simulate DC5 source file |
-| GRB (unchanged) | GRB_bn081207680 | `DC3/sources/GRBs/bn081207680` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn081207680_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_bn090424592 | `DC3/sources/GRBs/bn090424592` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn090424592_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_bn100612726 | `DC3/sources/GRBs/bn100612726` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn100612726_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_bn110605183 | `DC3/sources/GRBs/bn110605183` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn110605183_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_bn131122490 | `DC3/sources/GRBs/bn131122490` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn131122490_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_bn140329295 | `DC3/sources/GRBs/bn140329295` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn140329295_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_bn161004964 | `DC3/sources/GRBs/bn161004964` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn161004964_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_bn170405777 | `DC3/sources/GRBs/bn170405777` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn170405777_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_bn180504136 | `DC3/sources/GRBs/bn180504136` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn180504136_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_bn180703876 | `DC3/sources/GRBs/bn180703876` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn180703876_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_bn080802386_flux150 | `DC3/sources/GRBs/bn080802386` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn080802386_flux150_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_MGF051103 | `DC3/sources/GRBs/MGF051103` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_MGF051103_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_MGF070201 | `DC3/sources/GRBs/MGF070201` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_MGF070201_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_MGF070222 | `DC3/sources/GRBs/MGF070222` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_MGF070222_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_MGF180128A | `DC3/sources/GRBs/MGF180128A` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_MGF180128A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_MGF200415A | `DC3/sources/GRBs/MGF200415A` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_MGF200415A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | GRB_MGF231115A | `DC3/sources/GRBs/MGF231115A` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_MGF231115A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB (unchanged) | MgtBurst_bright_complex | `DC3/sources/GRBs/MgtBurst_bright_complex` | reuse DC4 event file COSI-SMEX/DC4/Data/Sources/MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz (uses a light curve: check against the light-curve bug) |
+| GRB (modified) | GRB_bn081207680 | `DC5/sources/GRBs/bn081207680` | simulate DC5 source file (day 6.71, off-axis 4.3 deg) |
+| GRB (modified) | GRB_bn090424592 | `DC5/sources/GRBs/bn090424592` | simulate DC5 source file (day 7.19, off-axis 23.5 deg) |
+| GRB (modified) | GRB_bn100612726 | `DC5/sources/GRBs/bn100612726` | simulate DC5 source file (day 4.17, off-axis 39.3 deg) |
+| GRB (modified) | GRB_bn110605183 | `DC5/sources/GRBs/bn110605183` | simulate DC5 source file (day 4.62, off-axis 14.0 deg) |
+| GRB (modified) | GRB_bn131122490 | `DC5/sources/GRBs/bn131122490` | simulate DC5 source file (day 6.75, off-axis 0.4 deg) |
+| GRB (modified) | GRB_bn140329295 | `DC5/sources/GRBs/bn140329295` | simulate DC5 source file (day 7.82, off-axis 23.4 deg) |
+| GRB (modified) | GRB_bn161004964 | `DC5/sources/GRBs/bn161004964` | simulate DC5 source file (day 6.41, off-axis 58.5 deg) |
+| GRB (modified) | GRB_bn170405777 | `DC5/sources/GRBs/bn170405777` | simulate DC5 source file (day 7.96, off-axis 23.2 deg) |
+| GRB (modified) | GRB_bn180504136 | `DC5/sources/GRBs/bn180504136` | simulate DC5 source file (day 4.41, off-axis 13.8 deg) |
+| GRB (modified) | GRB_bn180703876 | `DC5/sources/GRBs/bn180703876` | simulate DC5 source file (day 4.23, off-axis 21.1 deg) |
+| GRB (modified) | GRB_bn080802386_flux150 | `DC5/sources/GRBs/bn080802386` | simulate DC5 source file (day 6.19, off-axis 6.1 deg) |
+| magnetar burst (unchanged) | GRB_MGF051103 | `DC3/sources/GRBs/MGF051103` | reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF051103_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
+| removed | GRB_MGF070201 | `-` | magnetar burst not included in DC5 (half of the DC4 magnetar bursts kept) |
+| removed | GRB_MGF070222 | `-` | magnetar burst not included in DC5 (half of the DC4 magnetar bursts kept) |
+| magnetar burst (unchanged) | GRB_MGF180128A | `DC3/sources/GRBs/MGF180128A` | reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF180128A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
+| magnetar burst (unchanged) | GRB_MGF200415A | `DC3/sources/GRBs/MGF200415A` | reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF200415A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
+| removed | GRB_MGF231115A | `-` | magnetar burst not included in DC5 (half of the DC4 magnetar bursts kept) |
+| magnetar burst (unchanged) | MgtBurst_bright_complex | `DC3/sources/GRBs/MgtBurst_bright_complex` | reuse event file COSI-SMEX/DC4/Data/Sources/MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz |

@@ -9,7 +9,7 @@ DC4 log-parabola spectrum, 80% polarisation and 11 s pulsation light curve. DC5 
 
 ## Change relative to the DC4 mock dataset
 
-flux 0.00033 -> 0.000247 ph/cm2/s (x0.75, long-term hard X-ray variability, den Hartog et al. 2008)
+flux 0.00033 -> 0.000247 ph/cm2/s (x0.75, long-term hard X-ray variability, den Hartog et al. 2008); light curve trimmed to 235528 whole pulse periods so that the periodic repeat keeps the pulse phase continuous (DC4 period bug fix)
 
 Any other README in this directory describes the original (DC2/DC3/DC4) model; where it conflicts with this file, this file describes what DC5 simulates.
 

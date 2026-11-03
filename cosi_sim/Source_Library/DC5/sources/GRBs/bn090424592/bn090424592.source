@@ -1,0 +1,32 @@
+# Define DC5 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+# Source
+DataChallenge.Source               bn090424592
+bn090424592.ParticleType    1
+bn090424592.Beam            FarFieldPointSource 0.0 0.0
+
+# Orientation: Latitude b [deg], Longitude l [deg]
+bn090424592.Orientation     Galactic Fixed -42.384846594045484 21.293418951586656
+
+# Spectrum 
+bn090424592.Spectrum        Band 100 10000 -0.3242 -2.2907 64.24
+
+# Average photon flux in photon/cm2/s
+bn090424592.Flux            244.79957010847312
+
+# Polarization: fraction in [0,1], angle in [0,180]
+bn090424592.Polarization       		galactic 0.03 97.8
+
+# Lightcurve
+bn090424592.Lightcurve      File false bn090424592_lightcurve.dat
+
+# Earth occultation:
+bn090424592.EarthOccultation false

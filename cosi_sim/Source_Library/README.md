@@ -253,6 +253,17 @@ DC5/sources/Extragalactic/MeV_blazar <br />
 DC5/sources/Extragalactic/NGC_4151 <br />
 DC5/sources/Extragalactic/NGC_4945 <br />
 DC5/sources/Extragalactic/Seyfert_new <br />
+DC5/sources/GRBs/bn080802386 <br />
+DC5/sources/GRBs/bn081207680 <br />
+DC5/sources/GRBs/bn090424592 <br />
+DC5/sources/GRBs/bn100612726 <br />
+DC5/sources/GRBs/bn110605183 <br />
+DC5/sources/GRBs/bn131122490 <br />
+DC5/sources/GRBs/bn140329295 <br />
+DC5/sources/GRBs/bn161004964 <br />
+DC5/sources/GRBs/bn170405777 <br />
+DC5/sources/GRBs/bn180504136 <br />
+DC5/sources/GRBs/bn180703876 <br />
 
 ## Galactic Diffuse (Galdiff) <br />
 Galdiff/GalIC <br />

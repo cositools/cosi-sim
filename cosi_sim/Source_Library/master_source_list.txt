@@ -246,5 +246,16 @@
 'DC5/sources/Extragalactic/MeV_blazar',
 'DC5/sources/Extragalactic/NGC_4151',
 'DC5/sources/Extragalactic/NGC_4945',
-'DC5/sources/Extragalactic/Seyfert_new'
+'DC5/sources/Extragalactic/Seyfert_new',
+'DC5/sources/GRBs/bn080802386',
+'DC5/sources/GRBs/bn081207680',
+'DC5/sources/GRBs/bn090424592',
+'DC5/sources/GRBs/bn100612726',
+'DC5/sources/GRBs/bn110605183',
+'DC5/sources/GRBs/bn131122490',
+'DC5/sources/GRBs/bn140329295',
+'DC5/sources/GRBs/bn161004964',
+'DC5/sources/GRBs/bn170405777',
+'DC5/sources/GRBs/bn180504136',
+'DC5/sources/GRBs/bn180703876'
 ]

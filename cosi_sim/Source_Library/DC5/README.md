@@ -4,23 +4,24 @@
 
 The DC5 mock dataset starts from the DC4 mock dataset (3 months, same orbit, orientation and backgrounds) and changes the source content:
 
-| | DC4 components (non-GRB) | Fraction |
+| | DC4 components | Fraction |
 |---|---|---|
-| Reused (same source files; 2 of these carry only the Request 3 bug fix) | 27 | 51% |
+| Reused (same source files; 2 of these carry only the 511 keV bug fix) | 27 | 51% |
 | Modified | 21 | 40% |
 | Removed | 5 | 9% |
 | **New** (relative to the ~71 DC4 components) | 17 | 24% |
-| GRBs (unchanged, as requested) | 18 | |
+| GRBs (`GRB_bn*`): new time, spectrum and polarization | 11 | all |
+| Magnetar bursts (`MGF*`, `MgtBurst*`): unchanged, half kept | 4 kept, 3 removed | |
 
-DC5 therefore has 65 non-GRB components plus 18 GRBs.
+Percentages refer to the non-GRB DC4 components. DC5 therefore has 65 non-GRB components, 11 GRBs and 4 magnetar bursts.
 
-**How the split was made.** Components that belong to one physical source (e.g. line + continuum maps, flare + quiescent states, the three nova components) were grouped, and the groups were shuffled with a random seed (3891814211, recorded in `DC5_draw.json`). Groups were assigned to *removed* (≈10% of files, only from sources that are not well-known detections: the Crab, Cyg X-1/X-3, Cen A, NGC 4151, the 511 keV bulge/disk, Galactic 26Al/60Fe, Cas A, etc. were protected), then *modified* (≈40%), with the rest *reused*. The modification applied to each drawn source was then chosen by hand from the literature (alternative library model where one exists, otherwise a simple flux/width/state change within the published range). Positions of the arbitrary new sources are drawn from the same seed. Running `scripts/draw_dc5.py` without a seed gives a different realisation.
+**How the split was made.** Components that belong to one physical source (e.g. line + continuum maps, flare + quiescent states, the three nova components) were grouped, and the groups were shuffled with a random seed (3891814211, recorded in `DC5_draw.json`). Groups were assigned to *removed* (≈10% of files, only from sources that are not well-known detections: the Crab, Cyg X-1/X-3, Cen A, NGC 4151, the 511 keV bulge/disk, Galactic 26Al/60Fe, Cas A, etc. were protected), then *modified* (≈40%), with the rest *reused*. The modification applied to each drawn source was then chosen by hand from the literature (alternative library model where one exists, otherwise a simple flux/width/state change within the published range). Positions of the arbitrary new sources are drawn from the same seed. The GRB draw uses its own seed (2367866795, `DC5_grb_draw.json`). Running `scripts/draw_dc5.py` or `scripts/draw_dc5_grbs.py` without a seed gives a different realisation.
 
 Files:
-- `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (82 entries; checked with `Setup.setup_srcs()`).
+- `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (79 entries; checked with `Setup.setup_srcs()`).
 - `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do (simulate / re-simulate / reuse the existing DC3/DC4 event file).
-- `DC5_build_log.json`, `DC5_draw.json` — machine-readable record of the draw and of every change.
-- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes `sources/` for this draw), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b).
+- `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json` — machine-readable record of the draws and of every change.
+- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_dc5_readme.py` (this file).
 - `sources/` — one directory per modified, bug-fixed or new source, each with a `README_DC5.md` describing the model, the change, and references.
 
 ## Reused sources (same source files)
@@ -35,10 +36,10 @@ Files:
 | Virgo_511 | `(no library file)` | reuse DC4 event file COSI-SMEX/DC4/Data/Sources/Virgo_511_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | NGC_1068 | `DC4/sources/Extragalactic/NGC_1068` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/NGC_1068_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | 4C71p07 | `DC4/sources/Extragalactic/4C71p07` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/4C71p07_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| 3C454p3_low | `DC4/sources/Extragalactic/3C454p3_low` | re-simulate with the same source file (light-curve bug) |
-| 3C454p3_high | `DC4/sources/Extragalactic/3C454p3_high` | re-simulate with the same source file (light-curve bug) |
+| 3C454p3_low | `DC4/sources/Extragalactic/3C454p3_low` | re-simulate with the same source file (time-chunk light-curve bug) |
+| 3C454p3_high | `DC4/sources/Extragalactic/3C454p3_high` | re-simulate with the same source file (time-chunk light-curve bug) |
 | CenA | `DC4/sources/Extragalactic/CenA` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/CenA_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| Crab_DC4 | `DC4/sources/Galactic/Crab` | re-simulate with the same source file (light-curve bug) |
+| Crab_DC4 | `DC4/sources/Galactic/Crab` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/Crab_DC4_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | Globular_Cluster_Tuc_47 | `DC3/sources/511/Globular_Cluster_Tuc_47` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_Tuc_47_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | Globular_Cluster_Omega_Cen | `DC3/sources/511/Globular_Cluster_Omega_Cen` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_Omega_Cen_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | Globular_Cluster_NGC_6397 | `DC3/sources/511/Globular_Cluster_NGC_6397` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_NGC_6397_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
@@ -47,8 +48,8 @@ Files:
 | Positrons_from_26Al_cont | `DC3/sources/511/Positrons_from_26Al_cont` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Positrons_from_26Al_cont_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | Positrons_from_44Ti_line | `DC3/sources/511/Positrons_from_44Ti_line` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Positrons_from_44Ti_line_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | Positrons_from_44Ti_cont | `DC3/sources/511/Positrons_from_44Ti_cont` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Positrons_from_44Ti_cont_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| PSRB1259 | `DC3/sources/Galactic/PSRB1259` | re-simulate with the same source file (light-curve bug) |
-| LS5039 | `DC3/sources/Galactic/LS5039` | re-simulate with the same source file (light-curve bug) |
+| PSRB1259 | `DC3/sources/Galactic/PSRB1259` | re-simulate with the same source file (time-chunk light-curve bug) |
+| LS5039 | `DC3/sources/Galactic/LS5039` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/LS5039_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | 26Al_NE2001 | `DC3/sources/Al26/26Al_NE2001` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/26Al_NE2001_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | 60Fe_Cyg_Region | `DC3/sources/Fe60/60Fe_Cyg_Region` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/60Fe_Cyg_Region_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | Narrow_Bulge_511 | `DC5/sources/511/NB_511` | re-simulate (511 keV map bug fixed) |
@@ -64,8 +65,8 @@ Files:
 | LMC_511 | `DC5/sources/511/LMC_511` | DC4 LMC_511 model replaced by the alternative DC3 LMC_Gaussian_511 definition, with flux x2 relative to DC3 (4.27e-06 -> 8.54e-06 ph/cm2/s; still below the SPI 2-sigma limit 3.6e-5, Siegert et al. 2016) |
 | M31_511 | `DC5/sources/511/M31_511` | DC4 M31_511 model replaced by the alternative DC3 M31_Gaussian_511 definition, with the Gaussian width reduced 1.0 -> 0.5 deg (emission concentrated in the M31 bulge); DC3 flux 2.13e-7 ph/cm2/s |
 | NGC_4151 | `DC5/sources/Extragalactic/NGC_4151` | thermal (Gamma=1.75, Ecut=200 keV) normalisation x1.5 (brighter state, Lubinski et al. 2010); non-thermal tail unchanged; flux 0.00188 -> 0.002726 ph/cm2/s |
-| 1RXSJ170849 | `DC5/sources/Galactic/1RXSJ170849` | flux 0.00033 -> 0.000247 ph/cm2/s (x0.75, long-term hard X-ray variability, den Hartog et al. 2008) |
-| magnetar2 | `DC5/sources/Galactic/magnetar2` | flux 0.00033 -> 0.000495 ph/cm2/s (x1.5) |
+| 1RXSJ170849 | `DC5/sources/Galactic/1RXSJ170849` | flux 0.00033 -> 0.000247 ph/cm2/s (x0.75, long-term hard X-ray variability, den Hartog et al. 2008); light curve trimmed to 235528 whole pulse periods so that the periodic repeat keeps the pulse phase continuous (DC4 period bug fix) |
+| magnetar2 | `DC5/sources/Galactic/magnetar2` | flux 0.00033 -> 0.000495 ph/cm2/s (x1.5); light curve trimmed to 109913 whole pulse periods so that the periodic repeat keeps the pulse phase continuous (DC4 period bug fix) |
 | Broad_Bulge_511 | `DC5/sources/511/BB_511` | 511 keV side nodes set to zero (bug fix) and broad-bulge intensity scaled x0.85; integrated flux 1.480e-03 -> 6.290e-04 ph/cm2/s |
 | nova_co_511keV | `DC5/sources/Galactic/nova_co_511keV` | flux 0.01537 -> 0.02305 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc) |
 | nova_co_continuum | `DC5/sources/Galactic/nova_co_continuum` | flux 0.1221 -> 0.1831 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc) |
@@ -109,33 +110,53 @@ Files:
 | Seyfert_new | (arbitrary) | l=31.746, b=-21.833 | Seyfert galaxy with Gamma=1.8, Ecut=300 keV, 3e-4 ph/cm2/s (a few times fainter than NGC 4151) |
 | 26Al_new_region | (arbitrary) | l=316.177, b=-0.02 | additional massive-star region: 4 deg Gaussian 1809 keV source, 1.5e-5 ph/cm2/s (similar to Carina / ~40% of Cygnus) |
 
-## GRBs (unchanged)
+## GRBs (Request 5)
+
+All 11 DC4 `GRB_bn` bursts keep their sky position, light-curve shape and 100 keV–10 MeV photon flux. Their trigger time, spectral parameters and polarization are new. Sources: `DC5/sources/GRBs/<name>`; the light-curve files are the DC3 ones with every time stamp shifted to the new trigger time.
+
+| GRB | Duration (s) | Day (DC4 → DC5) | Off-axis (deg) | Zenith (deg, DC5) | Spectrum α / β / Epeak (keV) | Pol. fraction, angle |
+|---|---|---|---|---|---|---|
+| bn100612726 | 10.8 | 48.80 → **4.17** | 23.5 → **39.3** | 39.9 | PL 2.49 → **PL 2.90** | 0.20, 35° → **0.78, 145°** |
+| bn180703876 | 19.5 | 37.64 → **4.23** | 24.8 → **21.1** | 40.5 | Band -0.78 / -1.97 / 287 → **Band -1.26 / -2.30 / 95** | 0.90, 25° → **0.30, 176°** |
+| bn180504136 | 25.6 | 18.34 → **4.41** | 12.6 → **13.8** | 23.6 | Band -0.74 / -2.12 / 113 → **Band -0.78 / -2.47 / 422** | 0.80, 45° → **0.46, 105°** |
+| bn110605183 | 44.3 | 75.18 → **4.62** | 39.8 → **14.0** | 20.9 | Band -0.61 / -2.22 / 109 → **Band -1.07 / -2.53 / 523** | 0.30, 50° → **0.73, 48°** |
+| bn080802386 | 0.5 | 1.07 → **6.19** | 20.6 → **6.1** | 27.2 | Band -0.74 / -2.10 / 622 → **Band -0.92 / -2.41 / 635** | 0.80, 90° → **0.16, 169°** |
+| bn161004964 | 19.0 | 87.36 → **6.41** | 15.0 → **58.5** | 59.2 | Band -0.81 / -2.39 / 114 → **Band -0.83 / -2.28 / 72** | 0.60, 10° → **0.18, 76°** |
+| bn081207680 | 89.0 | 12.68 → **6.71** | 5.3 → **4.3** | 25.9 | Band -0.59 / -2.10 / 298 → **Band -0.66 / -1.99 / 134** | 0.00, 0° → **0.83, 91°** |
+| bn131122490 | 32.9 | 77.81 → **6.75** | 0.0 → **0.4** | 21.9 | Band -0.90 / -2.29 / 258 → **Band -0.41 / -1.95 / 443** | 0.40, 175° → **0.65, 65°** |
+| bn090424592 | 9.9 | 24.38 → **7.19** | 20.6 → **23.5** | 35.8 | Band -1.02 / -2.76 / 164 → **Band -0.32 / -2.29 / 64** | 0.10, 110° → **0.03, 98°** |
+| bn140329295 | 7.9 | 26.08 → **7.82** | 8.2 → **23.4** | 27.4 | Band -0.81 / -2.25 / 193 → **Band -0.40 / -2.24 / 205** | 0.50, 95° → **0.50, 92°** |
+| bn170405777 | 88.1 | 75.40 → **7.96** | 59.7 → **23.2** | 44.1 | Band -0.80 / -2.35 / 222 → **Band -1.17 / -2.07 / 103** | 0.70, 160° → **0.39, 47°** |
+
+**Timing.** All DC5 GRBs fall on days 4.17–7.96, i.e. 3–7 days after the start of the DC4 orientation file (unix 1835487300), within the first week covered by the ACS background simulations and after several days of activation build-up. Consecutive bursts are at least 1 h apart, and each burst has livetime > 0 (no SAA) from 5 min before to 5 min after.
+
+**Off-axis angles and field of view.** The off-axis angle is the angle between the COSI z-axis (from the orientation file, same column convention as `cosipy.spacecraftfile.SpacecraftHistory`) and the GRB position. DC4: 0.0, 5.3, 8.2, 12.6, 15.0, 20.6, 20.6, 23.5, 24.8, 39.8, 59.7 deg (median 20.6). DC5: 0.4, 4.3, 6.1, 13.8, 14.0, 21.1, 23.2, 23.4, 23.5, 39.3, 58.5 deg (median 21.1). The DC5 times were drawn so that each burst lands within ±2 deg of a target angle (the DC4 set jittered by ±3 deg and randomly reassigned), with the off-axis angle ≤ 60 deg and the zenith angle ≤ 100 deg (Earth occultation sets in at ~113 deg) for the full burst, and no slew during the burst.
+
+**Spectra.** Same spectral model as in DC4 (10 Band, 1 power law). Band parameters are drawn from the Fermi GBM 10-year spectral catalog (Poolakkil et al. 2021, fluence spectra): long bursts α ~ N(−0.84, 0.35) in [−1.5, −0.3], log Epeak ~ N(log 144 keV, 0.38 dex) in [60, 1200] keV; the short burst bn080802386 α ~ N(−0.46, 0.45), log Epeak ~ N(log 413 keV, 0.35 dex); β ~ N(−2.3, 0.3) in [−3.2, −1.95]. The power-law index of bn100612726 follows the high-energy slope distribution, N(2.3, 0.25) in [1.9, 2.9], because COSI only sees the spectrum above 100 keV.
+
+**Polarization.** The DC4 polarization fractions are spread uniformly between 0 and 0.9 (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.8, 0.9). The DC5 fractions are drawn from the same distribution, stratified uniform on [0, 0.9] (0.03, 0.16, 0.18, 0.30, 0.39, 0.46, 0.50, 0.65, 0.73, 0.78, 0.83). Angles are uniform in [0, 180) deg.
+
+**Fix.** The DC3 bn180703876 source file declared `EarthOccultation` for the wrong component (`bn090424592`); the DC5 file uses the correct name.
+
+## Magnetar bursts (unchanged, half kept)
 | Component | Source path | Action |
 |---|---|---|
-| GRB_bn081207680 | `DC3/sources/GRBs/bn081207680` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn081207680_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_bn090424592 | `DC3/sources/GRBs/bn090424592` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn090424592_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_bn100612726 | `DC3/sources/GRBs/bn100612726` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn100612726_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_bn110605183 | `DC3/sources/GRBs/bn110605183` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn110605183_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_bn131122490 | `DC3/sources/GRBs/bn131122490` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn131122490_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_bn140329295 | `DC3/sources/GRBs/bn140329295` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn140329295_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_bn161004964 | `DC3/sources/GRBs/bn161004964` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn161004964_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_bn170405777 | `DC3/sources/GRBs/bn170405777` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn170405777_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_bn180504136 | `DC3/sources/GRBs/bn180504136` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn180504136_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_bn180703876 | `DC3/sources/GRBs/bn180703876` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn180703876_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_bn080802386_flux150 | `DC3/sources/GRBs/bn080802386` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_bn080802386_flux150_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_MGF051103 | `DC3/sources/GRBs/MGF051103` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_MGF051103_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_MGF070201 | `DC3/sources/GRBs/MGF070201` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_MGF070201_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_MGF070222 | `DC3/sources/GRBs/MGF070222` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_MGF070222_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_MGF180128A | `DC3/sources/GRBs/MGF180128A` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_MGF180128A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_MGF200415A | `DC3/sources/GRBs/MGF200415A` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_MGF200415A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_MGF231115A | `DC3/sources/GRBs/MGF231115A` | reuse DC3 event file COSI-SMEX/DC3/Data/Sources/GRB_MGF231115A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| MgtBurst_bright_complex | `DC3/sources/GRBs/MgtBurst_bright_complex` | reuse DC4 event file COSI-SMEX/DC4/Data/Sources/MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz (uses a light curve: check against the light-curve bug) |
+| GRB_MGF051103 | `DC3/sources/GRBs/MGF051103` | reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF051103_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
+| GRB_MGF180128A | `DC3/sources/GRBs/MGF180128A` | reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF180128A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
+| GRB_MGF200415A | `DC3/sources/GRBs/MGF200415A` | reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF200415A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
+| MgtBurst_bright_complex | `DC3/sources/GRBs/MgtBurst_bright_complex` | reuse event file COSI-SMEX/DC4/Data/Sources/MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz |
 
-## Request 2 — DC4 mock sources (non-GRB) with a light curve
-These must be re-simulated once the light-curve bug is fixed: Crab (P1, bridge, P2), 1RXSJ170849, magnetar2, 3C454p3_low, 3C454p3_high, nova_co_511keV, nova_co_continuum, nova_co_478keV, 4C21p35_noflare, 4C21p35_flare, PSRB1259, LS5039, PSRJ1846, MAXIJ1820, MAXIJ1348 (16 files). MgtBurst_bright_complex (GRB directory) also uses a light curve. In DC5, PSRJ1846 and MAXIJ1348 are removed; the new PSRB1509 also uses (periodic) light curves.
+Not included in DC5 (random draw, seed 2367866795): GRB_MGF070201, GRB_MGF070222, GRB_MGF231115A. Four of the seven DC4 magnetar bursts are kept (half, rounded up).
 
-## Request 3 — bug fixes and verification
-**In-flight annihilation position.** `DC5/sources/511/Positrons_In_Flight_Annihilation` now declares `Galactic Fixed -0.2 -1.4`. MEGAlib reads Galactic Fixed as (b, l): every other library source follows this order, e.g. the Crab `-5.78434 184.5575` (l = 184.56°, b = −5.78°, recomputed independently from RA/Dec with `scripts/eq2gal.py`), the LMC `-32.89 280.46` and Kepler `6.8 4.5`. The source is therefore centred at (l, b) = (−1.4°, −0.2°) as intended. The final check is a short cosima run (a few minutes on one core) imaged with mimrec; this was not possible here because MEGAlib is not installed in this environment.
+## Light-curve bugs — what needs to be re-simulated
+From the [bug report](https://github.com/cositools/cosi-data-challenges/blob/develop/README.md#bug-report):
+
+- **Time-chunk normalisation bug:** nova_co (all three components), 3C454p3 (low/high), 4C21p35 (flare/no flare), PSRB1259, MAXIJ1820, MAXIJ1348. In DC5, 3C454p3 and PSRB1259 are reused and must be re-simulated with the same source file. nova_co, 4C21p35 and MAXIJ1820 are modified, so they are simulated anyway. MAXIJ1348 is removed. Any light-curve source simulated in time chunks must use the corrected normalisation.
+- **Period bug:** 1RXSJ170849 and magnetar2 (both modified in DC5). Their light curves repeat periodically, but the DC4 files covered a non-whole number of rotations (235528.7 periods over 30 days and 109913.4 over 7 days), so the pulse phase jumped at every repeat. The DC5 copies are cut at 235528 and 109913 whole periods, ending on the phase-0 value (`scripts/fix_magnetar_lightcurves.py`). The time-averaged light curve stays at 1.000000, so the Flux keyword is unchanged in meaning.
+- **Not affected:** the Crab (all components), LS5039 and PSRJ1846 (simulated by splitting the flux), and all GRBs and magnetar bursts (no splitting). The Crab and LS5039 reuse their DC4/DC3 event files; PSRJ1846 is removed.
+
+## 511 keV and in-flight annihilation bug fixes
+**In-flight annihilation position.** `DC5/sources/511/Positrons_In_Flight_Annihilation` now declares `Galactic Fixed -0.2 -1.4`. MEGAlib reads Galactic Fixed as (b, l): every other library source follows this order, e.g. the Crab `-5.78434 184.5575` (l = 184.56°, b = −5.78°, recomputed independently from RA/Dec with `scripts/eq2gal.py`), the LMC `-32.89 280.46` and Kepler `6.8 4.5`. The source is therefore centred at (l, b) = (−1.4°, −0.2°) as intended. The final check is a short cosima run (a few minutes on one core) imaged with mimrec; MEGAlib was not available where this directory was built.
 
 **511 keV line maps.** The 510 and 512 keV nodes were set to zero, so the linearly interpolated line contains exactly the 511 keV node value per keV. Integrated fluxes (from `scripts/mapflux.py`):
 
