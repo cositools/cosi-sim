@@ -21,7 +21,7 @@ Files:
 - `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (80 entries; checked with `Setup.setup_srcs()`).
 - `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do (simulate / re-simulate / reuse the existing DC3/DC4 event file).
 - `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json` — machine-readable record of the draws and of every change.
-- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate).
+- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → draw_dc5_grbs → build_dc5_grbs → dm/run_dm_choice → dm/build_dc5_dm → write_manifest → write_readmes → write_dc5_readme.
 - `sources/` — one directory per modified, bug-fixed or new source, each with a `README_DC5.md` describing the model, the change, and references.
 
 ## Reused sources (same source files)
