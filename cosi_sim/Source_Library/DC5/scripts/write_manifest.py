@@ -131,11 +131,12 @@ for q in NEW: rows.append(("new", os.path.basename(q), q, "simulate DC5 source f
 for lab, d in GRB_BN:
     g = grbdraw["grbs"][d]["dc5"]
     rows.append(("GRB (modified)", lab, "DC5/sources/GRBs/" + d,
-                 f"simulate DC5 source file (day {g['day']:.2f}, off-axis {g['offaxis']:.1f} deg)"))
+                 f"simulate DC5 source file with the time-shifted inputs, t_ref = 1835487300.0 (day {g['day']:.2f}, off-axis {g['offaxis']:.1f} deg)"))
 for lab, d, w in MAGNETAR:
     if d in grbdraw["magnetar_kept"]:
         ev = f"{w}{lab}{sfx}" if w == W3 else f"{W4}MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz"
-        rows.append(("magnetar burst (unchanged)", lab, "DC3/sources/GRBs/" + d, f"reuse event file {ev}"))
+        rows.append(("magnetar burst (unchanged)", lab, "DC5/sources/GRBs/" + d,
+                     f"unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file {ev})"))
     else:
         rows.append(("removed", lab, "-", "magnetar burst not included in DC5 (half of the DC4 magnetar bursts kept)"))
 

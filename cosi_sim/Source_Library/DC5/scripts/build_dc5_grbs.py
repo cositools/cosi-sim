@@ -7,6 +7,9 @@ For each DC4 GRB_bn burst, DC5/sources/GRBs/<name>/ gets
   <name>.source           same structure as the DC3 file; new Spectrum and Polarization lines
   <name>_lightcurve.dat   DC3 light curve with all times shifted to the DC5 trigger time
   README_DC5.md           model, DC4 -> DC5 changes, geometry, references
+
+Run scripts/make_sim_time_inputs.py afterwards: it adds the time-shifted MEGAlib inputs and points the
+source files to the shifted light curves (rerunning this script resets them to absolute times).
 """
 import os, sys, re, json
 

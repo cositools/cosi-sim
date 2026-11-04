@@ -21,7 +21,7 @@ Files:
 - `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (80 entries; checked with `Setup.setup_srcs()`).
 - `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do (simulate / re-simulate / reuse the existing DC3/DC4 event file).
 - `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json` — machine-readable record of the draws and of every change.
-- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → draw_dc5_grbs → build_dc5_grbs → dm/run_dm_choice → dm/build_dc5_dm → write_manifest → write_readmes → write_dc5_readme.
+- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → write_manifest → write_readmes → write_dc5_readme.
 - `sources/` — one directory per modified, bug-fixed or new source, each with a `README_DC5.md` describing the model, the change, and references.
 
 ## Reused sources (same source files)
@@ -145,15 +145,25 @@ All 11 DC4 `GRB_bn` bursts keep their light-curve shape and spectral model. Thei
 
 **Polarization.** The DC4 polarization fractions are spread uniformly between 0 and 0.9 (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.8, 0.9). The DC5 fractions are drawn from the same distribution, stratified uniform on [0, 0.9] (0.00, 0.09, 0.22, 0.31, 0.34, 0.41, 0.56, 0.65, 0.66, 0.74, 0.88). Angles are uniform in [0, 180) deg.
 
+**MEGAlib simulation inputs (Request 7).** MEGAlib has trouble simulating short bursts at large absolute unix times, so every GRB and magnetar-burst directory holds inputs in times relative to **t_ref = 1835487300.0**, the first time of the orientation file:
+- `<light curve>_shifted.dat`: the light curve with time − t_ref; the source file points to it, and the original light curve is kept;
+- `DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori`: the orientation file for the Cosima run, cut to 3–8 rows (15 s steps) covering the burst, with time − t_ref. `..._cut.ori` holds the same rows with absolute times;
+- `sim_time_reference.txt`: t_ref and the burst window, absolute and shifted.
+
+After the Cosima run, add t_ref to the simulated times. The files were made with `scripts/make_sim_time_inputs.py` from the 9-column `DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori`, which matches the DC4 orientation file without the livetime column. The method is the same as `cut_ori.py` and `shift_times.py`, and the outputs are byte-identical where those scripts run. Two cases differ: bursts shorter than the 15 s step keep the bracketing rows (at least 3), and the light curves of MGF180128A and MGF200415A, which have no `EN` footer, get their last data point shifted too.
+
 **Fix.** The DC3 bn180703876 source file declared `EarthOccultation` for the wrong component (`bn090424592`); the DC5 file uses the correct name.
 
 ## Magnetar bursts (unchanged, half kept)
+
+The models are unchanged from DC3/DC4. The kept bursts are copied to `DC5/sources/GRBs/<name>` only to add the time-shifted MEGAlib simulation inputs (see the GRB section).
+
 | Component | Source path | Action |
 |---|---|---|
-| GRB_MGF051103 | `DC3/sources/GRBs/MGF051103` | reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF051103_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_MGF180128A | `DC3/sources/GRBs/MGF180128A` | reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF180128A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| GRB_MGF200415A | `DC3/sources/GRBs/MGF200415A` | reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF200415A_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| MgtBurst_bright_complex | `DC3/sources/GRBs/MgtBurst_bright_complex` | reuse event file COSI-SMEX/DC4/Data/Sources/MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz |
+| GRB_MGF051103 | `DC5/sources/GRBs/MGF051103` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF051103_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| GRB_MGF180128A | `DC5/sources/GRBs/MGF180128A` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF180128A_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| GRB_MGF200415A | `DC5/sources/GRBs/MGF200415A` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF200415A_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| MgtBurst_bright_complex | `DC5/sources/GRBs/MgtBurst_bright_complex` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC4/Data/Sources/MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz) |
 
 Not included in DC5 (random draw, seed 3662968627): GRB_MGF070201, GRB_MGF070222, GRB_MGF231115A. Four of the seven DC4 magnetar bursts are kept (half, rounded up).
 

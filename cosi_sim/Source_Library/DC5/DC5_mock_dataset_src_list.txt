@@ -77,8 +77,8 @@
 'DC5/sources/GRBs/bn180504136',
 'DC5/sources/GRBs/bn180703876',
 'DC5/sources/GRBs/bn080802386',
-'DC3/sources/GRBs/MGF051103',
-'DC3/sources/GRBs/MGF180128A',
-'DC3/sources/GRBs/MGF200415A',
-'DC3/sources/GRBs/MgtBurst_bright_complex'
+'DC5/sources/GRBs/MGF051103',
+'DC5/sources/GRBs/MGF180128A',
+'DC5/sources/GRBs/MGF200415A',
+'DC5/sources/GRBs/MgtBurst_bright_complex'
 ]
