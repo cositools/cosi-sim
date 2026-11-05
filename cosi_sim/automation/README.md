@@ -61,7 +61,8 @@ Progress is stored in `<run_dir>/automation.json`. Logs are in `<run_dir>/logs/`
 ## Commands
 
 ```bash
-python run_pipeline.py submit   <dirs> [--chain] [--dry-run] [--force]
+python run_pipeline.py submit   <dirs> [--max-jobs N | --no-queue | --chain] [--dry-run] [--force]
+python run_pipeline.py fill     <sim_root>
 python run_pipeline.py status   <dirs>
 python run_pipeline.py check    <dirs>
 python run_pipeline.py finish   <run_dir> [--from check|mimrec|cosipy|copy] [--no-resubmit]
@@ -71,9 +72,29 @@ python run_pipeline.py cancel   <dirs>
 
 `<dirs>` can be source directories or any directory above them (the simulation root, a class directory).
 
-- `--chain` starts each source's sims only after the previous source's sims have ended. Use it to queue many sources without exceeding per-user job limits.
+- `--max-jobs N` (or `slurm.max_jobs` in the config) turns on rolling submission, below. `--no-queue` ignores `slurm.max_jobs` and submits everything at once.
+- `--chain` starts each source's sims only after the previous source's sims have ended. This limits how many jobs *run* at once, but all chained jobs are still *submitted* (pending), so it does not help with a limit on submitted jobs such as Palmetto's.
 - `finish` can be run by hand (e.g. on an interactive node). It continues from the first step that has not completed.
 - `resubmit` resubmits only the failed sims, plus a new post-processing job, and resets the automatic retry count.
+
+## Rolling submission (job limits)
+
+SLURM clusters usually cap how many jobs one user can have pending + running, and every array task counts. On Palmetto 2 the `normal` QOS of the `work1` partition has `MaxSubmitPU = 3000`, so with `num_sims: 1000` (about 1002 jobs per source) only two sources fit at once; a third `sbatch` is rejected. Check your cluster with:
+
+```bash
+scontrol show partition work1 | grep -i qos
+sacctmgr show qos format=name%20,maxsubmitpu,maxjobspu
+```
+
+Set `slurm.max_jobs` a little below that limit (e.g. 2900, leaving room for resubmissions and interactive jobs) and submit everything once:
+
+```bash
+python run_pipeline.py submit /path/to/simulations
+```
+
+The sources go into a queue file, `<sim_root>/pipeline_queue.json`, and are submitted in order while your total job count (`squeue`, all your jobs) stays at or below `max_jobs`. A smaller source, such as a GRB, can go ahead of a large one that does not fit yet. Each post-processing job submits the next waiting sources once its own sims have left the queue (after the check step), and again when it ends. There is no polling: at most two `squeue` calls per post-processing job.
+
+Waiting sources show as `waiting` in `status`. If none of a queue's sources is running (e.g. your other jobs used the whole budget when you submitted), nothing will submit the waiting ones; `status` then tells you to run `run_pipeline.py fill <sim_root>`. `cancel` on a waiting source removes it from the queue.
 
 ## Notes
 

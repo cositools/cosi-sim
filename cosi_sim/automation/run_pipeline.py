@@ -2,7 +2,8 @@
 """
 Run the cosi-sim pipeline for sources prepared with setup_sims.py.
 
-    python run_pipeline.py submit  <targets> [--chain]   # submit sims + post-processing
+    python run_pipeline.py submit  <targets> [--max-jobs N | --chain]   # submit sims + post-processing
+    python run_pipeline.py fill    <sim_root>            # submit waiting sources that fit now
     python run_pipeline.py status  <targets>             # progress of each source
     python run_pipeline.py check   <targets>             # check the sim outputs only
     python run_pipeline.py finish  <run_dir> [--from STEP] [--no-resubmit]
@@ -27,6 +28,12 @@ post-processing job runs `finish`, which
      in the MEGAlib environment;
   3. runs cosipy read_tra and cut_SAA_events in the cosipy environment;
   4. copies the *_with_SAAcut file to products_dir.
+
+Rolling submission (optional): with slurm.max_jobs in the config, or
+--max-jobs N, sources are queued and submitted only while your SLURM jobs
+(pending + running, array tasks counted separately) stay <= N. Each
+post-processing job submits the next waiting sources once its own sims have
+left the queue, so a whole data challenge can be submitted with one command.
 
 Each step is recorded in <run_dir>/automation.json, so `finish` can be rerun
 by hand and continues from the first step that has not completed
@@ -265,6 +272,156 @@ def submit_sim_jobs(state, indices=None, depend_on=None, dry_run=False, note=Non
 
 
 # ---------------------------------------------------------------------------
+# Rolling submission (optional; enabled with max_jobs / --max-jobs)
+# ---------------------------------------------------------------------------
+#
+# SLURM limits how many jobs a user may have pending + running (on Palmetto 2:
+# MaxSubmitPU = 3000, counting every array task). With max_jobs set, `submit`
+# puts the sources in a queue file next to the class directories
+# (<sim_root>/pipeline_queue.json) and submits only what fits. Each source's
+# post-processing job then submits the next waiting sources, once its own sims
+# have left the queue. Nothing polls: there is one squeue call per fill.
+
+QUEUE_FILE = "pipeline_queue.json"
+
+
+def queue_path_for(run_dir):
+    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(run_dir))), QUEUE_FILE)
+
+
+def jobs_needed(state):
+    return state["njobs"] + 1          # array tasks (or the GRB job) + post-processing job
+
+
+class LockedQueue:
+    """Context manager: load, lock, and save the queue file."""
+
+    def __init__(self, path):
+        self.path = path
+
+    def __enter__(self):
+        self.lock = open(self.path + ".lock", "w")
+        try:
+            fcntl.flock(self.lock, fcntl.LOCK_EX)
+        except OSError:
+            pass
+        if os.path.exists(self.path):
+            with open(self.path) as f:
+                self.queue = json.load(f)
+        else:
+            self.queue = {"max_jobs": None, "waiting": [], "history": []}
+        return self.queue
+
+    def __exit__(self, *exc):
+        tmp = self.path + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(self.queue, f, indent=2)
+        os.replace(tmp, self.path)
+        self.lock.close()
+        return False
+
+
+def count_my_jobs():
+    """Number of this user's pending + running jobs, counting array tasks separately."""
+    user = os.environ.get("USER") or os.environ.get("LOGNAME")
+    cmd = ["squeue", "-h", "-r", "-o", "%i"] + (["-u", user] if user else ["--me"])
+    out = subprocess.run(cmd, capture_output=True, text=True)
+    if out.returncode != 0:
+        raise SubmitError("squeue failed: %s" % (out.stderr or out.stdout).strip())
+    return sum(1 for line in out.stdout.splitlines() if line.strip())
+
+
+def fill_queue(path):
+    """Submit waiting sources while they fit under max_jobs. Returns the run dirs submitted."""
+    if not os.path.exists(path):
+        return []
+    with LockedQueue(path) as q:
+        if not q["waiting"]:
+            return []
+        try:
+            used = count_my_jobs()
+        except SubmitError as err:
+            q["history"].append("%s  ERROR: %s; nothing submitted" % (now(), err))
+            print("ERROR: %s" % err)
+            return []
+        start = used
+        submitted, remaining = [], []
+        waiting = list(q["waiting"])
+        for k, run_dir in enumerate(waiting):
+            state = load_state(run_dir)
+            if state["stage"] != "waiting":          # cancelled or submitted another way
+                continue
+            need = jobs_needed(state)
+            if used + need > q["max_jobs"]:
+                remaining.append(run_dir)           # keep looking: a smaller source may fit
+                continue
+            name = "%s/%s" % (state["class"], state["source_name"])
+            update_state(run_dir, stage="submitted", attempt=0, completed=[])
+            try:
+                sim_id, post_id = submit_sim_jobs(state)
+            except SubmitError as err:
+                if err.sim_id is None:              # rejected: keep it and the rest waiting
+                    update_state(run_dir, stage="waiting", message="%-40s ERROR: %s" % (name, err))
+                    remaining += [d for d in waiting[k:] if d not in remaining]
+                    break
+                used += need                        # sims queued; reported as post_not_submitted
+                continue
+            update_state(run_dir, message="%-40s submitted from the queue: sims %s (%d), post-processing %s"
+                         % (name, sim_id, state["njobs"], post_id))
+            used += need
+            submitted.append(run_dir)
+        q["waiting"] = remaining
+        q["history"].append("%s  %d jobs in SLURM before, %d after; submitted %d source(s), %d waiting"
+                            % (now(), start, used, len(submitted), len(remaining)))
+    return submitted
+
+
+def enqueue(run_dirs, max_jobs, force=False):
+    """Mark sources as waiting in their queue files, then fill each queue."""
+    queues = {}
+    for run_dir in run_dirs:
+        state = load_state(run_dir)
+        name = "%s/%s" % (state["class"], state["source_name"])
+        if state["stage"] not in ("setup",) and not force:
+            print("%-40s skipped (stage: %s; use --force to submit again)" % (name, state["stage"]))
+            continue
+        if jobs_needed(state) > max_jobs:
+            print("%-40s skipped: needs %d jobs, more than max_jobs = %d"
+                  % (name, jobs_needed(state), max_jobs))
+            continue
+        path = queue_path_for(run_dir)
+        update_state(run_dir, stage="waiting", queue_file=path, attempt=0, completed=[])
+        queues.setdefault(path, []).append(run_dir)
+    for path, dirs in queues.items():
+        with LockedQueue(path) as q:
+            q["max_jobs"] = max_jobs
+            q["waiting"] += [d for d in dirs if d not in q["waiting"]]
+            q["history"].append("%s  %d source(s) added, max_jobs %d" % (now(), len(dirs), max_jobs))
+        submitted = fill_queue(path)
+        with open(path) as f:
+            n_wait = len(json.load(f)["waiting"])
+        print("Queue %s: %d source(s) submitted now, %d waiting (max_jobs %d)."
+              % (path, len(submitted), n_wait, max_jobs))
+        if n_wait:
+            active = ("submitted", "resubmitted", "checking", "mimrec", "cosipy")
+            running = [d for d in find_run_dirs([os.path.dirname(path)])
+                       if load_state(d).get("queue_file") == path and load_state(d)["stage"] in active]
+            if running:
+                print("The waiting sources are submitted automatically as running sources finish.")
+            else:
+                print("None of these sources is running yet (your other jobs fill the budget), so run\n"
+                      "    python %s fill %s\nonce some of your jobs have ended."
+                      % (os.path.abspath(__file__), os.path.dirname(path)))
+
+
+def fill_for(state):
+    """Called by the post-processing job: submit waiting sources of this source's queue."""
+    path = state.get("queue_file")
+    if path:
+        fill_queue(path)
+
+
+# ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
 
@@ -272,6 +429,21 @@ def cmd_submit(args):
     run_dirs = find_run_dirs(args.targets)
     if not run_dirs:
         sys.exit("No prepared sources found (run setup_sims.py first).")
+    max_jobs = args.max_jobs
+    if max_jobs is None and not args.no_queue:
+        max_jobs = load_state(run_dirs[0])["slurm"].get("max_jobs")
+    if max_jobs:
+        if args.chain:
+            sys.exit("--chain and max_jobs (rolling submission) cannot be combined; use one or the other.")
+        if args.dry_run:
+            for run_dir in run_dirs:
+                state = load_state(run_dir)
+                print("    [dry run] queue %s/%s (%d jobs)" % (state["class"], state["source_name"],
+                                                             jobs_needed(state)))
+            print("    [dry run] sources are submitted while your SLURM jobs stay <= %d" % max_jobs)
+            return 0
+        enqueue(run_dirs, int(max_jobs), force=args.force)
+        return 0
     previous = None
     errors = 0
     for run_dir in run_dirs:
@@ -331,6 +503,19 @@ def cmd_status(args):
         final = state.get("final_file") or ""
         print("%-42s %-5s %-6d %-11s %-18s %s" % (name, state["mode"], state["njobs"], ok,
                                                 state["stage"], os.path.basename(final)))
+    queues = list(dict.fromkeys(load_state(d).get("queue_file") for d in run_dirs if load_state(d).get("queue_file")))
+    active = ("submitted", "resubmitted", "checking", "mimrec", "cosipy")
+    for path in queues:
+        if not os.path.exists(path):
+            continue
+        with open(path) as f:
+            q = json.load(f)
+        if not q["waiting"]:
+            continue
+        print("\n%d source(s) waiting in %s (max_jobs %s)." % (len(q["waiting"]), path, q["max_jobs"]))
+        if not any(load_state(d)["stage"] in active for d in run_dirs if load_state(d).get("queue_file") == path):
+            print("No source of this queue is running, so nothing will submit them; run:\n"
+                  "    python %s fill %s" % (os.path.abspath(__file__), os.path.dirname(path)))
 
 
 def run_in_env(env_script, command, run_dir, log_path):
@@ -350,7 +535,7 @@ def fail(run_dir, stage, message):
     return 1
 
 
-def cmd_finish(args):
+def _finish(args):
     run_dir = os.path.abspath(args.run_dir)
     state = load_state(run_dir)
 
@@ -403,6 +588,8 @@ def cmd_finish(args):
                         % (len(failed), compress_ranges(failed), attempt, run_dir))
         completed.append("check")
         commit(message="all %d sims ok" % state["njobs"], completed=list(completed))
+        # The sims have left the SLURM queue: let waiting sources use the slots.
+        fill_for(state)
 
     # 2. mimrec + overflow filter (MEGAlib environment).
     #    post_megalib.py removes old outputs first and checks that mimrec wrote a new file.
@@ -452,6 +639,36 @@ def cmd_finish(args):
     return 0
 
 
+def cmd_finish(args):
+    try:
+        return _finish(args)
+    finally:
+        # Waiting sources (rolling submission) get any slots freed meanwhile.
+        fill_for(load_state(os.path.abspath(args.run_dir)))
+
+
+def cmd_fill(args):
+    paths = []
+    for target in args.targets:
+        direct = os.path.join(os.path.abspath(target), QUEUE_FILE)
+        if os.path.exists(direct):
+            paths.append(direct)
+    for run_dir in find_run_dirs(args.targets):
+        path = load_state(run_dir).get("queue_file")
+        if path:
+            paths.append(path)
+    paths = list(dict.fromkeys(paths))
+    if not paths:
+        print("No queue found.")
+        return 0
+    for path in paths:
+        submitted = fill_queue(path)
+        with open(path) as f:
+            n_wait = len(json.load(f)["waiting"])
+        print("Queue %s: %d source(s) submitted, %d waiting." % (path, len(submitted), n_wait))
+    return 0
+
+
 def cmd_resubmit(args):
     run_dir = os.path.abspath(args.run_dir)
     state = load_state(run_dir)
@@ -478,6 +695,11 @@ def cmd_resubmit(args):
 def cmd_cancel(args):
     for run_dir in find_run_dirs(args.targets):
         state = load_state(run_dir)
+        if state["stage"] == "waiting":
+            with LockedQueue(state["queue_file"]) as q:
+                q["waiting"] = [d for d in q["waiting"] if d != run_dir]
+            update_state(run_dir, stage="setup", message="removed from the submission queue")
+            continue
         jobs = state.get("jobs", [])
         if not jobs:
             continue
@@ -495,8 +717,16 @@ def main(argv=None):
     s.add_argument("--chain", action="store_true",
                    help="start each source's sims only after the previous source's sims end")
     s.add_argument("--force", action="store_true", help="submit even if already submitted")
+    s.add_argument("--max-jobs", type=int, default=None,
+                   help="rolling submission: keep your SLURM jobs (pending + running) at or below this "
+                        "(default: slurm.max_jobs from the config)")
+    s.add_argument("--no-queue", action="store_true", help="ignore slurm.max_jobs and submit everything now")
     s.add_argument("--dry-run", action="store_true", help="print the sbatch commands only")
     s.set_defaults(func=cmd_submit)
+
+    s = sub.add_parser("fill", help="submit waiting sources that fit (rolling submission)")
+    s.add_argument("targets", nargs="+", help="simulation root, class or source directories")
+    s.set_defaults(func=cmd_fill)
 
     s = sub.add_parser("status", help="show progress")
     s.add_argument("targets", nargs="+")

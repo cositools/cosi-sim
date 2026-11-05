@@ -72,11 +72,20 @@ slurm:
   # Random delay (s) at the start of each array task, to spread the load.
   start_jitter: 60
 
-  # Maximum number of array tasks running at once (null = no limit).
+  # Maximum number of array tasks of one source running at once (null = no limit).
   array_throttle: null
 
   # Failed sims are resubmitted automatically up to this many times.
   max_retries: 2
+
+  # Rolling submission (optional). SLURM limits how many jobs you may have
+  # pending + running at once, counting every array task (Palmetto 2: 3000,
+  # QOS "normal", MaxSubmitPU). With max_jobs set, `run_pipeline.py submit`
+  # queues all sources and submits them only while your jobs stay <= max_jobs;
+  # each source's post-processing job submits the next ones. Leave some room
+  # for resubmissions and interactive jobs (e.g. 2900 for a limit of 3000).
+  # null = submit everything at once.
+  max_jobs: null
 
 # Python used by the post-processing job before any environment is sourced.
 # run_pipeline.py only needs the standard library.

@@ -57,7 +57,7 @@ REQUIRED_CONFIG = ["sim_root", "products_dir", "inputs_template", "cosipy_templa
 SLURM_DEFAULTS = {"extra_directives": [], "sim_time": "0:55:00", "sim_mem": "3G",
                   "flux_time": "0:55:00", "flux_mem": "3G", "grb_time": "2:00:00", "grb_mem": "8G",
                   "post_time": "12:00:00", "post_mem": "32G", "start_jitter": 60,
-                  "array_throttle": None, "max_retries": 2}
+                  "array_throttle": None, "max_retries": 2, "max_jobs": None}
 
 
 class SetupError(Exception):
