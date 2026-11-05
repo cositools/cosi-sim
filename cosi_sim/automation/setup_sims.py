@@ -111,6 +111,9 @@ def check_paths(cfg, template):
         problems.append("cosipy template ori_file: %s" % ori)
     if problems:
         sys.exit("These paths do not exist:\n  " + "\n  ".join(problems))
+    if template.get("run_nuc"):
+        sys.exit("inputs template has run_nuc: True. The nuclearizer (2016 balloon data) is not part of "
+                 "this automated workflow; set run_nuc: False.")
 
 
 def read_source_list(args):
@@ -311,14 +314,23 @@ def post_megalib_py(cfg, sim_name):
             "import os, sys\n"
             "from cosi_sim.pipeline.simulate import Simulate\n\n"
             "revan_geo = %s\n"
+            "extracted = \"Output/%s.inc1.id1.extracted.tra.gz\"\n"
+            "filtered = \"Output/%s.inc1.id1.extracted.filtered.tra.gz\"\n\n"
+            "# Remove outputs of an earlier run, so a failed mimrec cannot leave a stale file:\n"
+            "for old in (extracted, filtered):\n"
+            "    if os.path.exists(old):\n"
+            "        os.remove(old)\n\n"
             "instance = Simulate(\"inputs.yaml\")\n"
             "instance.name = %s\n"
-            "instance.run_mimrec(extract_root=True, geo_file=revan_geo)\n\n"
+            "instance.run_mimrec(extract_root=True, geo_file=revan_geo)\n"
+            "if not os.path.isfile(extracted) or os.path.getsize(extracted) == 0:\n"
+            "    sys.exit(\"mimrec did not write \" + extracted)\n\n"
             "os.chdir(\"Output\")\n"
             "code = os.system(f\"python %s -f %s.inc1.id1.extracted.tra.gz -g {revan_geo}\")\n"
             "os.chdir(\"../\")\n"
             "sys.exit(1 if code else 0)\n"
-            % (json.dumps(cfg["revan_geometry"]), json.dumps(sim_name), cfg["overflow_filter"], sim_name))
+            % (json.dumps(cfg["revan_geometry"]), sim_name, sim_name, json.dumps(sim_name),
+               cfg["overflow_filter"], sim_name))
 
 
 def post_cosipy_py(label):
@@ -417,9 +429,15 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     run_dir = os.path.join(cfg["sim_root"], cls, name)
     num_sims = int(cfg["num_sims"])
 
-    if os.path.isfile(os.path.join(run_dir, STATE_FILE)) and not force:
-        stage = load_state(run_dir)["stage"]
-        raise SetupError("already set up in %s (stage: %s); use --force to redo it" % (run_dir, stage))
+    if os.path.isfile(os.path.join(run_dir, STATE_FILE)):
+        existing = load_state(run_dir)
+        if existing["source"] != src:
+            # Never let one library source replace another (e.g. DC2 and DC4 Galactic/Crab):
+            raise SetupError("%s is already used by %s; use another sim_root or class_map for this source"
+                             % (run_dir, existing["source"]))
+        if not force:
+            raise SetupError("already set up in %s (stage: %s); use --force to redo it"
+                             % (run_dir, existing["stage"]))
 
     t_ref, grb_ori = None, None
     if mode == "grb":
@@ -534,6 +552,13 @@ def main(argv=None):
     check_paths(cfg, template)
 
     failed = []
+    targets = {}
+    for src, mode in entries:
+        run_dir = os.path.join(cfg["sim_root"], class_name(src, cfg), os.path.basename(src))
+        if run_dir in targets and targets[run_dir] != src:
+            sys.exit("%s and %s would both use %s; simulate them in separate sim_roots (or use class_map)."
+                     % (targets[run_dir], src, run_dir))
+        targets[run_dir] = src
     for src, mode in entries:
         try:
             setup_source(src, mode, cfg, template_text, template, force=args.force, dry_run=args.dry_run)

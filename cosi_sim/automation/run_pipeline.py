@@ -37,6 +37,7 @@ This file only uses the Python standard library.
 
 import argparse
 import datetime
+import fcntl
 import glob
 import json
 import os
@@ -68,6 +69,27 @@ def save_state(run_dir, state):
     with open(tmp, "w") as f:
         json.dump(state, f, indent=2)
     os.replace(tmp, path)
+
+
+def update_state(run_dir, fn=None, message=None, **fields):
+    """Read-modify-write automation.json under a lock.
+
+    The submitting process and the post-processing jobs can both write the file,
+    so every write starts from the current file on disk.
+    """
+    with open(os.path.join(run_dir, STATE_FILE + ".lock"), "w") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+        except OSError:
+            pass                      # file system without locking: still read-modify-write
+        state = load_state(run_dir)
+        state.update(fields)
+        if fn:
+            fn(state)
+        if message:
+            log_event(state, message)
+        save_state(run_dir, state)
+    return state
 
 
 def log_event(state, message):
@@ -180,12 +202,21 @@ def check_sims(state):
 # SLURM
 # ---------------------------------------------------------------------------
 
+class SubmitError(Exception):
+    """sbatch rejected a job. sim_id is set if the simulation job was already submitted."""
+    def __init__(self, message, sim_id=None):
+        super().__init__(message)
+        self.sim_id = sim_id
+
+
 def sbatch(args, run_dir, dry_run=False):
     cmd = ["sbatch", "--parsable"] + args
     if dry_run:
         print("    [dry run] (cd %s && %s)" % (run_dir, " ".join(cmd)))
         return "DRYRUN"
-    out = subprocess.run(cmd, cwd=run_dir, check=True, capture_output=True, text=True)
+    out = subprocess.run(cmd, cwd=run_dir, capture_output=True, text=True)
+    if out.returncode != 0:
+        raise SubmitError("sbatch %s was rejected: %s" % (args[-1], (out.stderr or out.stdout).strip()))
     return out.stdout.strip().split(";")[0]
 
 
@@ -197,8 +228,13 @@ def array_spec(state, indices=None):
     return spec
 
 
-def submit_sim_jobs(state, indices=None, depend_on=None, dry_run=False):
-    """Submit the simulation job(s) and the dependent post-processing job."""
+def submit_sim_jobs(state, indices=None, depend_on=None, dry_run=False, note=None):
+    """Submit the simulation job(s) and the dependent post-processing job.
+
+    Each job ID is written to automation.json as soon as it exists, so `cancel`
+    always finds it. If the post-processing job is rejected, the source is
+    marked post_not_submitted and SubmitError is raised.
+    """
     run_dir = state["run_dir"]
     dep = ["--dependency=afterany:%s" % depend_on] if depend_on else []
     if state["mode"] == "grb":
@@ -206,7 +242,25 @@ def submit_sim_jobs(state, indices=None, depend_on=None, dry_run=False):
     else:
         sim_id = sbatch(dep + ["--array=%s" % array_spec(state, indices), "slurm_array_job.sh"],
                         run_dir, dry_run)
-    post_id = sbatch(["--dependency=afterany:%s" % sim_id, "postprocess.sh"], run_dir, dry_run)
+    if not dry_run:
+        job = {"sim": sim_id, "post": None, "time": now()}
+        if note:
+            job["resubmitted"] = note
+        update_state(run_dir, lambda s: s.setdefault("jobs", []).append(job))
+    try:
+        post_id = sbatch(["--dependency=afterany:%s" % sim_id, "postprocess.sh"], run_dir, dry_run)
+    except SubmitError as err:
+        update_state(run_dir, stage="post_not_submitted",
+                     message="ERROR: %s. Simulation job %s has no post-processing job; when it ends, run: "
+                             "run_pipeline.py finish %s (or cancel it)" % (err, sim_id, run_dir))
+        raise SubmitError(str(err), sim_id=sim_id)
+    if not dry_run:
+        def set_post(s):
+            for j in reversed(s.get("jobs", [])):
+                if j["sim"] == sim_id:
+                    j["post"] = post_id
+                    break
+        update_state(run_dir, set_post)
     return sim_id, post_id
 
 
@@ -219,6 +273,7 @@ def cmd_submit(args):
     if not run_dirs:
         sys.exit("No prepared sources found (run setup_sims.py first).")
     previous = None
+    errors = 0
     for run_dir in run_dirs:
         state = load_state(run_dir)
         name = "%s/%s" % (state["class"], state["source_name"])
@@ -227,18 +282,22 @@ def cmd_submit(args):
             continue
         depend = previous if args.chain else None
         if not args.dry_run:
-            state["stage"] = "submitted"
-            state["attempt"] = 0
-            state["completed"] = []
-            save_state(run_dir, state)
-        sim_id, post_id = submit_sim_jobs(state, depend_on=depend, dry_run=args.dry_run)
+            update_state(run_dir, stage="submitted", attempt=0, completed=[])
+        try:
+            sim_id, post_id = submit_sim_jobs(state, depend_on=depend, dry_run=args.dry_run)
+        except SubmitError as err:
+            errors += 1
+            if err.sim_id is None:      # nothing was submitted: allow a plain resubmit later
+                update_state(run_dir, stage="setup", message="%-40s ERROR: %s" % (name, err))
+            else:
+                print("%-40s ERROR: %s" % (name, err))
+            continue
         if args.dry_run:
             continue
-        state.setdefault("jobs", []).append({"sim": sim_id, "post": post_id, "time": now()})
-        log_event(state, "%-40s submitted: sims %s (%d), post-processing %s"
-                  % (name, sim_id, state["njobs"], post_id))
-        save_state(run_dir, state)
+        update_state(run_dir, message="%-40s submitted: sims %s (%d), post-processing %s"
+                     % (name, sim_id, state["njobs"], post_id))
         previous = sim_id
+    return 1 if errors else 0
 
 
 def cmd_check(args):
@@ -260,7 +319,7 @@ def cmd_check(args):
 
 def cmd_status(args):
     run_dirs = find_run_dirs(args.targets)
-    print("%-42s %-5s %-6s %-11s %-16s %s" % ("source", "mode", "jobs", "sims ok", "stage", "final file"))
+    print("%-42s %-5s %-6s %-11s %-18s %s" % ("source", "mode", "jobs", "sims ok", "stage", "final file"))
     for run_dir in run_dirs:
         state = load_state(run_dir)
         name = "%s/%s" % (state["class"], state["source_name"])
@@ -270,7 +329,7 @@ def cmd_status(args):
             failed, _, _ = check_sims(state)
             ok = "%d/%d" % (state["njobs"] - len(failed), state["njobs"])
         final = state.get("final_file") or ""
-        print("%-42s %-5s %-6d %-11s %-16s %s" % (name, state["mode"], state["njobs"], ok,
+        print("%-42s %-5s %-6d %-11s %-18s %s" % (name, state["mode"], state["njobs"], ok,
                                                 state["stage"], os.path.basename(final)))
 
 
@@ -286,19 +345,24 @@ def run_in_env(env_script, command, run_dir, log_path):
     return result.returncode
 
 
-def fail(state, run_dir, stage, message):
-    state["stage"] = stage
-    log_event(state, "ERROR: " + message)
-    save_state(run_dir, state)
+def fail(run_dir, stage, message):
+    update_state(run_dir, stage=stage, message="ERROR: " + message)
     return 1
 
 
 def cmd_finish(args):
     run_dir = os.path.abspath(args.run_dir)
     state = load_state(run_dir)
-    completed = state.setdefault("completed", [])
+
+    def commit(message=None, **fields):
+        """Record fields locally and in automation.json (merged with the file on disk)."""
+        state.update(fields)
+        update_state(run_dir, message=message, **fields)
+
+    completed = list(state.get("completed", []))
     if args.from_step:
-        completed[:] = STEPS[:STEPS.index(args.from_step)]
+        completed = STEPS[:STEPS.index(args.from_step)]
+        commit(completed=list(completed))
     todo = [s for s in STEPS if s not in completed]
     if not todo:
         print("All steps already completed; final file: %s" % state.get("final_file"))
@@ -308,8 +372,7 @@ def cmd_finish(args):
 
     # 1. Check the sims, resubmitting failures:
     if "check" in todo:
-        state["stage"] = "checking"
-        save_state(run_dir, state)
+        commit(stage="checking")
         failed, report, counts = check_sims(state)
         with open(os.path.join(run_dir, "check_report.txt"), "w") as f:
             f.write("%s\n%d/%d sims ok\n" % (now(), state["njobs"] - len(failed), state["njobs"]))
@@ -319,74 +382,73 @@ def cmd_finish(args):
             f.write("\n".join(report) + "\n")
         if failed:
             retries = state["slurm"].get("max_retries", 2)
-            if not args.no_resubmit and state.get("attempt", 0) < retries:
+            attempt = state.get("attempt", 0)
+            if not args.no_resubmit and attempt < retries:
                 # Record the attempt before submitting, so the new post job sees it:
-                state["attempt"] = state.get("attempt", 0) + 1
-                state["stage"] = "resubmitted"
-                save_state(run_dir, state)
+                commit(attempt=attempt + 1, stage="resubmitted")
                 indices = None if state["mode"] == "grb" else failed
-                sim_id, post_id = submit_sim_jobs(state, indices=indices)
-                state.setdefault("jobs", []).append(
-                    {"sim": sim_id, "post": post_id, "time": now(), "resubmitted": compress_ranges(failed)})
-                log_event(state, "%d failed sims (%s) resubmitted, attempt %d/%d: sims %s, post-processing %s"
-                          % (len(failed), compress_ranges(failed), state["attempt"], retries, sim_id, post_id))
-                save_state(run_dir, state)
+                try:
+                    sim_id, post_id = submit_sim_jobs(state, indices=indices, note=compress_ranges(failed))
+                except SubmitError as err:
+                    if err.sim_id is None:
+                        return fail(run_dir, "failed_sims", "could not resubmit %d failed sims: %s"
+                                    % (len(failed), err))
+                    return 1          # already recorded as post_not_submitted
+                commit(message="%d failed sims (%s) resubmitted, attempt %d/%d: sims %s, post-processing %s"
+                       % (len(failed), compress_ranges(failed), attempt + 1, retries, sim_id, post_id))
                 return 0
-            return fail(state, run_dir, "failed_sims",
+            return fail(run_dir, "failed_sims",
                         "%d sims failed (%s) after %d resubmission(s); see check_report.txt. "
                         "Fix and run: run_pipeline.py resubmit %s"
-                        % (len(failed), compress_ranges(failed), state.get("attempt", 0), run_dir))
+                        % (len(failed), compress_ranges(failed), attempt, run_dir))
         completed.append("check")
-        log_event(state, "all %d sims ok" % state["njobs"])
-        save_state(run_dir, state)
+        commit(message="all %d sims ok" % state["njobs"], completed=list(completed))
 
-    # 2. mimrec + overflow filter (MEGAlib environment):
+    # 2. mimrec + overflow filter (MEGAlib environment).
+    #    post_megalib.py removes old outputs first and checks that mimrec wrote a new file.
     filtered = os.path.join(run_dir, state["filtered_tra"])
     if "mimrec" in todo:
-        state["stage"] = "mimrec"
-        save_state(run_dir, state)
+        commit(stage="mimrec")
+        if os.path.exists(filtered):
+            os.remove(filtered)
         code = run_in_env(state["megalib_env"], "python post_megalib.py", run_dir,
                           os.path.join(logs, "post_megalib.log"))
         if code != 0 or not os.path.isfile(filtered):
-            return fail(state, run_dir, "failed_mimrec",
+            return fail(run_dir, "failed_mimrec",
                         "mimrec/overflow filter failed (exit %d, %s %s); see logs/post_megalib.log"
                         % (code, state["filtered_tra"], "exists" if os.path.isfile(filtered) else "missing"))
         completed.append("mimrec")
-        log_event(state, "mimrec and overflow filter done")
-        save_state(run_dir, state)
+        commit(message="mimrec and overflow filter done", completed=list(completed))
 
     # 3. cosipy (cosipy environment):
     pattern = os.path.join(run_dir, state["output_label"] + "_with_SAAcut*")
     if "cosipy" in todo:
-        state["stage"] = "cosipy"
-        save_state(run_dir, state)
+        commit(stage="cosipy")
         for old in glob.glob(os.path.join(run_dir, state["output_label"] + "*")):
             os.remove(old)
         code = run_in_env(state["cosipy_env"], "python post_cosipy.py", run_dir,
                           os.path.join(logs, "post_cosipy.log"))
         if code != 0 or not glob.glob(pattern):
-            return fail(state, run_dir, "failed_cosipy",
+            return fail(run_dir, "failed_cosipy",
                         "cosipy step failed (exit %d); see logs/post_cosipy.log" % code)
         completed.append("cosipy")
-        log_event(state, "cosipy extraction and SAA cut done")
-        save_state(run_dir, state)
+        commit(message="cosipy extraction and SAA cut done", completed=list(completed))
 
     # 4. Copy the final file:
     if "copy" in todo:
         finals = sorted(glob.glob(pattern))
         if not finals:
-            return fail(state, run_dir, "failed_copy", "no %s file to copy" % os.path.basename(pattern))
+            return fail(run_dir, "failed_copy", "no %s file to copy" % os.path.basename(pattern))
         os.makedirs(state["products_dir"], exist_ok=True)
         for final in finals:
             dest = os.path.join(state["products_dir"], os.path.basename(final))
             if os.path.exists(dest):
                 print("NOTE: overwriting %s" % dest)
             shutil.copy2(final, dest)
-        state["final_file"] = os.path.join(state["products_dir"], os.path.basename(finals[0]))
+        final_file = os.path.join(state["products_dir"], os.path.basename(finals[0]))
         completed.append("copy")
-        state["stage"] = "done"
-        log_event(state, "done: %s" % state["final_file"])
-        save_state(run_dir, state)
+        commit(message="done: %s" % final_file, final_file=final_file,
+               completed=list(completed), stage="done")
     return 0
 
 
@@ -396,21 +458,21 @@ def cmd_resubmit(args):
     failed, _, _ = check_sims(state)
     if not failed and not args.all:
         print("No failed sims. To continue the post-processing run: run_pipeline.py finish %s" % run_dir)
-        return
+        return 0
     indices = None if (args.all or state["mode"] == "grb") else failed
+    what = "all sims" if indices is None else compress_ranges(failed)
     if not args.dry_run:
-        state["stage"] = "resubmitted"
-        state["completed"] = []
-        state["attempt"] = 0          # automatic retries start again
-        save_state(run_dir, state)
-    sim_id, post_id = submit_sim_jobs(state, indices=indices, dry_run=args.dry_run)
-    if args.dry_run:
-        return
-    state.setdefault("jobs", []).append({"sim": sim_id, "post": post_id, "time": now(),
-                                         "resubmitted": "all" if indices is None else compress_ranges(failed)})
-    log_event(state, "resubmitted %s: sims %s, post-processing %s"
-              % ("all sims" if indices is None else compress_ranges(failed), sim_id, post_id))
-    save_state(run_dir, state)
+        # Automatic retries start again:
+        update_state(run_dir, stage="resubmitted", completed=[], attempt=0)
+    try:
+        sim_id, post_id = submit_sim_jobs(state, indices=indices, dry_run=args.dry_run, note=what)
+    except SubmitError as err:
+        if err.sim_id is None:        # otherwise already reported as post_not_submitted
+            update_state(run_dir, stage="failed_sims", message="ERROR: %s" % err)
+        return 1
+    if not args.dry_run:
+        update_state(run_dir, message="resubmitted %s: sims %s, post-processing %s" % (what, sim_id, post_id))
+    return 0
 
 
 def cmd_cancel(args):
@@ -419,11 +481,9 @@ def cmd_cancel(args):
         jobs = state.get("jobs", [])
         if not jobs:
             continue
-        ids = [jobs[-1]["sim"], jobs[-1]["post"]]
+        ids = [j for j in (jobs[-1].get("sim"), jobs[-1].get("post")) if j]
         subprocess.run(["scancel"] + ids)
-        state["stage"] = "cancelled"
-        log_event(state, "cancelled jobs %s" % " ".join(ids))
-        save_state(run_dir, state)
+        update_state(run_dir, stage="cancelled", message="cancelled jobs %s" % " ".join(ids))
 
 
 def main(argv=None):
