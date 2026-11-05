@@ -1,0 +1,83 @@
+#----------#
+# Configuration for the automated cosi-sim pipeline
+# (setup_sims.py and run_pipeline.py).
+#
+# Copy this file, fill in your paths, and pass it with -c.
+# Only this file needs editing; the per-source inputs.yaml,
+# cosipy_inputs.yaml and job scripts are written for you.
+#----------#
+
+# Where simulations are run. Each source goes in
+# <sim_root>/<class>/<source name>, e.g. <sim_root>/Galactic/cygX3.
+sim_root: "/full/path/DC5/simulations"
+
+# Where the final *_with_SAAcut files are copied.
+products_dir: "/full/path/DC5/data_products/New_Source_Sims"
+
+# Your cosi-sim inputs.yaml and cosipy_inputs.yaml. They provide everything
+# that is the same for all sources (geometry, orientation file, revan/mimrec
+# configs, exposure time, SAA orientation file, binning...). The scripts only
+# change: run_dir, src_list, num_sims, parallel_time_sims, lightcurve,
+# mcosima, clear_sims (and orientation_file for GRBs) in inputs.yaml, and
+# data_file in cosipy_inputs.yaml.
+inputs_template: "/full/path/templates/inputs.yaml"
+cosipy_template: "/full/path/templates/cosipy_inputs.yaml"
+
+# Environment scripts. Each is sourced from its own directory
+# (cd <dir>; source <script>), as in the original slurm script.
+megalib_env: "/full/path/software/megalib.sh"   # MEGAlib + cosi-sim
+cosipy_env: "/full/path/software/cosipy.sh"     # cosipy
+
+# Geometry used for revan, mimrec and the overflow filter.
+revan_geometry: "/full/path/massmodel-cosi-dc3/COSISMEX.analysis.geo.setup"
+
+# MEGAlib overflow filter script.
+overflow_filter: "/full/path/megalib/resource/examples/python/OverflowFilter.py"
+
+# Number of parallel jobs for time-chunk and flux-chunk sources.
+# (Time chunks get one extra job when the orientation file does not divide evenly.)
+num_sims: 1000
+
+# Name of the final file (without extension). {source} is the source directory name.
+output_label: "{source}_3months_unbinned_data_filtered"
+grb_output_label: "{source}_unbinned_data_filtered"
+
+# GRBs / bursts: the normed orientation file and t_ref are read from the source
+# directory (*_normed.ori and sim_time_reference.txt, as in DC5/sources/GRBs).
+# These are fallbacks for bursts that do not have them.
+grb_orientation_file: null
+grb_time_reference: 1835487300.0
+
+# Optional: rename library categories to simulation class directories,
+# e.g. {"Al26": "Nucleosynthesis", "Fe60": "Nucleosynthesis"}.
+class_map: {}
+
+#----------#
+# SLURM settings
+#----------#
+slurm:
+  # Extra #SBATCH lines for every job, e.g. ["--partition=work1", "--account=myaccount"].
+  extra_directives: []
+
+  # Wall time and memory per job type.
+  sim_time: "0:55:00"       # one time chunk (cosima + revan)
+  sim_mem: "3G"
+  flux_time: "0:55:00"      # one flux chunk (full exposure at flux / num_sims)
+  flux_mem: "3G"
+  grb_time: "2:00:00"       # single GRB run (cosima + time fix + revan)
+  grb_mem: "8G"
+  post_time: "12:00:00"     # check + mimrec + overflow filter + cosipy
+  post_mem: "32G"
+
+  # Random delay (s) at the start of each array task, to spread the load.
+  start_jitter: 60
+
+  # Maximum number of array tasks running at once (null = no limit).
+  array_throttle: null
+
+  # Failed sims are resubmitted automatically up to this many times.
+  max_retries: 2
+
+# Python used by the post-processing job before any environment is sourced.
+# run_pipeline.py only needs the standard library.
+orchestrator_python: "python3"

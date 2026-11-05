@@ -1,0 +1,51 @@
+#----------#
+
+# Full path to run directory:
+run_dir: "/full/path/set/by/setup_sims"
+
+# Full path to geometry file:
+geometry_file: "/full/path/massmodel-cosi-dc3/COSISMEX.sim.geo.setup" 
+
+# Full path to orientation file:
+orientation_file: "/full/path/orientation/DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori"
+
+# Transmission probability:
+include_transmission_prob: False # True or False
+transmission_prob_file: "/full/path/TransmissionProbability_33000.dat"
+
+# Full paths to configuration files:
+# Note: if no configuration file use "none"
+nuc_config: "/full/path/ContinuumResponse_cori_v1v2.nuclearizer.cfg"
+revan_config: "/full/path/configuration/SMEXv12.Continuum.HEALPixO3.binnedimaging.revan.cfg"
+mimrec_config: "/full/path/configuration/SMEXv12.Continuum.HEALPixO3.binnedimaging.mimrec.cfg"
+
+# Sources to be simulated:
+src_list: ["set/by/setup_sims"]
+
+name: "GalacticScan" # Name of run.
+time: 1843467255.0 # Exposure time in seconds.
+
+# Whether or not to run the nuclearizer.
+# Note: nuclearizer is needed for 2016 COSI balloon data. 
+run_nuc: False
+
+# For running parallel time bins (using run_parallel_sims.py):
+parallel_time_sims: True # True or False
+num_sims: 1000 # Number of time bins to use:
+clear_sims: True # Remove existing simulation directories and write new ones. 
+run_type: "array_jobs" # "mult_nodes", "array_jobs", "array_jobs-parallel", "slurm"
+
+# Option to use a lightcurve in your sim with parallel time bins:
+# Note: If True, LC and ori files must have same time binning. 
+lightcurve: False # True or False
+lightcurve_file: "/full/path/Lightcurve.dat" # full path
+
+# Option to run mcosima:
+mcosima: False # True or False
+num_cores: 1 # Number of parallel cores to use. 
+
+# For Aeff calculation:
+ntriggers: 200000
+ASphere: 11309.7 # cm2
+#----------#
+
