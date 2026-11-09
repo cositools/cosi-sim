@@ -81,6 +81,7 @@ def load_config(path):
     cfg.setdefault("class_map", {})
     cfg["class_map"] = cfg["class_map"] or {}
     cfg.setdefault("orchestrator_python", "python3")
+    cfg.setdefault("clean_env", True)
     slurm = dict(SLURM_DEFAULTS)
     slurm.update(cfg.get("slurm") or {})
     cfg["slurm"] = slurm
@@ -510,7 +511,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         "njobs": njobs, "num_sims": num_sims, "file_name": file_name, "sim_name": sim_name,
         "filtered_tra": filtered, "output_label": label, "products_dir": cfg["products_dir"],
         "megalib_env": cfg["megalib_env"], "cosipy_env": cfg["cosipy_env"],
-        "revan_geometry": cfg["revan_geometry"], "t_ref": t_ref,
+        "revan_geometry": cfg["revan_geometry"], "clean_env": bool(cfg["clean_env"]), "t_ref": t_ref,
         "orientation_file": keys.get("orientation_file", template["orientation_file"]),
         "flux_scaling": flux_scaling, "slurm": cfg["slurm"],
         "stage": "setup", "attempt": 0, "completed": [], "jobs": [],
