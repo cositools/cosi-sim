@@ -431,7 +431,18 @@ def cmd_submit(args):
         sys.exit("No prepared sources found (run setup_sims.py first).")
     max_jobs = args.max_jobs
     if max_jobs is None and not args.no_queue:
-        max_jobs = load_state(run_dirs[0])["slurm"].get("max_jobs")
+        # Use the setting of the sources about to be submitted (saved at setup time),
+        # not of sources that were submitted or finished earlier:
+        states = [load_state(d) for d in run_dirs]
+        to_submit = [s for s in states if args.force or s["stage"] == "setup"]
+        values = sorted(set(s["slurm"].get("max_jobs") for s in to_submit) - {None})
+        if values:
+            max_jobs = values[0]
+            if len(values) > 1:
+                print("NOTE: these sources were set up with different max_jobs %s; using %d."
+                      % (values, max_jobs))
+            if any(s["slurm"].get("max_jobs") is None for s in to_submit):
+                print("NOTE: some sources were set up without max_jobs; they are queued as well.")
     if max_jobs:
         if args.chain:
             sys.exit("--chain and max_jobs (rolling submission) cannot be combined; use one or the other.")
