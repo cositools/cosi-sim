@@ -96,6 +96,8 @@ The sources go into a queue file, `<sim_root>/pipeline_queue.json`, and are subm
 
 Waiting sources show as `waiting` in `status`. If none of a queue's sources is running (e.g. your other jobs used the whole budget when you submitted), nothing will submit the waiting ones; `status` then tells you to run `run_pipeline.py fill <sim_root>`. `cancel` on a waiting source removes it from the queue.
 
+`max_jobs` is saved with each source when `setup_sims.py` runs, and `submit` uses the value of the sources it is about to submit (sources already submitted or finished are ignored). So if you turn on rolling submission after setting some sources up, either rerun `setup_sims.py --force` for the ones not yet submitted, or pass `--max-jobs 2900` to `submit`.
+
 ## Notes
 
 - `setup_sims.py` refuses to redo a source that is already set up unless `--force` is given (this deletes its `Simulations/`).
