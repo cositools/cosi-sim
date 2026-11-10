@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
 # Upload file:
-df = pd.read_csv("TransmissionProbability_33000.dat",delim_whitespace=True,skiprows=7,names=["index","theta","energy","probability"])
+df = pd.read_csv("TransmissionProbability_33000.dat",sep=r"\s+",skiprows=7,names=["index","theta","energy","probability"])
 
 theta_list = [0.0,5.0,10.0,15.0,20.0,25.0,30.0,35.0,40.0,45.0,50.0,55.0,60.0,65.0,70.0,75.0,80.0,85.0,90.0,90.0001,180.0]
 energy_list = [50.0,60.0,80.0,100.0,150.0,200.0,300.0,400.0,500.0,600.0,800.0,1000.0,1022.0,1250.0,1500.0,2000.0,2044.0,3000.0,4000.0,5000.0,6000.0,7000.0,8000.0,9000.0,10000.0]
