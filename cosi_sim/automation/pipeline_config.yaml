@@ -28,12 +28,6 @@ cosipy_template: "/full/path/templates/cosipy_inputs.yaml"
 megalib_env: "/full/path/software/megalib.sh"   # MEGAlib + cosi-sim
 cosipy_env: "/full/path/software/cosipy.sh"     # cosipy
 
-# The post-processing job runs each environment script in a clean login shell,
-# as if you had just logged in, so the MEGAlib environment you submitted from
-# (ROOT, PYTHONPATH, LD_LIBRARY_PATH) does not leak into the cosipy step.
-# Set to false to source the scripts on top of the inherited environment instead.
-clean_env: true
-
 # Geometry used for revan, mimrec and the overflow filter.
 revan_geometry: "/full/path/massmodel-cosi-dc3/COSISMEX.analysis.geo.setup"
 

@@ -543,22 +543,19 @@ def clean_environment():
     return env
 
 
-def run_in_env(env_script, command, run_dir, log_path, clean=True):
+def run_in_env(env_script, command, run_dir, log_path):
     """cd <env dir>; source <env>; cd <run_dir>; <command>  -- output to log_path.
 
-    With clean=True (default) this runs in a login shell (bash -l, so the module
-    command is set up) with a minimal environment, as after logging in afresh.
+    Runs in a login shell (bash -l, so the module command is set up) with a
+    minimal environment, as after logging in afresh.
     """
     env_dir, env_file = os.path.split(os.path.abspath(env_script))
     script = 'cd "%s" && source "./%s" && cd "%s" && %s' % (env_dir, env_file, run_dir, command)
-    if clean:
-        cmd, env = ["bash", "-l", "-c", script], clean_environment()
-    else:
-        cmd, env = ["bash", "-c", script], dict(os.environ, MPLBACKEND="Agg")
     with open(log_path, "a") as log:
-        log.write("\n==== %s  %s  (%s environment)\n" % (now(), command, "clean" if clean else "inherited"))
+        log.write("\n==== %s  %s\n" % (now(), command))
         log.flush()
-        result = subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, env=env)
+        result = subprocess.run(["bash", "-l", "-c", script], stdout=log, stderr=subprocess.STDOUT,
+                                env=clean_environment())
     return result.returncode
 
 
@@ -631,7 +628,7 @@ def _finish(args):
         if os.path.exists(filtered):
             os.remove(filtered)
         code = run_in_env(state["megalib_env"], "python post_megalib.py", run_dir,
-                          os.path.join(logs, "post_megalib.log"), clean=state.get("clean_env", True))
+                          os.path.join(logs, "post_megalib.log"))
         if code != 0 or not os.path.isfile(filtered):
             return fail(run_dir, "failed_mimrec",
                         "mimrec/overflow filter failed (exit %d, %s %s); see logs/post_megalib.log"
@@ -646,7 +643,7 @@ def _finish(args):
         for old in glob.glob(os.path.join(run_dir, state["output_label"] + "*")):
             os.remove(old)
         code = run_in_env(state["cosipy_env"], "python post_cosipy.py", run_dir,
-                          os.path.join(logs, "post_cosipy.log"), clean=state.get("clean_env", True))
+                          os.path.join(logs, "post_cosipy.log"))
         if code != 0 or not glob.glob(pattern):
             return fail(run_dir, "failed_cosipy",
                         "cosipy step failed (exit %d); see logs/post_cosipy.log" % code)
