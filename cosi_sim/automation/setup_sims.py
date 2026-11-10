@@ -25,10 +25,14 @@ For each source this writes <sim_root>/<class>/<name>/ with:
 Modes (chosen automatically):
     grb   source under a GRBs/ category: one run with the time-shifted (normed)
           orientation file in the source directory.
-    flux  source with a light curve: num_sims parallel runs over the full exposure,
-          every .Flux in the copied source file divided by num_sims (flux chunks).
+    flux  source with a repeating light curve: num_sims parallel runs over the full
+          exposure, every .Flux in the copied source file divided by num_sims (flux chunks).
     time  everything else: the exposure split into num_sims time chunks
           (cosi_sim.pipeline.make_orientation_bins, as run_parallel_sims.py).
+          A light curve that does not repeat is cut into the chunks
+          (cosi_sim.pipeline.lightcurve_chunks): each chunk gets its own light curve and
+          flux (Flux x chunk mean / mean of the light curve), and the chunks are chosen
+          with equal expected photons, so times without emission get no chunk.
 
 Sources with normalized times (a sim_time_reference.txt in the library
 directory, see cosi_sim.pipeline.time_reference) are simulated in times t - t_ref
@@ -57,6 +61,7 @@ import yaml
 import cosi_sim
 from cosi_sim.pipeline.sim_setup import Setup
 from cosi_sim.pipeline.make_orientation_bins import make_bins
+from cosi_sim.pipeline.lightcurve_chunks import LightCurveError, write_chunks
 from cosi_sim.pipeline.time_reference import (check_lightcurves, orientation_time_range,
                                              read_time_reference, write_shifted_orientation)
 
@@ -180,11 +185,21 @@ def active_lines(path):
         return [l for l in f if l.strip() and not l.lstrip().startswith("#")]
 
 
+def lightcurve_flags(path):
+    """Repeat flags (True/False) of the active Lightcurve lines of a source file."""
+    flags = []
+    for line in active_lines(path):
+        m = re.match(r"\s*\S+\.Lightcurve\s+File\s+(\S+)", line)
+        if m:
+            flags.append(m.group(1).lower() == "true")
+    return flags
+
+
 def detect_mode(src):
     parts = src.split("/")
     if "GRBs" in parts[:-1]:
         return "grb"
-    if any(re.match(r"\s*\S+\.Lightcurve\s", l) for l in active_lines(library_source_file(src))):
+    if any(lightcurve_flags(library_source_file(src))):
         return "flux"
     return "time"
 
@@ -315,12 +330,15 @@ def source_env(env_script):
     return "cd %s\nsource %s\n" % (env_dir, env_file)
 
 
-def run_sims_py(cfg, t_ref, file_name):
+def run_sims_py(cfg, t_ref, file_name, chunk_sources=False):
     text = ("# Simulation job (cosima + revan), written by setup_sims.py.\n"
-            "import random\n"
+            "import os, random\n"
             "from cosi_sim.pipeline.simulate import Simulate\n\n"
-            "instance = Simulate(\"inputs.yaml\")\n"
-            "seed = random.randint(0, 2**31 - 1)\n"
+            "instance = Simulate(\"inputs.yaml\")\n")
+    if chunk_sources:
+        text += ("# Light-curve time chunk: use this chunk's Sources/ (its own light curve and flux):\n"
+                 "instance.run_dir = os.getcwd()\n")
+    text += ("seed = random.randint(0, 2**31 - 1)\n"
             "with open(\"cosima_seed.txt\", \"w\") as f:\n"
             "    f.write(\"%d\\n\" % seed)\n"
             "instance.define_sim()\n"
@@ -397,7 +415,7 @@ def write_job_scripts(run_dir, cfg, state):
         + "# cosipy and copy of the final file. Safe to rerun by hand.\n"
         + "cd %s\n" % run_dir
         + "%s %s finish %s\n" % (cfg["orchestrator_python"], os.path.join(AUTOMATION_DIR, "run_pipeline.py"), run_dir))
-    files["run_sims.py"] = run_sims_py(cfg, state.get("t_ref"), state["file_name"])
+    files["run_sims.py"] = run_sims_py(cfg, state.get("t_ref"), state["file_name"], bool(state.get("lightcurve_chunks")))
     files["post_megalib.py"] = post_megalib_py(cfg, state["sim_name"])
     files["post_cosipy.py"] = post_cosipy_py(state["output_label"])
     files["post_plots.py"] = POST_PLOTS_PY
@@ -414,14 +432,18 @@ def write_job_scripts(run_dir, cfg, state):
 # ---------------------------------------------------------------------------
 
 def make_sim_dirs(run_dir, state, extra_files):
-    """Simulations/sim_<i> with inputs.yaml, run_sims.py and (time chunks) GalacticScan.ori."""
+    """Simulations/sim_<i> with inputs.yaml, run_sims.py and (time chunks) GalacticScan.ori.
+
+    For light-curve time chunks the directories already hold GalacticScan.ori and Sources/.
+    """
     sims = os.path.join(run_dir, "Simulations")
-    if os.path.isdir(sims):
-        shutil.rmtree(sims)
-    os.makedirs(sims)
+    if not state.get("lightcurve_chunks"):
+        if os.path.isdir(sims):
+            shutil.rmtree(sims)
+        os.makedirs(sims)
     for i in range(state["njobs"]):
         d = os.path.join(sims, "sim_%d" % i)
-        os.mkdir(d)
+        os.makedirs(d, exist_ok=True)
         for fname in ("inputs.yaml", "run_sims.py"):
             shutil.copy2(os.path.join(run_dir, fname), d)
         if extra_files:
@@ -474,6 +496,10 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         t_ref = read_time_reference(os.path.join(LIBRARY, src))
         o0, o1 = orientation_time_range(template["orientation_file"])
         ori_range = (o0 - t_ref, o1 - t_ref) if t_ref is not None else (o0, o1)
+
+    lc_flags = lightcurve_flags(lib_file)
+    if mode == "time" and any(lc_flags):
+        raise SetupError("time chunks cannot split a repeating light curve; use flux mode")
 
     # Light curves that do not repeat must match the orientation file (bursts: lie inside it):
     problems = check_lightcurves(lib_file, ori_range, burst=(mode == "grb"))
@@ -531,8 +557,28 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     flux_scaling = scale_fluxes(os.path.join(run_dir, "Sources"), num_sims) if mode == "flux" else []
 
     # Number of jobs (time chunks get one more if the orientation file does not divide evenly):
-    extra_files = None
-    if mode == "time":
+    extra_files, lc_chunks = None, None
+    if mode == "time" and lc_flags:
+        sims = os.path.join(run_dir, "Simulations")
+        if os.path.isdir(sims):
+            shutil.rmtree(sims)
+        # The chunks run in times t - t_ref (t_ref: first orientation time), as GRBs do:
+        lc_ori = keys.get("orientation_file", template["orientation_file"])
+        shift = 0.0
+        if t_ref is None:
+            t_ref = shift = orientation_time_range(lc_ori)[0]
+            sim_name = "fixed_times"
+            filtered = "Output/%s.inc1.id1.extracted.filtered.tra.gz" % sim_name
+            with open(os.path.join(run_dir, "cosipy_inputs.yaml"), "w") as f:
+                f.write(set_yaml_keys(cosipy_text, {"data_file": filtered}))
+        try:
+            lc_chunks = write_chunks(os.path.join(run_dir, "Sources", name + ".source"), os.path.join(run_dir, "Sources"),
+                                     lc_ori, num_sims, lambda k: os.path.join(sims, "sim_%d" % k), t_shift=shift)
+        except (LightCurveError, OSError) as err:
+            raise SetupError("light-curve time chunks: %s" % err)
+        njobs = lc_chunks["chunks"]
+        lc_chunks = {k: lc_chunks[k] for k in ("chunks", "start", "stop", "photons_per_cm2")}
+    elif mode == "time":
         try:
             os.chdir(run_dir)
             extra = make_bins(num_sims, keys.get("orientation_file", template["orientation_file"]), False, "")
@@ -553,7 +599,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         "megalib_env": cfg["megalib_env"], "cosipy_env": cfg["cosipy_env"],
         "revan_geometry": cfg["revan_geometry"], "t_ref": t_ref,
         "orientation_file": keys.get("orientation_file", template["orientation_file"]),
-        "flux_scaling": flux_scaling, "slurm": cfg["slurm"],
+        "flux_scaling": flux_scaling, "lightcurve_chunks": lc_chunks, "slurm": cfg["slurm"],
         "stage": "setup", "attempt": 0, "completed": [], "jobs": [],
         "history": ["%s  set up (%s mode, %d job%s)" % (now(), mode, njobs, "s" if njobs > 1 else "")],
     }
@@ -561,7 +607,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     if mode != "grb":
         make_sim_dirs(run_dir, state, extra_files)
         write_combined_tra(run_dir, state)
-        if mode == "time":
+        if mode == "time" and not lc_chunks:
             os.rmdir(os.path.join(run_dir, "Orientation_Bins"))
     save_state(run_dir, state)
 
@@ -569,9 +615,12 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     if flux_scaling:
         msg += "\n    flux / %d: %s" % (num_sims, ", ".join(
             "%s %.4g -> %.4g" % (c["keyword"], c["flux"], c["scaled"]) for c in flux_scaling))
+    if lc_chunks:
+        msg += ("\n    light curve: %d time chunks with equal expected photons over [%.1f, %.1f] s; "
+                "flux of each chunk from the light curve" % (lc_chunks["chunks"], lc_chunks["start"], lc_chunks["stop"]))
     if t_ref is not None:
-        msg += "\n    times relative to t_ref %r: orientation %s; sim times fixed after cosima" % (
-            t_ref, os.path.basename(keys["orientation_file"]))
+        ori_note = "chunk orientation files" if lc_chunks else "orientation %s" % os.path.basename(keys["orientation_file"])
+        msg += "\n    times relative to t_ref %r: %s; sim times fixed after cosima" % (t_ref, ori_note)
     print(msg)
 
 
