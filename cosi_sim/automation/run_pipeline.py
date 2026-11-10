@@ -53,7 +53,7 @@ import subprocess
 import sys
 
 STATE_FILE = "automation.json"
-STEPS = ["check", "mimrec", "cosipy", "copy"]
+STEPS = ["check", "mimrec", "plots", "cosipy", "copy"]
 AUTOMATION_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -543,6 +543,50 @@ def clean_environment():
     return env
 
 
+PLOT_FILES = ["spectra.pdf", "LCs.pdf", "sim_image.png"]
+
+POST_PLOTS_PY = """# Spectrum, light curve and image from the mimrec extraction (MEGAlib environment).
+# Written by the cosi-sim automation; run from the source directory.
+import os, sys
+from cosi_sim.pipeline.simulate import Simulate
+
+instance = Simulate("inputs.yaml")
+extracted = sorted(f for f in os.listdir("Output") if f.endswith(".extracted.tra.gz"))
+newest = max(os.path.getmtime(os.path.join("Output", f)) for f in extracted) if extracted else 0
+plots = [
+    ("extracted_spectrum.dat", "spectra.pdf",
+     lambda: instance.plot_spectrum(show_plots=False, fig_kwargs={"xlim": (1e2, 1e4)})),
+    ("extracted_lc.dat", "LCs.pdf", lambda: instance.plot_lc(show_plots=False)),
+    ("extracted_image.dat", "sim_image.png", lambda: instance.plot_image(show_plots=False)),
+]
+failed = []
+for data, figure, plot in plots:
+    data, figure = os.path.join("Output", data), os.path.join("Output", figure)
+    if os.path.exists(figure):
+        os.remove(figure)
+    if not os.path.exists(data) or os.path.getmtime(data) < newest:
+        print("skipped %s: %s is missing or older than the extracted events; "
+              "rerun the extraction with: run_pipeline.py finish <source dir> --from mimrec" % (figure, data))
+        failed.append(figure)
+        continue
+    try:
+        plot()
+    except Exception as err:
+        print("failed %s: %s" % (figure, err))
+        failed.append(figure)
+sys.exit(1 if failed else 0)
+"""
+
+
+def write_post_plots(run_dir):
+    with open(os.path.join(run_dir, "post_plots.py"), "w") as f:
+        f.write(POST_PLOTS_PY)
+
+
+def images_dir(state):
+    return os.path.join(state["products_dir"], "Images", state["class"], state["source_name"])
+
+
 def run_in_env(env_script, command, run_dir, log_path):
     """cd <env dir>; source <env>; cd <run_dir>; <command>  -- output to log_path.
 
@@ -636,7 +680,29 @@ def _finish(args):
         completed.append("mimrec")
         commit(message="mimrec and overflow filter done", completed=list(completed))
 
-    # 3. cosipy (cosipy environment):
+    # 3. Spectrum, light curve and image (MEGAlib environment), copied to <products_dir>/Images.
+    #    A failure is reported but does not stop the data product; `finish` retries it.
+    if "plots" in todo:
+        commit(stage="plots")
+        if not os.path.exists(os.path.join(run_dir, "post_plots.py")):
+            write_post_plots(run_dir)          # sources set up before this step existed
+        code = run_in_env(state["megalib_env"], "python post_plots.py", run_dir,
+                          os.path.join(logs, "post_plots.log"))
+        made = [f for f in PLOT_FILES if os.path.isfile(os.path.join(run_dir, "Output", f))]
+        if made:
+            dest = images_dir(state)
+            os.makedirs(dest, exist_ok=True)
+            for f in made:
+                shutil.copy2(os.path.join(run_dir, "Output", f), os.path.join(dest, f))
+        if code == 0 and len(made) == len(PLOT_FILES):
+            completed.append("plots")
+            commit(message="plots done: %s" % images_dir(state), completed=list(completed))
+        else:
+            commit(message="WARNING: plots incomplete (%d of %d made; see logs/post_plots.log). "
+                           "The data product is not affected; retry with: run_pipeline.py finish %s"
+                           % (len(made), len(PLOT_FILES), run_dir))
+
+    # 4. cosipy (cosipy environment):
     pattern = os.path.join(run_dir, state["output_label"] + "_with_SAAcut*")
     if "cosipy" in todo:
         commit(stage="cosipy")
@@ -650,7 +716,7 @@ def _finish(args):
         completed.append("cosipy")
         commit(message="cosipy extraction and SAA cut done", completed=list(completed))
 
-    # 4. Copy the final file:
+    # 5. Copy the final file:
     if "copy" in todo:
         finals = sorted(glob.glob(pattern))
         if not finals:
@@ -665,6 +731,8 @@ def _finish(args):
         completed.append("copy")
         commit(message="done: %s" % final_file, final_file=final_file,
                completed=list(completed), stage="done")
+    elif state.get("stage") == "plots" and state.get("final_file"):
+        commit(stage="done")                   # finished earlier; only the plots were (re)made
     return 0
 
 

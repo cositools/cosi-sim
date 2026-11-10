@@ -53,8 +53,9 @@ For each source, `submit` sends the simulation job (array or single) and a post-
 
 1. **check**: each sim must have `<name>.inc1.id1.tra.gz` and a revan terminal output ending with "Event reconstruction finished" (the `check_revan_parallel` criteria). Failed sims are resubmitted automatically as a smaller array, together with a new post-processing job, up to `slurm.max_retries` times. The result is in `check_report.txt`.
 2. **mimrec**: in the MEGAlib environment, `run_mimrec(extract_root=True)` on the combined tra file, then `OverflowFilter.py`.
-3. **cosipy**: in the cosipy environment, `UnBinnedData.read_tra` and `cut_SAA_events`.
-4. **copy**: the `*_with_SAAcut` file goes to `products_dir`.
+3. **plots**: in the MEGAlib environment, `plot_spectrum`, `plot_lc` and `plot_image` from the mimrec extraction. The figures (`spectra.pdf`, `LCs.pdf`, `sim_image.png`) go to `<products_dir>/Images/<class>/<source>/`. If a plot fails, the history says so and the pipeline continues; `finish` makes the missing plots later.
+4. **cosipy**: in the cosipy environment, `UnBinnedData.read_tra` and `cut_SAA_events`.
+5. **copy**: the `*_with_SAAcut` file goes to `products_dir`.
 
 Each environment is sourced in a fresh login shell, as after logging in again, so the environment you submitted from does not carry over (your `~/.bashrc` is loaded, as at a normal login). Progress is stored in `<run_dir>/automation.json`. Logs are in `<run_dir>/logs/`.
 
@@ -65,7 +66,7 @@ python run_pipeline.py submit   <dirs> [--max-jobs N | --no-queue | --chain] [--
 python run_pipeline.py fill     <sim_root>
 python run_pipeline.py status   <dirs>
 python run_pipeline.py check    <dirs>
-python run_pipeline.py finish   <run_dir> [--from check|mimrec|cosipy|copy] [--no-resubmit]
+python run_pipeline.py finish   <run_dir> [--from check|mimrec|plots|cosipy|copy] [--no-resubmit]
 python run_pipeline.py resubmit <run_dir> [--all]
 python run_pipeline.py cancel   <dirs>
 ```
@@ -74,7 +75,7 @@ python run_pipeline.py cancel   <dirs>
 
 - `--max-jobs N` (or `slurm.max_jobs` in the config) turns on rolling submission, below. `--no-queue` ignores `slurm.max_jobs` and submits everything at once.
 - `--chain` starts each source's sims only after the previous source's sims have ended. This limits how many jobs *run* at once, but all chained jobs are still *submitted* (pending), so it does not help with a limit on submitted jobs such as Palmetto's.
-- `finish` can be run by hand (e.g. on an interactive node). It continues from the first step that has not completed.
+- `finish` can be run by hand (e.g. on an interactive node). It continues from the first step that has not completed; for a source finished before the plots step existed, it makes only the plots.
 - `resubmit` resubmits only the failed sims, plus a new post-processing job, and resets the automatic retry count.
 
 ## Rolling submission (job limits)
