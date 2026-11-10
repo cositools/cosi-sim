@@ -14,7 +14,7 @@ Burst.Beam				FarFieldPointSource 0 0
 Burst.Orientation		Galactic Fixed 0.81875 57.247
 Burst.Spectrum			File MgtBurst_complex_spec.dat
 # Light-curve times are relative to t_ref = 1835487300.0 (unix s, first time of the orientation file).
-# Simulate with DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
+# Simulate with DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
 # Original light curve (absolute unix times): MgtBurst_complex_lc.dat; see sim_time_reference.txt.
 Burst.Lightcurve		File false MgtBurst_complex_lc_shifted.dat
 Burst.Flux				0.314537
