@@ -1,0 +1,17 @@
+# MEGAlib simulation time reference for PSRB1509
+t_ref                      1835487300.0
+lightcurve_original        B1509_b1_lc.dat
+lightcurve_folded          B1509_b1_lc_shifted.dat
+repeat_period              0.151581943393
+fold_phase_offset          0.13046011937323027
+lightcurve_original        B1509_b2_lc.dat
+lightcurve_folded          B1509_b2_lc_shifted.dat
+repeat_period              0.151581943393
+fold_phase_offset          0.13046011937323027
+lightcurve_original        B1509_b3_lc.dat
+lightcurve_folded          B1509_b3_lc_shifted.dat
+repeat_period              0.151581943393
+fold_phase_offset          0.13046011937323027
+orientation_file           DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori
+# Repeating light curve(s): simulate over the orientation file in t - t_ref.
+# After the Cosima run, add t_ref to the simulated event times to recover the absolute times.

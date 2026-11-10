@@ -15,5 +15,8 @@ magnetar2.Orientation                Galactic Fixed 0.03838608 250.0
 magnetar2.Spectrum                   File magnetar2_spec.dat
 magnetar2.Flux                       0.000495
 magnetar2.Polarization  galactic    0.4  75
-magnetar2.Lightcurve                     File true magnetar2_lightcurve.dat
+# Light-curve times are relative to t_ref = 1835487300.0 (unix s, first time of the orientation file).
+# Simulate with the orientation file in t - t_ref and add t_ref to the simulated times afterwards.
+# Original light curve (absolute unix times): magnetar2_lightcurve.dat; see sim_time_reference.txt.
+magnetar2.Lightcurve                     File true magnetar2_lightcurve_shifted.dat
 magnetar2.EarthOccultation false

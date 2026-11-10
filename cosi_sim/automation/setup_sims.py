@@ -24,11 +24,20 @@ For each source this writes <sim_root>/<class>/<name>/ with:
 
 Modes (chosen automatically):
     grb   source under a GRBs/ category: one run with the time-shifted (normed)
-          orientation file, sim times fixed with modify_sim_times(t_ref).
+          orientation file in the source directory.
     flux  source with a light curve: num_sims parallel runs over the full exposure,
           every .Flux in the copied source file divided by num_sims (flux chunks).
     time  everything else: the exposure split into num_sims time chunks
           (cosi_sim.pipeline.make_orientation_bins, as run_parallel_sims.py).
+
+Sources with normalized light curves (a sim_time_reference.txt in the library
+directory, see cosi_sim.pipeline.time_reference) are simulated in times t - t_ref
+in every mode: GRBs with their own normed orientation file, other sources with the
+template orientation file shifted by t_ref (written once to <sim_root>). Each job
+then adds t_ref back with modify_sim_times and runs revan on fixed_times.
+
+A light curve that does not repeat must have the same start and stop times as the
+orientation file (bursts: lie inside it); otherwise the source is skipped with an error.
 
 Then submit with:  python run_pipeline.py submit <sim_root or run dirs>
 """
@@ -47,6 +56,8 @@ import yaml
 import cosi_sim
 from cosi_sim.pipeline.sim_setup import Setup
 from cosi_sim.pipeline.make_orientation_bins import make_bins
+from cosi_sim.pipeline.time_reference import (check_lightcurves, orientation_time_range,
+                                             read_time_reference, write_shifted_orientation)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from run_pipeline import STATE_FILE, AUTOMATION_DIR, now, load_state, save_state, POST_PLOTS_PY  # noqa: E402
@@ -233,18 +244,30 @@ def grb_inputs(src, cfg):
         ori = cfg["grb_orientation_file"]
     else:
         raise SetupError("no *_normed.ori in %s and no grb_orientation_file in the config" % lib_dir)
-    t_ref = None
-    ref_file = os.path.join(lib_dir, "sim_time_reference.txt")
-    if os.path.exists(ref_file):
-        for line in open(ref_file):
-            split = line.split()
-            if len(split) >= 2 and split[0] == "t_ref":
-                t_ref = float(split[1])
+    t_ref = read_time_reference(lib_dir)
     if t_ref is None:
         t_ref = cfg["grb_time_reference"]
     if t_ref is None:
-        raise SetupError("no t_ref in %s and no grb_time_reference in the config" % ref_file)
+        raise SetupError("no t_ref in %s/sim_time_reference.txt and no grb_time_reference in the config" % lib_dir)
     return ori, float(t_ref)
+
+
+def normed_orientation(template_ori, t_ref, sim_root, dry_run=False):
+    """The template orientation file shifted by t_ref, shared by all normalized sources of a sim_root."""
+    stem = os.path.splitext(os.path.basename(template_ori))[0]
+    tag = "%d" % t_ref if t_ref == int(t_ref) else repr(t_ref)
+    path = os.path.join(sim_root, "%s_normed_%s.ori" % (stem, tag))
+    if dry_run:
+        return path
+    expected = orientation_time_range(template_ori)[0] - t_ref
+    if os.path.exists(path) and abs(orientation_time_range(path)[0] - expected) < 1e-3:
+        return path
+    os.makedirs(sim_root, exist_ok=True)
+    tmp = path + ".tmp%d" % os.getpid()
+    write_shifted_orientation(template_ori, tmp, t_ref)
+    os.replace(tmp, path)
+    print("    wrote %s (orientation file in t - t_ref)" % path)
+    return path
 
 
 def scale_fluxes(sources_dir, num_sims):
@@ -291,7 +314,7 @@ def source_env(env_script):
     return "cd %s\nsource %s\n" % (env_dir, env_file)
 
 
-def run_sims_py(cfg, mode, t_ref, file_name):
+def run_sims_py(cfg, t_ref, file_name):
     text = ("# Simulation job (cosima + revan), written by setup_sims.py.\n"
             "import random\n"
             "from cosi_sim.pipeline.simulate import Simulate\n\n"
@@ -301,7 +324,7 @@ def run_sims_py(cfg, mode, t_ref, file_name):
             "    f.write(\"%d\\n\" % seed)\n"
             "instance.define_sim()\n"
             "instance.run_cosima(seed=seed)\n")
-    if mode == "grb":
+    if t_ref is not None:
         text += ("\n# Shift the sim times back to absolute times (the run used t - t_ref):\n"
                  "instance.modify_sim_times(\"%s.inc1.id1.sim.gz\", %r)\n"
                  "instance.name = \"fixed_times\"\n\n" % (file_name, t_ref))
@@ -373,7 +396,7 @@ def write_job_scripts(run_dir, cfg, state):
         + "# cosipy and copy of the final file. Safe to rerun by hand.\n"
         + "cd %s\n" % run_dir
         + "%s %s finish %s\n" % (cfg["orchestrator_python"], os.path.join(AUTOMATION_DIR, "run_pipeline.py"), run_dir))
-    files["run_sims.py"] = run_sims_py(cfg, state["mode"], state.get("t_ref"), state["file_name"])
+    files["run_sims.py"] = run_sims_py(cfg, state.get("t_ref"), state["file_name"])
     files["post_megalib.py"] = post_megalib_py(cfg, state["sim_name"])
     files["post_cosipy.py"] = post_cosipy_py(state["output_label"])
     files["post_plots.py"] = POST_PLOTS_PY
@@ -408,12 +431,12 @@ def write_combined_tra(run_dir, state):
     """Output/<name>.inc1.id1.tra.gz listing the per-job tra files (as run_parallel_sims.py)."""
     out = os.path.join(run_dir, "Output")
     os.makedirs(out, exist_ok=True)
-    path = os.path.join(out, "%s.inc1.id1.tra.gz" % state["file_name"])
+    path = os.path.join(out, "%s.inc1.id1.tra.gz" % state["sim_name"])
     with gzip.open(path, "wt") as f:
         f.write("TYPE TRA\n\n")
         for i in range(state["njobs"]):
             f.write("IN %s\n" % os.path.join(run_dir, "Simulations", "sim_%d" % i, "Output",
-                                             "%s.inc1.id1.tra.gz" % state["file_name"]))
+                                             "%s.inc1.id1.tra.gz" % state["sim_name"]))
         f.write("EN")
 
 
@@ -441,13 +464,26 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
             raise SetupError("already set up in %s (stage: %s); use --force to redo it"
                              % (run_dir, existing["stage"]))
 
+    # Times relative to t_ref (normalized light curves) and the orientation file of the sims:
     t_ref, grb_ori = None, None
     if mode == "grb":
         grb_ori, t_ref = grb_inputs(src, cfg)
+        ori_range = orientation_time_range(grb_ori)
+    else:
+        t_ref = read_time_reference(os.path.join(LIBRARY, src))
+        o0, o1 = orientation_time_range(template["orientation_file"])
+        ori_range = (o0 - t_ref, o1 - t_ref) if t_ref is not None else (o0, o1)
+
+    # Light curves that do not repeat must match the orientation file (bursts: lie inside it):
+    problems = check_lightcurves(lib_file, ori_range, burst=(mode == "grb"))
+    if problems:
+        raise SetupError("light curve does not match the orientation file: " + "; ".join(problems))
 
     if dry_run:
         gz = gunzip_library_files(src, dry_run=True)
-        print("%-50s %-5s -> %s%s" % (src, mode, run_dir, "  (gunzip %s)" % ", ".join(gz) if gz else ""))
+        note = "  (times - t_ref %r)" % t_ref if t_ref is not None else ""
+        print("%-50s %-5s -> %s%s%s" % (src, mode, run_dir, note,
+                                      "  (gunzip %s)" % ", ".join(gz) if gz else ""))
         return
 
     unzipped = gunzip_library_files(src)
@@ -467,10 +503,12 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         local_ori = os.path.join(run_dir, os.path.basename(grb_ori))
         shutil.copy2(grb_ori, local_ori)
         keys["orientation_file"] = local_ori
+    elif t_ref is not None:
+        keys["orientation_file"] = normed_orientation(template["orientation_file"], t_ref, cfg["sim_root"])
     with open(os.path.join(run_dir, "inputs.yaml"), "w") as f:
         f.write(set_yaml_keys(template_text, keys))
     file_name = template["name"]
-    sim_name = "fixed_times" if mode == "grb" else file_name
+    sim_name = "fixed_times" if t_ref is not None else file_name
 
     # cosipy_inputs.yaml:
     with open(cfg["cosipy_template"]) as f:
@@ -496,7 +534,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     if mode == "time":
         try:
             os.chdir(run_dir)
-            extra = make_bins(num_sims, template["orientation_file"], False, "")
+            extra = make_bins(num_sims, keys.get("orientation_file", template["orientation_file"]), False, "")
         finally:
             os.chdir(home)
         njobs = num_sims + extra
@@ -530,8 +568,9 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     if flux_scaling:
         msg += "\n    flux / %d: %s" % (num_sims, ", ".join(
             "%s %.4g -> %.4g" % (c["keyword"], c["flux"], c["scaled"]) for c in flux_scaling))
-    if mode == "grb":
-        msg += "\n    orientation %s, t_ref %.1f" % (os.path.basename(grb_ori), t_ref)
+    if t_ref is not None:
+        msg += "\n    times relative to t_ref %r: orientation %s; sim times fixed after cosima" % (
+            t_ref, os.path.basename(keys["orientation_file"]))
     print(msg)
 
 

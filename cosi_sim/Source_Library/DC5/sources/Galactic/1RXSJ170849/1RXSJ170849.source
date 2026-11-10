@@ -15,5 +15,8 @@ DataChallenge.Source                   1RXSJ170849
 1RXSJ170849.Spectrum                   File 1RXSJ170849_magnetar_spec.dat
 1RXSJ170849.Flux                       0.0002475
 1RXSJ170849.Polarization  galactic    0.8  30
-1RXSJ170849.Lightcurve                     File true 1RXSJ170849_magnetar_lightcurve.dat
+# Light-curve times are relative to t_ref = 1835487300.0 (unix s, first time of the orientation file).
+# Simulate with the orientation file in t - t_ref and add t_ref to the simulated times afterwards.
+# Original light curve (absolute unix times): 1RXSJ170849_magnetar_lightcurve.dat; see sim_time_reference.txt.
+1RXSJ170849.Lightcurve                     File true 1RXSJ170849_magnetar_lightcurve_shifted.dat
 1RXSJ170849.EarthOccultation false

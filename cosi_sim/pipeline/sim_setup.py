@@ -2,6 +2,7 @@
 import os,sys,shutil 
 import yaml
 import cosi_sim
+from cosi_sim.pipeline.time_reference import check_lightcurves, orientation_time_range
 
 class Setup:
         
@@ -21,6 +22,7 @@ class Setup:
 
         self.name = inputs["name"]
         self.src_list = inputs["src_list"]
+        self.orientation_file = inputs.get("orientation_file")
         self.include_transmission_prob = inputs["include_transmission_prob"]
         self.transmission_prob_file = inputs["transmission_prob_file"]
         self.run_type = inputs["run_type"]
@@ -177,7 +179,24 @@ class Setup:
 
                 else:
                     h.write(line)
-       
+
+            h.close()
+
+            # Light curves that do not repeat must start and stop with the orientation file
+            # (bursts: lie inside it):
+            if self.orientation_file and os.path.exists(str(self.orientation_file)):
+                burst = "GRBs" in each.split("/")[:-1]
+                problems = check_lightcurves(this_src, orientation_time_range(self.orientation_file), burst=burst)
+                if problems:
+                    print()
+                    print("ERROR: light curve does not match the orientation file %s" % self.orientation_file)
+                    print("Source: %s" % each)
+                    for problem in problems:
+                        print("  " + problem)
+                    print()
+                    os.chdir(self.home)
+                    sys.exit(1)
+
         # Go home:
         os.chdir(self.home)
 

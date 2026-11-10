@@ -28,7 +28,7 @@ Every component of the DC5 mock dataset, its origin in the DC4 mock dataset, the
 | reused | 3C454p3_low | `DC4/sources/Extragalactic/3C454p3_low` | re-simulate with the same source file (time-chunk light-curve bug) |
 | reused | 3C454p3_high | `DC4/sources/Extragalactic/3C454p3_high` | re-simulate with the same source file (time-chunk light-curve bug) |
 | reused | CenA | `DC4/sources/Extragalactic/CenA` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/CenA_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| reused | Crab_DC4 | `DC4/sources/Galactic/Crab` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/Crab_DC4_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
+| reused | Crab_DC4 | `DC4/sources/Galactic/Crab` | re-simulate with the same source file (pulsar light curves now in t - t_ref; at absolute times MEGAlib's repeat count overflows) |
 | reused | Globular_Cluster_Tuc_47 | `DC3/sources/511/Globular_Cluster_Tuc_47` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_Tuc_47_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | reused | Globular_Cluster_Omega_Cen | `DC3/sources/511/Globular_Cluster_Omega_Cen` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_Omega_Cen_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | reused | Globular_Cluster_NGC_6397 | `DC3/sources/511/Globular_Cluster_NGC_6397` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_NGC_6397_3months_unbinned_data_filtered_with_SAAcut.fits.gz |

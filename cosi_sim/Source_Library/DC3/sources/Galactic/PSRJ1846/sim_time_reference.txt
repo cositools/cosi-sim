@@ -1,0 +1,9 @@
+# MEGAlib simulation time reference for PSRJ1846
+t_ref                      1835487300.0
+lightcurve_original        J1846_lc.dat
+lightcurve_folded          J1846_lc_shifted.dat
+repeat_period              0.29391415950600003
+fold_phase_offset          0.16342731579736608
+orientation_file           DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori
+# Repeating light curve(s): simulate over the orientation file in t - t_ref.
+# After the Cosima run, add t_ref to the simulated event times to recover the absolute times.

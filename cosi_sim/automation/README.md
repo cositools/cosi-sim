@@ -43,9 +43,19 @@ The mode is chosen from the library source file:
 |---|---|---|---|
 | `time` | no light curve | `num_sims` time chunks (+1 if the orientation file does not divide evenly), one array task each | orientation bins from `cosi_sim.pipeline.make_orientation_bins`, as `run_parallel_sims.py` |
 | `flux` | `.Lightcurve` in the source file | `num_sims` runs of the full exposure | every `.Flux` in the copied source file is divided by `num_sims` (the library file is not changed) |
-| `grb` | source under a `GRBs/` category | one job | uses the `*_normed.ori` in the source directory, `modify_sim_times(..., t_ref)` with t_ref from `sim_time_reference.txt`, then revan on `fixed_times` |
+| `grb` | source under a `GRBs/` category | one job | uses the `*_normed.ori` in the source directory |
 
 Each sim runs exactly the steps of `run_sims.py`: `define_sim()`, `run_cosima(seed=random)` (the seed is saved in `cosima_seed.txt`), `run_revan(geo_file=revan_geometry)`.
+
+## Light curves
+
+**Times relative to t_ref.** MEGAlib has trouble with light curves at large absolute times: short bursts, and repeating light curves with periods below ~0.86 s (the number of repeats is stored in a 32-bit integer). Such library sources store their light curves in times t − t_ref (`*_shifted.dat`, made with `python -m cosi_sim.pipeline.time_reference`) and have a `sim_time_reference.txt`. In any mode, these sources are simulated in t − t_ref:
+- **GRBs** use the `*_normed.ori` in the source directory.
+- **Other sources** use the template orientation file shifted by t_ref. It is written once to `<sim_root>` and shared.
+
+Each job then runs `modify_sim_times(..., t_ref)`, so the events get their absolute times back, and revan, mimrec and cosipy work on `fixed_times`.
+
+**Start and stop times.** A light curve that does not repeat must have the same start and stop times as the orientation file of the simulation. For bursts (`grb` mode), it must lie inside it. Otherwise `setup_sims.py` skips the source and says why (also with `--dry-run`); `Setup.setup_srcs()` stops with the same error.
 
 ## What happens after `submit`
 
