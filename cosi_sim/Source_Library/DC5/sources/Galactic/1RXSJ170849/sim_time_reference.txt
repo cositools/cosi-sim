@@ -1,0 +1,7 @@
+# MEGAlib simulation time reference for 1RXSJ170849
+t_ref                      1835487300.0
+lightcurve_repeating       1RXSJ170849_magnetar_lightcurve.dat
+repeat_period              2591991.4363440797
+orientation_file           DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori
+# Repeating light curve(s), used as they are: simulate over the orientation file in t - t_ref.
+# After the Cosima run, add t_ref to the simulated event times to recover the absolute times.

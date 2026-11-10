@@ -1,0 +1,17 @@
+# Define DC5 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source          Seyfert_new
+Seyfert_new.ParticleType               1
+Seyfert_new.Beam                       FarFieldPointSource 0 0
+Seyfert_new.Orientation                Galactic Fixed -21.833000 31.746000
+Seyfert_new.Spectrum                   File Seyfert_new_spec.dat
+Seyfert_new.Flux                       0.0003
+Seyfert_new.EarthOccultation false

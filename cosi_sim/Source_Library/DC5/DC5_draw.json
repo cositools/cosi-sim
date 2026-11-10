@@ -1,0 +1,62 @@
+{
+ "seed": 3891814211,
+ "n_files": 53,
+ "n_units": 46,
+ "removed": [
+  "G1903",
+  "Kepler",
+  "MAXIJ1348",
+  "OrEr",
+  "PSRJ1846"
+ ],
+ "modified": [
+  "1E1740_compow",
+  "1RXSJ170849",
+  "26Al_Cyg_Region",
+  "4C21p35",
+  "60Fe_NE2001",
+  "BB_511",
+  "GRS1758",
+  "LMC_511",
+  "M31_511",
+  "MAXIJ1820",
+  "NGC_4151",
+  "Positrons_In_Flight_Annihilation",
+  "Tycho",
+  "USco",
+  "cygX1_hard",
+  "cygX3",
+  "magnetar2",
+  "nova_co"
+ ],
+ "reused": [
+  "26Al_NE2001",
+  "3C454p3",
+  "4C71p07",
+  "60Fe_Cyg_Region",
+  "CasAG16distribution",
+  "CenA",
+  "Crab",
+  "GC_NGC_6121",
+  "GC_NGC_6397",
+  "GC_Omega_Cen",
+  "GC_Tuc_47",
+  "LS5039",
+  "NB_511",
+  "NGC_1068",
+  "PSRB1259",
+  "Positrons_Central_Source",
+  "Positrons_Thin_Disk",
+  "Positrons_from_26Al",
+  "Positrons_from_44Ti",
+  "SN1987A",
+  "VelaJr_44Ti",
+  "Vela_SNR_511",
+  "Virgo_511"
+ ],
+ "files": {
+  "removed": 5,
+  "modified": 21,
+  "reused": 27
+ }
+}

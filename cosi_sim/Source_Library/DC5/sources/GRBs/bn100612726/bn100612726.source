@@ -1,0 +1,34 @@
+# Define DC5 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source               bn100612726
+bn100612726.ParticleType    1
+bn100612726.Beam            FarFieldPointSource 0.0 0.0
+
+# Orientation: Latitude b [deg], Longitude l [deg]
+bn100612726.Orientation     Galactic Fixed 17.7076 189.5098
+
+# Spectrum 
+bn100612726.Spectrum        PowerLaw 100 10000 2.6710
+
+# Average photon flux in photon/cm2/s
+bn100612726.Flux            2.02145
+
+# Polarization: fraction in [0,1], angle in [0,180]
+bn100612726.Polarization       		galactic 0.56 140.8
+
+# Lightcurve
+# Light-curve times are relative to t_ref = 1835487300.0 (unix s, first time of the orientation file).
+# Simulate with DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
+# Original light curve (absolute unix times): bn100612726_lightcurve.dat; see sim_time_reference.txt.
+bn100612726.Lightcurve      File false bn100612726_lightcurve_shifted.dat
+
+# Earth occultation:
+bn100612726.EarthOccultation false

@@ -1,0 +1,29 @@
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source          MAXIJ1820_0p1-0p4
+MAXIJ1820_0p1-0p4.ParticleType               1
+MAXIJ1820_0p1-0p4.Beam                       FarFieldPointSource 0 0
+MAXIJ1820_0p1-0p4.Orientation                Galactic Fixed 10.15915  35.8535
+MAXIJ1820_0p1-0p4.Spectrum                   File MAXIJ1820_0.1-0.4_spec.dat
+MAXIJ1820_0p1-0p4.Flux                       0.0967469
+MAXIJ1820_0p1-0p4.Lightcurve                 File false MAXIJ1820_LC.dat
+MAXIJ1820_0p1-0p4.Polarization  galactic   0.17  120
+MAXIJ1820_0p1-0p4.EarthOccultation false
+
+DataChallenge.Source          MAXIJ1820_0p4-10
+MAXIJ1820_0p4-10.ParticleType               1
+MAXIJ1820_0p4-10.Beam                       FarFieldPointSource 0 0
+MAXIJ1820_0p4-10.Orientation                Galactic Fixed 10.15915  35.8535
+MAXIJ1820_0p4-10.Spectrum                   File MAXIJ1820_0.4-10_spec.dat
+MAXIJ1820_0p4-10.Flux                       0.00417446
+MAXIJ1820_0p4-10.Lightcurve                 File false MAXIJ1820_LC.dat
+MAXIJ1820_0p4-10.Polarization  galactic   0.35  105
+MAXIJ1820_0p4-10.EarthOccultation false

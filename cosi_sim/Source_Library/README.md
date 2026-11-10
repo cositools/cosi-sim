@@ -211,6 +211,65 @@ DC4/sources/DarkMatter/Annihilation_eeg_NFW <br />
 DC4/sources/DarkMatter/Decay_gg_NFW <br />
 DC4/sources/DarkMatter/Decay_mass400 <br />
 
+## Data Challenge 5 (DC5) <br />
+Blind DC5 mock dataset. See DC5/README.md before using these sources. <br />
+DC5/sources/511/BB_511 <br />
+DC5/sources/511/LMC_511 <br />
+DC5/sources/511/M31_511 <br />
+DC5/sources/511/NB_511 <br />
+DC5/sources/511/Positrons_In_Flight_Annihilation <br />
+DC5/sources/511/Positrons_Point_Source <br />
+DC5/sources/511/Vela_SNR_511 <br />
+DC5/sources/Nucleosynthesis/26Al_Carina_Region <br />
+DC5/sources/Nucleosynthesis/26Al_Cyg_Region <br />
+DC5/sources/Nucleosynthesis/26Al_new_region <br />
+DC5/sources/Nucleosynthesis/60Fe_NE2001 <br />
+DC5/sources/Nucleosynthesis/nova_one_22Na <br />
+DC5/sources/Nucleosynthesis/Ti44_hidden_SNR <br />
+DC5/sources/Nucleosynthesis/Tycho <br />
+DC5/sources/Nucleosynthesis/USco <br />
+DC5/sources/Galactic/1E1740_twocompt <br />
+DC5/sources/Galactic/1RXSJ170849 <br />
+DC5/sources/Galactic/4U0142p61 <br />
+DC5/sources/Galactic/BHXB_hard_transient <br />
+DC5/sources/Galactic/cygX1_soft <br />
+DC5/sources/Galactic/cygX3 <br />
+DC5/sources/Galactic/GRS1758 <br />
+DC5/sources/Galactic/GX339m4_hard <br />
+DC5/sources/Galactic/magnetar2 <br />
+DC5/sources/Galactic/magnetar3 <br />
+DC5/sources/Galactic/MAXIJ1820 <br />
+DC5/sources/Galactic/nova_co_478keV <br />
+DC5/sources/Galactic/nova_co_511keV <br />
+DC5/sources/Galactic/nova_co_continuum <br />
+DC5/sources/Galactic/PSRB1509 <br />
+DC5/sources/Galactic/PWN_hard_source <br />
+DC5/sources/Extragalactic/3C273 <br />
+DC5/sources/Extragalactic/3C279_high <br />
+DC5/sources/Extragalactic/4C21p35_flare <br />
+DC5/sources/Extragalactic/4C21p35_noflare <br />
+DC5/sources/Extragalactic/IC_4329A <br />
+DC5/sources/Extragalactic/MeV_blazar <br />
+DC5/sources/Extragalactic/NGC_4151 <br />
+DC5/sources/Extragalactic/NGC_4945 <br />
+DC5/sources/Extragalactic/Seyfert_new <br />
+DC5/sources/GRBs/bn080802386 <br />
+DC5/sources/GRBs/bn081207680 <br />
+DC5/sources/GRBs/bn090424592 <br />
+DC5/sources/GRBs/bn100612726 <br />
+DC5/sources/GRBs/bn110605183 <br />
+DC5/sources/GRBs/bn131122490 <br />
+DC5/sources/GRBs/bn140329295 <br />
+DC5/sources/GRBs/bn161004964 <br />
+DC5/sources/GRBs/bn170405777 <br />
+DC5/sources/GRBs/bn180504136 <br />
+DC5/sources/GRBs/bn180703876 <br />
+DC5/sources/DarkMatter/Annihilation_eeg_NFW <br />
+DC5/sources/GRBs/MGF051103 <br />
+DC5/sources/GRBs/MGF180128A <br />
+DC5/sources/GRBs/MGF200415A <br />
+DC5/sources/GRBs/MgtBurst_bright_complex <br />
+
 ## Galactic Diffuse (Galdiff) <br />
 Galdiff/GalIC <br />
 Galdiff/GalBrem <br />

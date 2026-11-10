@@ -1,0 +1,39 @@
+# Define DC5 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source B1509_band1
+B1509_band1.ParticleType			1
+B1509_band1.Beam					FarFieldPointSource 0 0
+B1509_band1.Orientation				Galactic Fixed -01.16175 320.32063
+B1509_band1.Spectrum				File B1509_b1_spec.dat
+# Simulated in times relative to t_ref = 1835487300.0 (unix s, first time of the orientation file).
+# Simulate with the orientation file in t - t_ref and add t_ref to the simulated times afterwards.
+# The repeating light curve starts its first cycle at t_ref; see sim_time_reference.txt.
+B1509_band1.Lightcurve				File true B1509_b1_lc.dat
+B1509_band1.Flux					0.000386826
+B1509_band1.EarthOccultation false
+
+DataChallenge.Source B1509_band2
+B1509_band2.ParticleType			1
+B1509_band2.Beam					FarFieldPointSource 0 0
+B1509_band2.Orientation				Galactic Fixed -01.16175 320.32063
+B1509_band2.Spectrum				File B1509_b2_spec.dat
+B1509_band2.Lightcurve				File true B1509_b2_lc.dat
+B1509_band2.Flux					0.000246015
+B1509_band2.EarthOccultation false
+
+DataChallenge.Source B1509_band3
+B1509_band3.ParticleType			1
+B1509_band3.Beam					FarFieldPointSource 0 0
+B1509_band3.Orientation				Galactic Fixed -01.16175 320.32063
+B1509_band3.Spectrum				File B1509_b3_spec.dat
+B1509_band3.Lightcurve				File true B1509_b3_lc.dat
+B1509_band3.Flux					0.000146919
+B1509_band3.EarthOccultation false
