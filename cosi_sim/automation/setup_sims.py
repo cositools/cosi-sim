@@ -18,6 +18,7 @@ For each source this writes <sim_root>/<class>/<name>/ with:
     run_sims.py                       cosima + revan for one job
     slurm_array_job.sh | grb_job.sh   the simulation job
     post_megalib.py, post_cosipy.py   mimrec + overflow filter; cosipy + SAA cut
+    post_plots.py                     spectrum, light curve and image plots
     postprocess.sh                    runs run_pipeline.py finish
     automation.json                   settings and progress, used by run_pipeline.py
 
@@ -48,7 +49,7 @@ from cosi_sim.pipeline.sim_setup import Setup
 from cosi_sim.pipeline.make_orientation_bins import make_bins
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from run_pipeline import STATE_FILE, AUTOMATION_DIR, now, load_state, save_state  # noqa: E402
+from run_pipeline import STATE_FILE, AUTOMATION_DIR, now, load_state, save_state, POST_PLOTS_PY  # noqa: E402
 
 LIBRARY = os.path.join(os.path.dirname(cosi_sim.__file__), "Source_Library")
 
@@ -375,6 +376,7 @@ def write_job_scripts(run_dir, cfg, state):
     files["run_sims.py"] = run_sims_py(cfg, state["mode"], state.get("t_ref"), state["file_name"])
     files["post_megalib.py"] = post_megalib_py(cfg, state["sim_name"])
     files["post_cosipy.py"] = post_cosipy_py(state["output_label"])
+    files["post_plots.py"] = POST_PLOTS_PY
     for fname, text in files.items():
         path = os.path.join(run_dir, fname)
         with open(path, "w") as f:
