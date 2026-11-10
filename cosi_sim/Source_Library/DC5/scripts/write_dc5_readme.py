@@ -118,10 +118,10 @@ All 11 DC4 `GRB_bn` bursts keep their light-curve shape and spectral model. Thei
 
 **MEGAlib simulation inputs (Request 7).** MEGAlib has trouble simulating short bursts at large absolute unix times, so every GRB and magnetar-burst directory holds inputs in times relative to **t_ref = 1835487300.0**, the first time of the orientation file:
 - `<light curve>_shifted.dat`: the light curve with time − t_ref; the source file points to it, and the original light curve is kept;
-- `DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori`: the orientation file for the Cosima run, cut to 3–8 rows (15 s steps) covering the burst, with time − t_ref. `..._cut.ori` holds the same rows with absolute times;
+- `DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth_cut_normed.ori`: the orientation file for the Cosima run, cut to the 1 s rows covering the burst (at least 3), with time − t_ref. `..._cut.ori` holds the same rows with absolute times;
 - `sim_time_reference.txt`: t_ref and the burst window, absolute and shifted.
 
-After the Cosima run, add t_ref to the simulated times. The files were made with `scripts/make_sim_time_inputs.py` from the 9-column `DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori`, which matches the DC4 orientation file without the livetime column. The method is the same as `cut_ori.py` and `shift_times.py`, and the outputs are byte-identical where those scripts run. Two cases differ: bursts shorter than the 15 s step keep the bracketing rows (at least 3), and the light curves of MGF180128A and MGF200415A, which have no `EN` footer, get their last data point shifted too.
+After the Cosima run, add t_ref to the simulated times. The files were made with `scripts/make_sim_time_inputs.py` from `DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth.ori`, the 9-column orientation file with 1 s steps used for the DC4 GRB simulations (no livetime column; the cosipy SAA cut uses the 15 s file with livetime). The method is the same as `cut_ori.py` and `shift_times.py`. Two cases differ: bursts shorter than the orientation step keep the bracketing rows (at least 3), and the light curves of MGF180128A and MGF200415A, which have no `EN` footer, get their last data point shifted too.
 
 **Fix.** The DC3 bn180703876 source file declared `EarthOccultation` for the wrong component (`bn090424592`); the DC5 file uses the correct name.
 

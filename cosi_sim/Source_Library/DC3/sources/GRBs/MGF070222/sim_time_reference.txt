@@ -6,10 +6,10 @@ burst_start_absolute       1835493286.000000
 burst_end_absolute         1835493287.022000
 burst_start_shifted        5986.000000
 burst_end_shifted          5987.022000
-orientation_file           DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori
-orientation_cut            DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut.ori
-orientation_cut_normed     DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori
-orientation_rows           3
+orientation_file           DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth.ori
+orientation_cut            DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth_cut.ori
+orientation_cut_normed     DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth_cut_normed.ori
+orientation_rows           4
 orientation_start_shifted  5985.000000
-orientation_end_shifted    6015.000000
+orientation_end_shifted    5988.000000
 # After the Cosima run, add t_ref to the simulated event times to recover the absolute times.
