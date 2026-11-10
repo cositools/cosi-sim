@@ -16,7 +16,7 @@ path = "/zfs/astrohe/ckarwin/My_Class_Library/COSI/Data_Challenge/Source_Library
 for i in range(0,len(source_list)):
     this_name = source_list[i]
     this_file = path + this_name + "/" + this_name + "_spec.dat"
-    df = pd.read_csv(this_file,skiprows=6,delim_whitespace=True,names=["ID","energy[keV]","flux[ph/cm^2/s/keV]"])
+    df = pd.read_csv(this_file,skiprows=6,sep=r"\s+",names=["ID","energy[keV]","flux[ph/cm^2/s/keV]"])
     energy = df["energy[keV]"]
     flux = energy**2 * df["flux[ph/cm^2/s/keV]"]*1.60218e-9 # erg/cm^2/s
     plt.loglog(energy,flux,ls=line_styles[i],color=colors[i],label=this_name)

@@ -851,7 +851,7 @@ class Simulate:
 
         # Plot prompt:
         spec = "Output/extracted_spectrum.dat"
-        df = pd.read_csv(spec,delim_whitespace=True)
+        df = pd.read_csv(spec,sep=r"\s+")
         e = df["EC[keV]"]
         e_width = df["BW[keV]"]
         r = df["src_ct/keV"]
@@ -899,7 +899,7 @@ class Simulate:
 
         # Plot prompt diffuse:
         lc = "Output/extracted_lc.dat"
-        df = pd.read_csv(lc,delim_whitespace=True)
+        df = pd.read_csv(lc,sep=r"\s+")
         t = df["t_center[s]"]
         if normed_time == True:
             t = (t - t[0])
@@ -930,7 +930,7 @@ class Simulate:
         """
 
         # Upload data:
-        df = pd.read_csv("Output/extracted_image.dat",delim_whitespace=True)
+        df = pd.read_csv("Output/extracted_image.dat",sep=r"\s+")
 
         x = df["Phi_center[deg]"]
         y = df["Theta_center[deg]"]

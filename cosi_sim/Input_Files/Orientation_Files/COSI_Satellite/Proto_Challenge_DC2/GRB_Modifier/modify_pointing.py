@@ -6,7 +6,7 @@ from astropy.coordinates import SkyCoord
 
 ori_file = "../20280301_first_2hrs.ori"
 
-df = pd.read_csv(ori_file,delim_whitespace=True,skiprows=[0,7202],names=["type","time","xb","xl","zb","zl"])
+df = pd.read_csv(ori_file,sep=r"\s+",skiprows=[0,7202],names=["type","time","xb","xl","zb","zl"])
 print(df)
 col0 = df["type"]
 time = df["time"]
