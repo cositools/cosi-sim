@@ -3,9 +3,10 @@ MEGAlib simulation inputs with normalized times for the DC5 GRBs and magnetar bu
 
 Usage: python3 make_sim_time_inputs.py <cosi-sim repo root> <orientation file>
 
-<orientation file> is the 9-column DC4/DC5 file used for the MEGAlib simulations,
-DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori (first time 1835487300.0, 15 s steps).
-It is the DC4 orientation file without the livetime column.
+<orientation file> is the 9-column orientation file with 1 s steps used for the DC4 GRB simulations,
+DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth.ori (first time 1835487300.0); an excerpt holding
+the rows around the bursts gives the same output. It has no livetime column (the SAA cut in cosipy uses
+the 15 s file with livetime).
 
 Large absolute unix times are hard for MEGAlib to simulate for short bursts, so every burst is simulated
 in times relative to T_REF = 1835487300.0 (the first time of the orientation file). For each burst
@@ -19,7 +20,7 @@ directory in DC5/sources/GRBs/ this writes:
 
 The original light curve stays in the directory for reference. The logic follows cut_ori.py and
 shift_times.py (C. Karwin), with two generalisations:
-  * bursts shorter than the 15 s orientation step have no orientation row inside the burst; the rows
+  * bursts shorter than the orientation step have no orientation row inside the burst; the rows
     bracketing the burst are kept, plus more neighbours until there are at least 3 rows;
   * light-curve files without an "EN" footer (MGF180128A, MGF200415A) end with a data point, which is
     treated as data rather than as a footer line.
@@ -34,7 +35,7 @@ MAGNETAR_KEPT = ["MGF051103", "MGF180128A", "MGF200415A", "MgtBurst_bright_compl
 REPO, ORI = Path(sys.argv[1]), Path(sys.argv[2])
 LIB = REPO / "cosi_sim" / "Source_Library"
 GRBDIR = LIB / "DC5" / "sources" / "GRBs"
-ORI_STEM = ORI.stem          # DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth
+ORI_STEM = ORI.stem          # DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth
 
 
 def is_data(line):
@@ -89,7 +90,7 @@ for i, line in enumerate(ORI_LINES):
     if len(tok) != 9:
         raise ValueError(f"Unexpected ORI row format (expected 9 columns): {line!r}")
     ORI_ROWS.append((i, float(tok[1])))
-assert ORI_ROWS[0][1] == T_REF, f"reference time {T_REF} is not the first orientation time ({ORI_ROWS[0][1]})"
+assert ORI_ROWS[0][1] >= T_REF, f"orientation file starts before the reference time {T_REF} ({ORI_ROWS[0][1]})"
 
 
 def cut_ori(t_first, t_last, out_cut, out_norm):
@@ -99,7 +100,7 @@ def cut_ori(t_first, t_last, out_cut, out_norm):
         keep = set(range(inr[0], inr[-1] + 1))
         if inr[0] - 1 >= 0: keep.add(inr[0] - 1)
         if inr[-1] + 1 < len(times): keep.add(inr[-1] + 1)
-    else:                                      # burst inside one 15 s step: the two bracketing rows
+    else:                                      # burst inside one orientation step: the two bracketing rows
         before = max(k for k, t in enumerate(times) if t < t_first)
         after = min(k for k, t in enumerate(times) if t > t_last)
         keep = {before, after}

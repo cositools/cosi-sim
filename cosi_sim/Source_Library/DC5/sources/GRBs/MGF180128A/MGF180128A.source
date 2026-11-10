@@ -23,7 +23,7 @@ MGF180128A.Flux             3.6326352
 
 # GBM Light Curve.
 # Light-curve times are relative to t_ref = 1835487300.0 (unix s, first time of the orientation file).
-# Simulate with DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
+# Simulate with DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
 # Original light curve (absolute unix times): GRB_180128A_Sum_n3_n4_n6_n7_n8_b1.dat; see sim_time_reference.txt.
 MGF180128A.Lightcurve       File false  GRB_180128A_Sum_n3_n4_n6_n7_n8_b1_shifted.dat
 
