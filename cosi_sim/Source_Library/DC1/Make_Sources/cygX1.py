@@ -13,7 +13,7 @@ def cygX1_flux(energy_range, elow, ehigh):
     gal_l = 71.33496
     gal_b = 3.066917
 
-    df = pd.read_csv("Cyg_X1.dat",skiprows=1,delim_whitespace=True)
+    df = pd.read_csv("Cyg_X1.dat",skiprows=1,sep=r"\s+")
     energy = df["energy[eV]"]*(1.0/1000.0) #keV
     flux = df["flux[erg/cm^2/s]"] #erg/cm^2/s
     flux = flux*6.242e8 #keV/cm^2/s

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
 # Upload file:
-df = pd.read_csv("TP_Earth_occultation_550km_zenith_pointing.dat",delim_whitespace=True,skiprows=7,names=["index","theta","energy","probability"])
+df = pd.read_csv("TP_Earth_occultation_550km_zenith_pointing.dat",sep=r"\s+",skiprows=7,names=["index","theta","energy","probability"])
 
 theta_list = [0.0, 45.0, 90.0, 112.5, 112.98, 145.0, 180.0]
 energy_list = [100.0, 1000.0, 5000.0, 10000.0]

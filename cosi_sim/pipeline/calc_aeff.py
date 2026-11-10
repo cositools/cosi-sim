@@ -243,7 +243,7 @@ class CalcAeff(Simulate):
         """
 
         # Observed events:
-        df_data = pd.read_csv(input_data, delim_whitespace=True)
+        df_data = pd.read_csv(input_data, sep=r"\s+")
         flux_data = df_data["src_ct/keV"] # ph/keV
         bin_width = df_data["BW[keV]"] # keV
         self.elow = df_data["EL[keV]"] 

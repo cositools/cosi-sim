@@ -14,7 +14,7 @@ def cenA_flux(energy_range, elow, ehigh):
     gal_b = 19.417
 
     # Spectrum:
-    df = pd.read_csv("cenA.txt",delim_whitespace=True)
+    df = pd.read_csv("cenA.txt",sep=r"\s+")
     energy = df["energy[eV]"]*(1.0/1000.0) #keV
     flux = df["flux[erg/cm^2/s]"] #erg/cm^2/s
     flux = flux*6.242e8 #keV/cm^2/s

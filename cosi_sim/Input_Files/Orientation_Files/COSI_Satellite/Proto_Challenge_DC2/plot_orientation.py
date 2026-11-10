@@ -2,7 +2,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("20280301_first_2hrs.ori",delim_whitespace=True,skiprows=[0,7202],names=["type","time","xb","xl","zb","zl"])
+df = pd.read_csv("20280301_first_2hrs.ori",sep=r"\s+",skiprows=[0,7202],names=["type","time","xb","xl","zb","zl"])
 print(df)
 time = df["time"]
 xb = df["xb"]
