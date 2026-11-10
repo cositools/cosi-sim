@@ -1,17 +1,11 @@
 # MEGAlib simulation time reference for Crab
 t_ref                      1835487300.0
-lightcurve_original        Crab_P1_lc.dat
-lightcurve_folded          Crab_P1_lc_shifted.dat
+lightcurve_repeating       Crab_P1_lc.dat
 repeat_period              0.0333924123
-fold_phase_offset          0.00989320094994936
-lightcurve_original        Crab_Brg_lc.dat
-lightcurve_folded          Crab_Brg_lc_shifted.dat
+lightcurve_repeating       Crab_Brg_lc.dat
 repeat_period              0.0333924123
-fold_phase_offset          0.00989320094994936
-lightcurve_original        Crab_P2_lc.dat
-lightcurve_folded          Crab_P2_lc_shifted.dat
+lightcurve_repeating       Crab_P2_lc.dat
 repeat_period              0.0333924123
-fold_phase_offset          0.00989320094994936
 orientation_file           DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori
-# Repeating light curve(s): simulate over the orientation file in t - t_ref.
+# Repeating light curve(s), used as they are: simulate over the orientation file in t - t_ref.
 # After the Cosima run, add t_ref to the simulated event times to recover the absolute times.

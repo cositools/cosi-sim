@@ -49,13 +49,13 @@ Each sim runs exactly the steps of `run_sims.py`: `define_sim()`, `run_cosima(se
 
 ## Light curves
 
-**Times relative to t_ref.** MEGAlib has trouble with light curves at large absolute times: short bursts, and repeating light curves with periods below ~0.86 s (the number of repeats is stored in a 32-bit integer). Such library sources store their light curves in times t − t_ref (`*_shifted.dat`, made with `python -m cosi_sim.pipeline.time_reference`) and have a `sim_time_reference.txt`. In any mode, these sources are simulated in t − t_ref:
+**Times relative to t_ref.** MEGAlib has trouble with light curves at large absolute times: short bursts, and repeating light curves with periods below ~0.86 s (the number of repeats is stored in a 32-bit integer). Such library sources have a `sim_time_reference.txt` (made with `python -m cosi_sim.pipeline.time_reference`). Burst light curves are stored in times t − t_ref (`*_shifted.dat`); repeating light curves hold one cycle starting at 0 and are used as they are, so the first cycle starts at t_ref. In any mode, these sources are simulated in t − t_ref:
 - **GRBs** use the `*_normed.ori` in the source directory.
 - **Other sources** use the template orientation file shifted by t_ref. It is written once to `<sim_root>` and shared.
 
 Each job then runs `modify_sim_times(..., t_ref)`, so the events get their absolute times back, and revan, mimrec and cosipy work on `fixed_times`.
 
-**Start and stop times.** A light curve that does not repeat must have the same start and stop times as the orientation file of the simulation. For bursts (`grb` mode), it must lie inside it. Otherwise `setup_sims.py` skips the source and says why (also with `--dry-run`); `Setup.setup_srcs()` stops with the same error.
+**Start and stop times.** A light curve that does not repeat must have the same start and stop times as the orientation file of the simulation. For bursts (`grb` mode), it must lie inside it. A repeating light curve must not need more than 2^31 repeats to reach the orientation times. Otherwise `setup_sims.py` skips the source and says why (also with `--dry-run`); `Setup.setup_srcs()` stops with the same error.
 
 ## What happens after `submit`
 

@@ -1,9 +1,7 @@
 # MEGAlib simulation time reference for magnetar2
 t_ref                      1835487300.0
-lightcurve_original        magnetar2_lightcurve.dat
-lightcurve_folded          magnetar2_lightcurve_shifted.dat
+lightcurve_repeating       magnetar2_lightcurve.dat
 repeat_period              604800.0
-fold_phase_offset          524100.0
 orientation_file           DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori
-# Repeating light curve(s): simulate over the orientation file in t - t_ref.
+# Repeating light curve(s), used as they are: simulate over the orientation file in t - t_ref.
 # After the Cosima run, add t_ref to the simulated event times to recover the absolute times.

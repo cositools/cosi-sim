@@ -10,16 +10,15 @@ simulated times afterwards (Simulate.modify_sim_times).
 
 A source directory in the library that uses normalized times contains:
 
-    <light curve>_shifted.dat     light curve in t - t_ref; the .source file points to it
-                                  (the original light curve is kept)
     sim_time_reference.txt        t_ref and how the files were made
+    <light curve>_shifted.dat     bursts only: light curve in t - t_ref; the .source file
+                                  points to it (the original light curve is kept)
     *_cut.ori, *_cut_normed.ori   bursts only: the orientation rows covering the burst,
                                   in absolute times and in t - t_ref
 
-Light curves that do not repeat (bursts) are shifted: every time becomes t - t_ref.
-Repeating light curves (Lightcurve File true) are folded: the shifted light curve is the
-original one evaluated at t = s + t_ref, i.e. also t - t_ref, written over one period
-starting at 0, so the pulse phase at every absolute time is unchanged.
+Burst light curves are shifted: every time becomes t - t_ref. Repeating light curves
+(Lightcurve File true) hold one cycle starting at 0 and are used as they are: with the
+orientation file in t - t_ref, the first cycle starts at t_ref.
 
 Usage (writes the files above into library source directories):
 
@@ -29,18 +28,19 @@ t_ref defaults to the first time of the orientation file.
 
 check_lightcurves() is used by Setup.setup_srcs() and the automation: a light curve that
 does not repeat must have the same start and stop times as the orientation file (or, for
-bursts, lie inside it).
+bursts, lie inside it), and a repeating light curve must not repeat more than 2^31 times
+before the end of the orientation file.
 """
 
 import argparse
 import gzip
-import math
 import os
 import re
 import sys
 
 TIME_REFERENCE_FILE = "sim_time_reference.txt"
 TOLERANCE = 1e-3            # s, allowed difference between light-curve and orientation times
+MAX_REPEATS = 2 ** 31 - 1   # MFunction::FindX stores the number of repeats in an int
 
 
 # ---------------------------------------------------------------------------
@@ -177,18 +177,26 @@ def check_lightcurves(source_file, ori_range, burst=False, lc_dir=None):
 
     A light curve that does not repeat must start and stop at the same times as the
     orientation file used for the simulation (ori_range = (first, last)); for bursts it
-    must lie inside it. Repeating light curves are not checked.
+    must lie inside it. A repeating light curve must not repeat more than 2^31 times
+    between its start and the orientation times (otherwise MEGAlib's repeat count overflows).
     """
     lc_dir = lc_dir or os.path.dirname(os.path.abspath(source_file))
     o0, o1 = ori_range
     problems = []
     for component, repeats, name in lightcurves(source_file):
-        if repeats:
-            continue
         try:
             t0, t1 = lightcurve_time_range(os.path.join(lc_dir, name))
         except (OSError, ValueError) as err:
             problems.append("%s: cannot read light curve %s (%s)" % (component, name, err))
+            continue
+        if repeats:
+            period = t1 - t0
+            repeats_needed = max(abs(o1 - t1), abs(t0 - o0)) / period if period > 0 else float("inf")
+            if repeats_needed > MAX_REPEATS:
+                problems.append("%s: light curve %s (period %.6g s) would repeat %.3g times to reach the "
+                                "orientation times [%.3f, %.3f] s, more than MEGAlib can count (2^31); "
+                                "simulate in times relative to the orientation start (see %s)"
+                                % (component, name, period, repeats_needed, o0, o1, __name__))
             continue
         if burst:
             if t0 < o0 - TOLERANCE or t1 > o1 + TOLERANCE:
@@ -232,68 +240,6 @@ def shift_lightcurve(lc_in, lc_out, t_ref):
                 raise ValueError("Expected 3 columns in %s: %r" % (lc_in, line))
             f.write("%s %.6f %s\n" % (split[0], float(split[1]) - t_ref, split[2]))
         f.writelines(footer)
-
-
-def fold_lightcurve(lc_in, lc_out, t_ref):
-    """Repeating light curve in times s = t - t_ref, over one period starting at 0.
-
-    MEGAlib repeats a light curve defined on [x_first, x_last] with period P = x_last - x_first,
-    i.e. it evaluates h(fmod(t - x_first, P)), h being the linear interpolation of the points.
-    The folded curve is g(y) = h(fmod(y + phi, P)) on [0, P] with phi = fmod(t_ref - x_first, P),
-    so g(fmod(s, P)) = h(fmod(t - x_first, P)) at every absolute time t = s + t_ref.
-    If the curve jumps at the wrap (first value != last value), the jump is kept as a step
-    1/1000 of the smallest point spacing wide; elsewhere the folded curve is the same function.
-    Returns (P, phi).
-    """
-    times, values = lightcurve_points(lc_in)
-    x0 = times[0]
-    u = [t - x0 for t in times]
-    period = u[-1]
-    phi = math.fmod(t_ref - x0, period)
-    if phi < 0:
-        phi += period
-    step = 1e-3 * min(b - a for a, b in zip(u, u[1:]) if b > a)
-
-    def h(x):                                # linear interpolation on [0, P]
-        if x <= u[0]:
-            return values[0]
-        if x >= u[-1]:
-            return values[-1]
-        lo, hi = 0, len(u) - 1
-        while hi - lo > 1:
-            mid = (lo + hi) // 2
-            if u[mid] <= x:
-                lo = mid
-            else:
-                hi = mid
-        if u[hi] == u[lo]:
-            return values[hi]
-        return values[lo] + (values[hi] - values[lo]) * (x - u[lo]) / (u[hi] - u[lo])
-
-    if phi == 0:
-        points = list(zip(u, values))
-    else:
-        points = [(0.0, h(phi))]
-        points += [(ui - phi, vi) for ui, vi in zip(u, values) if ui > phi]       # up to the wrap at P - phi
-        wrap = period - phi
-        after = [(ui - phi + period, vi) for ui, vi in zip(u, values) if ui < phi]
-        scale = max(abs(v) for v in values) or 1.0
-        if after and abs(after[0][1] - points[-1][1]) > 1e-12 * scale:
-            after[0] = (wrap + step, h(step))                                   # step at the wrap
-        elif after:
-            after = after[1:]                                                    # same value: one point
-        points += after
-        if points[-1][0] < period:
-            points.append((period, h(phi)))
-
-    with open_text(lc_in) as f:
-        header_lines = [l for l in f if l.strip() and not is_data(l) and not l.strip().startswith("EN")]
-    with open_text(lc_out, "wt") as f:
-        f.writelines(header_lines)
-        for t, v in points:
-            f.write("DP %r %r\n" % (t, v))
-        f.write("EN\n")
-    return period, phi
 
 
 def write_shifted_orientation(ori_in, ori_out, t_ref):
@@ -356,14 +302,15 @@ def cut_orientation(ori_in, t_first, t_last, out_cut, out_norm, t_ref):
     return kept[0], kept[-1], len(kept)
 
 
-NOTE = re.compile(r"^# Light-curve times are relative to t_ref.*\n# .*\n# .*\n", re.M)
+NOTE = re.compile(r"^# (Light-curve times are|Simulated in times) relative to t_ref.*\n# .*\n# .*\n", re.M)
 
 
 def normalize_source(source_dir, ori_file, t_ref=None):
-    """Write normalized light curves (and, for bursts, cut orientation files) into a source directory.
+    """Mark a source directory for simulations in t - t_ref and write the files this needs.
 
-    The .source file is changed only on its Lightcurve lines, which point to the shifted light
-    curves, plus a 3-line note. Running it again gives the same files.
+    Bursts: shifted light curves and cut orientation files; the .source Lightcurve lines point to
+    the shifted light curves. Repeating light curves are used as they are. The .source file also
+    gets a 3-line note. Running it again gives the same files.
     """
     name = os.path.basename(os.path.normpath(source_dir))
     source_file = os.path.join(source_dir, name + ".source")
@@ -378,12 +325,12 @@ def normalize_source(source_dir, ori_file, t_ref=None):
     for component, repeats, lc in entries:
         orig = original_name(lc)
         src_path = existing(os.path.join(source_dir, orig))
-        out_name = shifted_name(orig)
-        out_path = os.path.join(source_dir, out_name + (".gz" if src_path.endswith(".gz") else ""))
         if repeats:
-            period, phi = fold_lightcurve(src_path, out_path, t_ref)
-            done.append((component, orig, out_name, "folded", period, phi))
+            t0, t1 = lightcurve_time_range(src_path)
+            done.append((component, orig, orig, "repeating", t0, t1))
         else:
+            out_name = shifted_name(orig)
+            out_path = os.path.join(source_dir, out_name + (".gz" if src_path.endswith(".gz") else ""))
             shift_lightcurve(src_path, out_path, t_ref)
             t0, t1 = lightcurve_time_range(src_path)
             burst_window = (min(t0, burst_window[0]), max(t1, burst_window[1])) if burst_window else (t0, t1)
@@ -396,7 +343,7 @@ def normalize_source(source_dir, ori_file, t_ref=None):
                                     os.path.join(source_dir, ori_stem + "_cut_normed.ori"), t_ref)
         ori_info = (o0, o1, n)
 
-    # Source file: Lightcurve lines point to the shifted files; a note before the first one.
+    # Source file: burst Lightcurve lines point to the shifted files; a note before the first one.
     text = NOTE.sub("", open(source_file).read())
     lines = text.splitlines(keepends=True)
     first = True
@@ -406,17 +353,22 @@ def normalize_source(source_dir, ori_file, t_ref=None):
         m = LIGHTCURVE_LINE.match(line.rstrip("\n"))
         if not m:
             continue
-        new = m.group(1) + shifted_name(original_name(m.group(4))) + m.group(5) + "\n"
+        repeating = m.group(3).lower() == "true"
+        lc_name = original_name(m.group(4)) if repeating else shifted_name(original_name(m.group(4)))
+        new = m.group(1) + lc_name + m.group(5) + "\n"
         if first:
             if ori_info:
                 how = "Simulate with %s_cut_normed.ori and add t_ref to the simulated times afterwards." % ori_stem
+                what = "Original light curve%s (absolute unix times): %s" % (
+                    "s" if len(done) > 1 else "", ", ".join(d[1] for d in done))
             else:
                 how = "Simulate with the orientation file in t - t_ref and add t_ref to the simulated times afterwards."
-            originals = ", ".join(d[1] for d in done)
-            new = ("# Light-curve times are relative to t_ref = %r (unix s, first time of the orientation file).\n"
+                what = "The repeating light curve starts its first cycle at t_ref"
+            head = "Light-curve times are relative to" if ori_info else "Simulated in times relative to"
+            new = ("# %s t_ref = %r (unix s, first time of the orientation file).\n"
                    "# %s\n"
-                   "# Original light curve%s (absolute unix times): %s; see %s.\n"
-                   % (t_ref, how, "s" if len(done) > 1 else "", originals, TIME_REFERENCE_FILE)) + new
+                   "# %s; see %s.\n"
+                   % (head, t_ref, how, what, TIME_REFERENCE_FILE)) + new
             first = False
         lines[k] = new
     with open(source_file, "w") as f:
@@ -430,8 +382,7 @@ def normalize_source(source_dir, ori_file, t_ref=None):
                     "%-26s %.6f" % ("burst_start_absolute", a), "%-26s %.6f" % ("burst_end_absolute", b),
                     "%-26s %.6f" % ("burst_start_shifted", a - t_ref), "%-26s %.6f" % ("burst_end_shifted", b - t_ref)]
         else:
-            out += ["%-26s %s" % ("lightcurve_original", orig), "%-26s %s" % ("lightcurve_folded", shifted),
-                    "%-26s %r" % ("repeat_period", a), "%-26s %r" % ("fold_phase_offset", b)]
+            out += ["%-26s %s" % ("lightcurve_repeating", orig), "%-26s %r" % ("repeat_period", b - a)]
     out.append("%-26s %s" % ("orientation_file", os.path.basename(ori_file)))
     if ori_info:
         o0, o1, n = ori_info
@@ -441,7 +392,7 @@ def normalize_source(source_dir, ori_file, t_ref=None):
                 "%-26s %.6f" % ("orientation_start_shifted", o0 - t_ref),
                 "%-26s %.6f" % ("orientation_end_shifted", o1 - t_ref)]
     else:
-        out.append("# Repeating light curve(s): simulate over the orientation file in t - t_ref.")
+        out.append("# Repeating light curve(s), used as they are: simulate over the orientation file in t - t_ref.")
     out.append("# After the Cosima run, add t_ref to the simulated event times to recover the absolute times.")
     with open(os.path.join(source_dir, TIME_REFERENCE_FILE), "w") as f:
         f.write("\n".join(out) + "\n")
@@ -457,7 +408,7 @@ def main(argv=None):
     t_ref = args.t_ref if args.t_ref is not None else orientation_time_range(args.ori)[0]
     for d in args.source_dirs:
         done, ori_info = normalize_source(d, args.ori, t_ref)
-        what = ", ".join("%s %s" % (kind, out) for _, _, out, kind, _, _ in done)
+        what = ", ".join("%s %s" % (kind, out) for _, _, out, kind, _, _ in done)  # e.g. "shifted X_shifted.dat"
         extra = ", orientation rows %d" % ori_info[2] if ori_info else ""
         print("%-45s %s%s" % (os.path.basename(os.path.normpath(d)), what, extra))
     return 0

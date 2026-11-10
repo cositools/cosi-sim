@@ -13,9 +13,9 @@ J1846.ParticleType			1
 J1846.Beam					FarFieldPointSource 0 0
 J1846.Orientation			Galactic Fixed -0.24012 29.71195
 J1846.Spectrum				File J1846_spec.dat
-# Light-curve times are relative to t_ref = 1835487300.0 (unix s, first time of the orientation file).
+# Simulated in times relative to t_ref = 1835487300.0 (unix s, first time of the orientation file).
 # Simulate with the orientation file in t - t_ref and add t_ref to the simulated times afterwards.
-# Original light curve (absolute unix times): J1846_lc.dat; see sim_time_reference.txt.
-J1846.Lightcurve			File true J1846_lc_shifted.dat
+# The repeating light curve starts its first cycle at t_ref; see sim_time_reference.txt.
+J1846.Lightcurve			File true J1846_lc.dat
 J1846.Flux					0.000152392
 J1846.EarthOccultation false

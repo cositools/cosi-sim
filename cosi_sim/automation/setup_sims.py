@@ -30,14 +30,15 @@ Modes (chosen automatically):
     time  everything else: the exposure split into num_sims time chunks
           (cosi_sim.pipeline.make_orientation_bins, as run_parallel_sims.py).
 
-Sources with normalized light curves (a sim_time_reference.txt in the library
+Sources with normalized times (a sim_time_reference.txt in the library
 directory, see cosi_sim.pipeline.time_reference) are simulated in times t - t_ref
 in every mode: GRBs with their own normed orientation file, other sources with the
 template orientation file shifted by t_ref (written once to <sim_root>). Each job
 then adds t_ref back with modify_sim_times and runs revan on fixed_times.
 
 A light curve that does not repeat must have the same start and stop times as the
-orientation file (bursts: lie inside it); otherwise the source is skipped with an error.
+orientation file (bursts: lie inside it), and a repeating light curve must not need more
+than 2^31 repeats to reach the orientation times; otherwise the source is skipped with an error.
 
 Then submit with:  python run_pipeline.py submit <sim_root or run dirs>
 """
@@ -477,7 +478,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     # Light curves that do not repeat must match the orientation file (bursts: lie inside it):
     problems = check_lightcurves(lib_file, ori_range, burst=(mode == "grb"))
     if problems:
-        raise SetupError("light curve does not match the orientation file: " + "; ".join(problems))
+        raise SetupError("light curve check failed: " + "; ".join(problems))
 
     if dry_run:
         gz = gunzip_library_files(src, dry_run=True)
