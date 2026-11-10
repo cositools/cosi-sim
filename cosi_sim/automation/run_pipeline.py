@@ -529,15 +529,33 @@ def cmd_status(args):
                   "    python %s fill %s" % (os.path.abspath(__file__), os.path.dirname(path)))
 
 
+def clean_environment():
+    """A minimal environment, like a fresh login.
+
+    SLURM jobs inherit the environment of the shell they were submitted from
+    (usually the MEGAlib one, since setup_sims.py needs it). Starting each
+    environment script from this, in a login shell, keeps MEGAlib's ROOT,
+    PYTHONPATH and LD_LIBRARY_PATH out of the cosipy step, and the other way round.
+    """
+    keep = ("HOME", "USER", "LOGNAME", "TMPDIR", "LANG", "LC_ALL")
+    env = {k: os.environ[k] for k in keep if k in os.environ}
+    env.update(SHELL="/bin/bash", TERM="dumb", PATH="/usr/local/bin:/usr/bin:/bin", MPLBACKEND="Agg")
+    return env
+
+
 def run_in_env(env_script, command, run_dir, log_path):
-    """cd <env dir>; source <env>; cd <run_dir>; <command>  -- output to log_path."""
+    """cd <env dir>; source <env>; cd <run_dir>; <command>  -- output to log_path.
+
+    Runs in a login shell (bash -l, so the module command is set up) with a
+    minimal environment, as after logging in afresh.
+    """
     env_dir, env_file = os.path.split(os.path.abspath(env_script))
     script = 'cd "%s" && source "./%s" && cd "%s" && %s' % (env_dir, env_file, run_dir, command)
-    env = dict(os.environ, MPLBACKEND="Agg")
     with open(log_path, "a") as log:
         log.write("\n==== %s  %s\n" % (now(), command))
         log.flush()
-        result = subprocess.run(["bash", "-c", script], stdout=log, stderr=subprocess.STDOUT, env=env)
+        result = subprocess.run(["bash", "-l", "-c", script], stdout=log, stderr=subprocess.STDOUT,
+                                env=clean_environment())
     return result.returncode
 
 

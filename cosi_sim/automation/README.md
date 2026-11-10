@@ -56,7 +56,7 @@ For each source, `submit` sends the simulation job (array or single) and a post-
 3. **cosipy**: in the cosipy environment, `UnBinnedData.read_tra` and `cut_SAA_events`.
 4. **copy**: the `*_with_SAAcut` file goes to `products_dir`.
 
-Progress is stored in `<run_dir>/automation.json`. Logs are in `<run_dir>/logs/`.
+Each environment is sourced in a fresh login shell, as after logging in again, so the environment you submitted from does not carry over (your `~/.bashrc` is loaded, as at a normal login). Progress is stored in `<run_dir>/automation.json`. Logs are in `<run_dir>/logs/`.
 
 ## Commands
 
@@ -102,6 +102,4 @@ Waiting sources show as `waiting` in `status`. If none of a queue's sources is r
 
 - `setup_sims.py` refuses to redo a source that is already set up unless `--force` is given (this deletes its `Simulations/`).
 - Library files stored as `.dat.gz` (thin-disk maps, magnetar light curves) are gunzipped in place in the source library, as `setup_srcs()` needs them unzipped.
-- The time-chunk array size is the number of orientation bins actually written, so the extra bin made when the orientation file does not divide evenly is also simulated.
-- `run_mimrec` gets the revan geometry explicitly, because it runs in a new Python process.
 - The generated `run_sims.py`, `post_megalib.py`, `post_cosipy.py` and `*.sh` files are plain scripts that can be read, edited or run by hand.
