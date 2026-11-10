@@ -105,8 +105,6 @@ LC_TIMECHUNK = {"nova_co", "3C454p3", "4C21p35", "PSRB1259", "MAXIJ1820", "MAXIJ
 LC_PERIOD = {"1RXSJ170849", "magnetar2"}
 # Repeating pulsar light curves shorter than ~0.86 s: at absolute times MEGAlib's repeat count
 # overflows (MFunction::FindX); the library now has them in t - t_ref (cosi_sim.pipeline.time_reference).
-LC_REPEAT_OVERFLOW = {"Crab"}
-
 rows = []   # (status, dc4 label, dc5 src_list path, action)
 for u, comps in U.items():
     note = ""
@@ -126,9 +124,6 @@ for u, comps in U.items():
                 rows.append(("reused (bug-fixed)", lab, D5[u][0], "re-simulate (511 keV map bug fixed)"))
             elif u in LC_TIMECHUNK:
                 rows.append(("reused", lab, p, "re-simulate with the same source file (time-chunk light-curve bug)"))
-            elif u in LC_REPEAT_OVERFLOW:
-                rows.append(("reused", lab, p, "re-simulate with the same source file (pulsar light curves now in "
-                                               "t - t_ref; at absolute times MEGAlib's repeat count overflows)"))
             elif p.startswith("("):
                 rows.append(("reused", lab, "(no library file)", f"reuse DC4 event file {w}"))
             else:
