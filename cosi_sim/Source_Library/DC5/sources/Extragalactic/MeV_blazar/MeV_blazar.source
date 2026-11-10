@@ -1,0 +1,18 @@
+# Define DC5 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source          MeV_blazar
+MeV_blazar.ParticleType               1
+MeV_blazar.Beam                       FarFieldPointSource 0 0
+MeV_blazar.Orientation                Galactic Fixed -30.528000 330.525000
+MeV_blazar.Spectrum                   File MeV_blazar_spec.dat
+MeV_blazar.Flux                       0.0003
+MeV_blazar.Polarization galactic 0.15 120
+MeV_blazar.EarthOccultation false

@@ -1,0 +1,22 @@
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source                   magnetar2
+magnetar2.ParticleType               1
+magnetar2.Beam                       FarFieldPointSource 0 0
+magnetar2.Orientation                Galactic Fixed 0.03838608 250.0
+magnetar2.Spectrum                   File magnetar2_spec.dat
+magnetar2.Flux                       0.000495
+magnetar2.Polarization  galactic    0.4  75
+# Simulated in times relative to t_ref = 1835487300.0 (unix s, first time of the orientation file).
+# Simulate with the orientation file in t - t_ref and add t_ref to the simulated times afterwards.
+# The repeating light curve starts its first cycle at t_ref; see sim_time_reference.txt.
+magnetar2.Lightcurve                     File true magnetar2_lightcurve.dat
+magnetar2.EarthOccultation false

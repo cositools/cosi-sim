@@ -1,0 +1,19 @@
+# LMC 511 keV extended source at 1x flux
+
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source LMC_511
+LMC_511.ParticleType           1
+LMC_511.Beam                   FarFieldGaussian 0 0 3.3
+LMC_511.Orientation            Galactic Fixed -32.89 280.46
+LMC_511.Spectrum               Gaussian 511.5 0.85 3
+LMC_511.Flux                   8.54e-06
+LMC_511.EarthOccultation false

@@ -1,0 +1,17 @@
+# Define DC5 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source          Positrons_Point_Source
+Positrons_Point_Source.ParticleType               1
+Positrons_Point_Source.Beam                       FarFieldPointSource 0 0
+Positrons_Point_Source.Orientation                Galactic Fixed 1.707000 55.505000
+Positrons_Point_Source.Spectrum                   Gaussian 511 1.5 3
+Positrons_Point_Source.Flux                       2.5e-05
+Positrons_Point_Source.EarthOccultation false

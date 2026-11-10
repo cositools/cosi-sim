@@ -1,0 +1,16 @@
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source Vela_SNR_511
+Vela_SNR_511.ParticleType 1
+Vela_SNR_511.Beam FarFieldNormalizedEnergyBeamFluxFunction Vela_SNR_511.dat
+Vela_SNR_511.Spectrum NormalizedEnergyBeamFluxFunction
+Vela_SNR_511.Orientation Galactic Fixed 90 180
+Vela_SNR_511.EarthOccultation false

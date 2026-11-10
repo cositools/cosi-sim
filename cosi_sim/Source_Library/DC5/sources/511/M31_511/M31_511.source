@@ -1,0 +1,21 @@
+# M31 as a 511 keV extended source at 1X flux
+
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+# Define source:
+DataChallenge.Source M31_511
+M31_511.ParticleType           1
+M31_511.Beam                   FarFieldGaussian 0 0 0.5
+M31_511.Orientation            Galactic Fixed -21.0 121.0 
+M31_511.Spectrum               Gaussian 511.5 0.85 3
+M31_511.Flux                   2.13e-7
+M31_511.EarthOccultation false
+

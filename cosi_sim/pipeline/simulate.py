@@ -216,12 +216,15 @@ class Simulate:
     def modify_sim_times(self, filename, time_constant):
 
         """
-        Modify time stamps in sim file by time constant. 
-        
+        Modify time stamps in sim file by time constant.
+
+        The event times (TI) and the start and end times of the file (TB, TE)
+        are all shifted, so they stay consistent.
+
         Inputs:
         filename: Name of cosima sim file to modify.
 
-        time_constant: Time in seconds used to modify time stamps. 
+        time_constant: Time in seconds used to modify time stamps.
         """
 
         # Inputs:
@@ -251,13 +254,13 @@ class Simulate:
 
             if this_line:
 
-                if this_line.split()[0] != "TI":
+                split = this_line.split()
+                if split[0] in ("TI", "TB", "TE") and len(split) == 2:
+                    new_time = str(float(split[1]) + time_constant)
+                    g.write("%s %s\n" %(split[0], new_time))
+                else:
                     g.write(this_line+"\n")
 
-                if this_line.split()[0] == "TI":
-                    new_time = str(float(this_line.split()[1]) + time_constant)
-                    g.write("TI %s\n" %new_time)
-            
                 if this_line.split()[0] == "TS":
                     break
 

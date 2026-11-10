@@ -26,7 +26,10 @@ bn090424592.Flux            244.79957010847312
 bn090424592.Polarization       		galactic 0.1 110.00
 
 # Lightcurve
-bn090424592.Lightcurve      File false bn090424592_lightcurve.dat
+# Light-curve times are relative to t_ref = 1835487300.0 (unix s, first time of the orientation file).
+# Simulate with DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
+# Original light curve (absolute unix times): bn090424592_lightcurve.dat; see sim_time_reference.txt.
+bn090424592.Lightcurve      File false bn090424592_lightcurve_shifted.dat
 
 # Earth occultation:
 bn090424592.EarthOccultation false

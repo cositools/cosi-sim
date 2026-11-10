@@ -1,0 +1,34 @@
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source               MGF051103
+MGF051103.ParticleType     1
+MGF051103.Beam             FarFieldPointSource 0 0
+
+# Orientation: Latitude b [deg], Longitude l [deg]
+MGF051103.Orientation      Galactic Fixed  40.8048881 142.5329582
+
+# Comptonized Spectrum parameters: Flux integration min and max energies, alpha, Epeak
+MGF051103.Spectrum         Comptonized 100.0 10000.0 0.2 2300
+
+# Average photon flux, in photon/cm2/s, for a Comptonized function fit to a single spectrum over the duration of the burst.
+MGF051103.Flux             66.15748535832793
+
+# GBM Light Curve.
+# Light-curve times are relative to t_ref = 1835487300.0 (unix s, first time of the orientation file).
+# Simulate with DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
+# Original light curve (absolute unix times): GRB_051103_Sum_G1_G2_G3.dat; see sim_time_reference.txt.
+MGF051103.Lightcurve       File false GRB_051103_Sum_G1_G2_G3_shifted.dat  
+
+# Polarization
+MGF051103.Polarization galactic 1 90
+
+# Earth occultation:
+MGF051103.EarthOccultation false

@@ -1,0 +1,17 @@
+# Define DC5 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source          cygX3_hypersoft
+cygX3_hypersoft.ParticleType               1
+cygX3_hypersoft.Beam                       FarFieldPointSource 0 0
+cygX3_hypersoft.Orientation                Galactic Fixed 0.700060 79.845490
+cygX3_hypersoft.Spectrum                   File cygX3_hypersoft_spec.dat
+cygX3_hypersoft.Flux                       0.00123324
+cygX3_hypersoft.EarthOccultation false

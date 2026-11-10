@@ -1,0 +1,236 @@
+{
+ "NB_511": {
+  "status": "reused (bug-fixed)",
+  "origin": "DC3/sources/511/NB_511",
+  "change": "511 keV side nodes (510, 512 keV) set to zero; integrated flux 5.600e-04 -> 2.800e-04 ph/cm2/s"
+ },
+ "Vela_SNR_511": {
+  "status": "reused (bug-fixed)",
+  "origin": "DC3/sources/511/Vela_SNR_511",
+  "change": "511 keV side nodes set to zero; integrated flux 7.031e-04 -> 3.515e-04 ph/cm2/s (README value 3.5e-4)"
+ },
+ "BB_511": {
+  "status": "modified (+bug-fixed)",
+  "origin": "DC3/sources/511/BB_511",
+  "change": "511 keV side nodes set to zero (bug fix) and broad-bulge intensity scaled x0.85; integrated flux 1.480e-03 -> 6.290e-04 ph/cm2/s"
+ },
+ "Positrons_In_Flight_Annihilation": {
+  "status": "modified (+bug-fixed)",
+  "origin": "DC4/sources/511/Positrons_In_Flight_Annihilation",
+  "change": "Orientation 'Galactic Fixed -1.4 -0.2' -> 'Galactic Fixed -0.2 -1.4' (bug fix: MEGAlib order is b, l); flux 0.00031 -> 0.000372 ph/cm2/s (x1.2)"
+ },
+ "1E1740": {
+  "status": "modified",
+  "origin": "DC3/sources/Galactic/1E1740_compow -> DC3/sources/Galactic/1E1740_twocompt",
+  "change": "swapped compow model for the alternative twocompt model (Bouchet et al. 2009)"
+ },
+ "cygX1": {
+  "status": "modified",
+  "origin": "DC3/sources/Galactic/cygX1_hard -> DC3/sources/Galactic/cygX1_soft",
+  "change": "source in the soft state for the full 3 months (Cangemi et al. 2021 model)"
+ },
+ "cygX3": {
+  "status": "modified",
+  "origin": "DC4/sources/Galactic/cygX3",
+  "change": "transition state replaced by the hypersoft state (DC3 Cangemi et al. 2021 models) for the full 3 months at nominal flux 0.001233 ph/cm2/s"
+ },
+ "GRS1758": {
+  "status": "modified",
+  "origin": "DC3/sources/Galactic/GRS1758",
+  "change": "flux 0.003495 -> 0.002621 ph/cm2/s (x0.75, dimmer hard-state epoch)"
+ },
+ "1RXSJ170849": {
+  "status": "modified",
+  "origin": "DC4/sources/Galactic/1RXSJ170849",
+  "change": "flux 0.00033 -> 0.000247 ph/cm2/s (x0.75, long-term hard X-ray variability, den Hartog et al. 2008); light curve trimmed to 235528 whole pulse periods so that the periodic repeat keeps the pulse phase continuous (DC4 period bug fix)"
+ },
+ "magnetar2": {
+  "status": "modified",
+  "origin": "DC4/sources/Galactic/magnetar2",
+  "change": "flux 0.00033 -> 0.000495 ph/cm2/s (x1.5); light curve trimmed to 109913 whole pulse periods so that the periodic repeat keeps the pulse phase continuous (DC4 period bug fix)"
+ },
+ "MAXIJ1820": {
+  "status": "modified",
+  "origin": "DC3/sources/Galactic/MAXIJ1820",
+  "change": "MAXIJ1820_0p1-0p4: 0.1382 -> 0.09675; MAXIJ1820_0p4-10: 0.005964 -> 0.004174 ph/cm2/s (x0.7, fainter hard-state outburst)"
+ },
+ "nova_co_continuum": {
+  "status": "modified",
+  "origin": "DC3/sources/Galactic/nova_co_continuum",
+  "change": "flux 0.1221 -> 0.1831 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)"
+ },
+ "nova_co_511keV": {
+  "status": "modified",
+  "origin": "DC3/sources/Galactic/nova_co_511keV",
+  "change": "flux 0.01537 -> 0.02305 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)"
+ },
+ "nova_co_478keV": {
+  "status": "modified",
+  "origin": "DC3/sources/Galactic/nova_co_478keV",
+  "change": "flux 2.044e-06 -> 3.066e-06 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)"
+ },
+ "4C21p35_noflare": {
+  "status": "modified",
+  "origin": "DC3/sources/Extragalactic/4C21p35_noflare",
+  "change": "flux 0.0005535 -> 0.0008302 ph/cm2/s (x1.5)"
+ },
+ "4C21p35_flare": {
+  "status": "modified",
+  "origin": "DC3/sources/Extragalactic/4C21p35_flare",
+  "change": "flux 0.01729 -> 0.02594 ph/cm2/s (x1.5)"
+ },
+ "NGC_4151": {
+  "status": "modified",
+  "origin": "DC4/sources/Extragalactic/NGC_4151",
+  "change": "thermal (Gamma=1.75, Ecut=200 keV) normalisation x1.5 (brighter state, Lubinski et al. 2010); non-thermal tail unchanged; flux 0.00188 -> 0.002726 ph/cm2/s"
+ },
+ "LMC_511": {
+  "status": "modified",
+  "origin": "DC3/sources/511/LMC_Gaussian_511 (the DC4 LMC_511 definition is not in cosi-sim)",
+  "change": "DC4 LMC_511 model replaced by the alternative DC3 LMC_Gaussian_511 definition, with flux x2 relative to DC3 (4.27e-06 -> 8.54e-06 ph/cm2/s; still below the SPI 2-sigma limit 3.6e-5, Siegert et al. 2016)"
+ },
+ "M31_511": {
+  "status": "modified",
+  "origin": "DC3/sources/511/M31_Gaussian_511 (the DC4 M31_511 definition is not in cosi-sim)",
+  "change": "DC4 M31_511 model replaced by the alternative DC3 M31_Gaussian_511 definition, with the Gaussian width reduced 1.0 -> 0.5 deg (emission concentrated in the M31 bulge); DC3 flux 2.13e-7 ph/cm2/s"
+ },
+ "26Al_Cyg_Region": {
+  "status": "modified",
+  "origin": "DC3/sources/Al26/26Al_Cyg_Region",
+  "change": "Gaussian width 3.0 -> 4.5 deg (Martin et al. 2009: 3 deg is a lower limit, +-3 deg uncertainty); flux unchanged"
+ },
+ "60Fe_NE2001": {
+  "status": "modified",
+  "origin": "DC3/sources/Fe60/60Fe_NE2001",
+  "change": "map intensity x0.65 (60Fe mass 3.5 -> 2.3 Msun); total flux (both lines) 2.997e-04 -> 1.948e-04 ph/cm2/s"
+ },
+ "Tycho": {
+  "status": "modified",
+  "origin": "DC4/sources/Nucleosynthesis/Tycho",
+  "change": "flux 1.6e-05 -> 1e-05 ph/cm2/s (1.0x instead of 1.6x the Lopez et al. 2015 upper limit)"
+ },
+ "USco": {
+  "status": "modified",
+  "origin": "DC4/sources/Nucleosynthesis/USco",
+  "change": "60Fe line fluxes 4.5e-05 -> 2.25e-05 ph/cm2/s each (x0.5; 60Fe/26Al per line 0.75 -> 0.375); 26Al unchanged"
+ },
+ "3C273": {
+  "status": "new (from DC2)",
+  "origin": "DC2/sources/Extragalactic/3C273",
+  "change": "average state (Madsen et al. 2015), flux 8.6e-4 ph/cm2/s; DC2 transmission-probability line replaced by DC3+ settings"
+ },
+ "3C279_high": {
+  "status": "new (from DC3)",
+  "origin": "DC3/sources/Extragalactic/3C279_high100",
+  "change": "high-state spectrum at its physical flux (x1 instead of x100): 1.19e-4 ph/cm2/s, 19.6% polarisation at 45 deg"
+ },
+ "PSRB1509": {
+  "status": "new (from DC2)",
+  "origin": "DC2/sources/Galactic/PSRB1509",
+  "change": "3 energy bands with periodic pulse profiles (Kuiper et al. 2015); DC2 transmission-probability lines replaced by DC3+ settings"
+ },
+ "NGC_4945": {
+  "status": "new (literature)",
+  "l": 305.2721,
+  "b": 13.3397,
+  "flux": 0.0004603196013468412,
+  "change": "cutoff power law Gamma=1.9, Ecut=300 keV (NuSTAR: Ecut > 200-300 keV, Puccetti et al. 2014); F(20-100 keV)=2.0e-10 erg/cm2/s"
+ },
+ "IC_4329A": {
+  "status": "new (literature)",
+  "l": 317.4963,
+  "b": 30.92,
+  "flux": 0.0004337695178743159,
+  "change": "cutoff power law Gamma=1.70, Ecut=178 keV, F(5-79 keV)=3.04e-10 erg/cm2/s (Brenneman et al. 2014)"
+ },
+ "GX339m4_hard": {
+  "status": "new (literature)",
+  "l": 338.9391,
+  "b": -4.3265,
+  "flux": 0.002854156977071778,
+  "change": "black-hole LMXB in a moderately bright hard state for the full 3 months: Gamma=1.6, Ecut=200 keV, F(20-200 keV)=1.5e-9 erg/cm2/s; 5% polarisation"
+ },
+ "4U0142p61": {
+  "status": "new (literature)",
+  "l": 129.384,
+  "b": -0.4307,
+  "flux": 0.0005361559039289502,
+  "change": "log-parabola, local index 0.93 at 50 keV with the nuFnu peak at 228 keV (beta=0.353); F(20-229 keV)=1.5e-10 erg/cm2/s (den Hartog et al. 2008); steady (no pulsation light curve)"
+ },
+ "26Al_Carina_Region": {
+  "status": "new (literature)",
+  "l": 287.6,
+  "b": -0.6,
+  "flux": 1.5e-05,
+  "change": "1809 keV line, 2 deg Gaussian at Trumpler 16, flux 1.5e-5 ph/cm2/s (Voss et al. 2012), width as DC3 Cygnus model"
+ },
+ "Ti44_hidden_SNR": {
+  "status": "new (arbitrary)",
+  "l": 300.398,
+  "b": -0.163,
+  "flux": 1.2e-05,
+  "change": "unknown young, dust-obscured SNR: point-like 44Ti line, 4000 km/s broadening, 1.2e-5 ph/cm2/s (comparable to Tycho/Kepler models)"
+ },
+ "nova_one_22Na": {
+  "status": "new (arbitrary)",
+  "l": 71.159,
+  "b": 4.096,
+  "flux": 4.4e-06,
+  "change": "ONe nova at 1.5 kpc: 22Na 1275 keV line (~20 keV FWHM), ~1e-5 ph/cm2/s at 1 kpc (Hernanz 2014) scaled to 1.5 kpc; constant (22Na lifetime 3.75 yr)"
+ },
+ "Positrons_Point_Source": {
+  "status": "new (arbitrary)",
+  "l": 55.505,
+  "b": 1.707,
+  "flux": 2.5e-05,
+  "change": "steady point-like 511 keV line (e.g. a microquasar or pulsar positron source), 2.5e-5 ph/cm2/s, same line width as the DC4 central source"
+ },
+ "BHXB_hard_transient": {
+  "status": "new (arbitrary)",
+  "l": 15.756,
+  "b": 0.966,
+  "flux": 0.0015,
+  "change": "new black-hole X-ray binary in a long hard-state outburst: Gamma=1.6, Ecut=150 keV, 1.5e-3 ph/cm2/s (about 1/20 of the Crab in 100 keV-10 MeV)"
+ },
+ "PWN_hard_source": {
+  "status": "new (arbitrary)",
+  "l": 349.231,
+  "b": 0.547,
+  "flux": 0.0004,
+  "change": "Crab-like pulsar wind nebula ~80x fainter than the Crab nebula: power law Gamma=2.1, 4e-4 ph/cm2/s, 30% polarisation"
+ },
+ "magnetar3": {
+  "status": "new (arbitrary)",
+  "l": 199.713,
+  "b": 0.009,
+  "flux": 0.00025,
+  "change": "steady hard-tail magnetar (no pulsation light curve): log-parabola alpha=1.2, beta=0.30, pivot 143 keV, 2.5e-4 ph/cm2/s, 50% polarisation"
+ },
+ "MeV_blazar": {
+  "status": "new (arbitrary)",
+  "l": 330.525,
+  "b": -30.528,
+  "flux": 0.0003,
+  "change": "high-redshift FSRQ with nuFnu peak at 1 MeV: log-parabola alpha=2.0, beta=0.2 at 1 MeV, 3e-4 ph/cm2/s (between 4C 71.07 and 3C 279), 15% polarisation"
+ },
+ "Seyfert_new": {
+  "status": "new (arbitrary)",
+  "l": 31.746,
+  "b": -21.833,
+  "flux": 0.0003,
+  "change": "Seyfert galaxy with Gamma=1.8, Ecut=300 keV, 3e-4 ph/cm2/s (a few times fainter than NGC 4151)"
+ },
+ "26Al_new_region": {
+  "status": "new (arbitrary)",
+  "l": 316.177,
+  "b": -0.02,
+  "flux": 1.5e-05,
+  "change": "additional massive-star region: 4 deg Gaussian 1809 keV source, 1.5e-5 ph/cm2/s (similar to Carina / ~40% of Cygnus)"
+ },
+ "Annihilation_eeg_NFW": {
+  "status": "new (dark matter)",
+  "origin": "DC4/sources/DarkMatter/Annihilation_eeg_NFW",
+  "change": "annihilating DM, chi chi -> e+ e- gamma (FSR), NFW: m = 17.3 MeV, <sigma v> = 3.9e-28 cm3/s (DC4: 30 MeV, 1e-25); 5.9e-4 ph/cm2/s in 0.1-10 MeV, ~5 sigma expected in 3 months",
+  "skip_readme": true
+ }
+}

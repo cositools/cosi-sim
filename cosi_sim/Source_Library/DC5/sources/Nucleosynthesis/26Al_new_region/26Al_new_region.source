@@ -1,0 +1,17 @@
+# Define DC5 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source          26Al_new_region
+26Al_new_region.ParticleType               1
+26Al_new_region.Beam                       FarFieldGaussian 0 0 4.0
+26Al_new_region.Orientation                Galactic Fixed -0.020000 316.177000
+26Al_new_region.Spectrum                   Gaussian 1808.8 0.68 3
+26Al_new_region.Flux                       1.5e-05
+26Al_new_region.EarthOccultation false

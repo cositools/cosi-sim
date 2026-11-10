@@ -14,6 +14,9 @@ LS5039.Beam                             FarFieldPointSource 0 0
 # Orientation: Latitude b [deg], Longitude l [deg]
 LS5039.Orientation                      Galactic Fixed -1.28921165 16.88158741
 LS5039.Spectrum                         File LS5039_spec.dat
+# Simulated in times relative to t_ref = 1835487300.0 (unix s, first time of the orientation file).
+# Simulate with the orientation file in t - t_ref and add t_ref to the simulated times afterwards.
+# The repeating light curve starts its first cycle at t_ref; see sim_time_reference.txt.
 LS5039.Lightcurve                       File true LS5039_lc.dat
 LS5039.Flux                             0.0003006
 LS5039.EarthOccultation false
