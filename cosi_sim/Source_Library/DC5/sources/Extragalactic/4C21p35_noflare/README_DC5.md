@@ -12,6 +12,12 @@ DC3 two-state model (quiescent index 1.6, flaring index 2.5, flare light curve f
 - 4C21p35_noflare: flux 0.0005535 -> 0.0008302 ph/cm2/s (x1.5)
 - 4C21p35_flare: flux 0.01729 -> 0.02594 ph/cm2/s (x1.5)
 
+## Light-curve flux
+
+MEGAlib scales a light curve so that its mean over the light curve's time range is 1, so the Flux keyword must be the time-averaged flux over that range.
+
+- 4C21p35_noflare: **to be checked**, not changed. Unclear: the light curve varies within the quiescent state (on 77.3% of the time) and the README does not say whether Flux (the integral of the 4FGL-DR3 extrapolation, 5.5e-4 in DC4) is the 3-month average or the average while quiescent. If the latter, Flux should be 0.00083025 x 0.7726 = 6.41e-4. Not changed.
+
 Any other README in this directory describes the original (DC2/DC3/DC4) model; where it conflicts with this file, this file describes what DC5 simulates.
 
 ## References

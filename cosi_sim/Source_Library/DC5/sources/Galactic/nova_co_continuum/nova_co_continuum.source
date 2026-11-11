@@ -14,5 +14,6 @@ nova_co_cont.Beam				FarFieldPointSource 0 0
 nova_co_cont.Orientation			Galactic Fixed 2.7256 310.9847
 nova_co_cont.Spectrum				File nova_co_continuum_spec.dat
 nova_co_cont.Lightcurve				File false nova_co_continuum_lc.dat
-nova_co_cont.Flux				0.183107
+# Flux = time average over the light curve (MEGAlib scales the light curve to mean 1): peak flux 0.183107 ph/cm2/s x light-curve mean 0.000165
+nova_co_cont.Flux				3.014027e-05
 nova_co_cont.EarthOccultation false

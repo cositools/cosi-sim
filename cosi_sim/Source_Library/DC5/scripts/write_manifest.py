@@ -1,5 +1,6 @@
 """Write DC5 manifest files: DC5_mock_dataset_src_list.txt, DC5_mock_dataset_manifest.md and
-scripts/manifest_rows.json (the summary rows used by write_dc5_readme.py).
+scripts/manifest_rows.json (the summary rows used by write_dc5_readme.py). Light-curve rows get
+the Flux-keyword verdict from lc_flux_check.json (written by fix_lightcurve_fluxes.py).
 
 Usage: python3 write_manifest.py <Source_Library/DC5 dir> <Source_Library/DC5/DC5_draw.json>
 """
@@ -76,6 +77,8 @@ D5 = {
  "cygX3": ["DC5/sources/Galactic/cygX3"], "GRS1758": ["DC5/sources/Galactic/GRS1758"],
  "1RXSJ170849": ["DC5/sources/Galactic/1RXSJ170849"], "magnetar2": ["DC5/sources/Galactic/magnetar2"],
  "MAXIJ1820": ["DC5/sources/Galactic/MAXIJ1820"],
+ "3C454p3": ["DC5/sources/Extragalactic/3C454p3_low", "DC5/sources/Extragalactic/3C454p3_high"],
+ "PSRB1259": ["DC5/sources/Galactic/PSRB1259"],
  "nova_co": ["DC5/sources/Galactic/nova_co_511keV", "DC5/sources/Galactic/nova_co_continuum", "DC5/sources/Galactic/nova_co_478keV"],
  "4C21p35": ["DC5/sources/Extragalactic/4C21p35_noflare", "DC5/sources/Extragalactic/4C21p35_flare"],
  "NGC_4151": ["DC5/sources/Extragalactic/NGC_4151"],
@@ -97,6 +100,19 @@ MAGNETAR = [("GRB_MGF051103", "MGF051103", W3), ("GRB_MGF070201", "MGF070201", W
        ("GRB_MGF180128A", "MGF180128A", W3), ("GRB_MGF200415A", "MGF200415A", W3), ("GRB_MGF231115A", "MGF231115A", W3),
        ("MgtBurst_bright_complex", "MgtBurst_bright_complex", W4)]
 grbdraw = json.load(open(os.path.join(ROOT, "DC5_grb_draw.json")))
+lcflux = {}
+for r in json.load(open(os.path.join(ROOT, "lc_flux_check.json"))):
+    lcflux.setdefault(r["source"], []).append(r)
+LC_FLUX_FIXED = {"3C454p3", "PSRB1259"}   # reused sources whose DC5 copy only corrects the Flux keyword
+
+def lc_note(path):
+    """Flux-keyword verdict for the light-curve components of a source path."""
+    rs = [r for p in path.split(", ") for r in lcflux.get(p, [])]
+    if not rs: return ""
+    if all(r["verdict"] == "correct" for r in rs): return " — LC flux: correct (%s)" % rs[0]["short"]
+    if any(r["verdict"] == "check" for r in rs): return " — LC flux: **CHECK**, not changed (see the light-curve flux table in README.md)"
+    return " — LC flux: fixed, " + "; ".join("%s %.4g -> %.4g ph/cm2/s (%s %.4g)" % (
+        r["component"], r["flux_old"], r["flux_new"], r["short"], r["lc_mean"]) for r in rs if r["verdict"] == "fixed")
 
 # Light-curve bugs (cosi-data-challenges bug report):
 #  - time-chunk normalisation bug: nova_co (x3), 3C454p3 (low/high), 4C21p35 (flare/noflare), PSRB1259, MAXIJ1820, MAXIJ1348
@@ -115,29 +131,32 @@ for u, comps in U.items():
     elif u in draw["modified"]:
         paths = D5[u]
         if len(paths) == len(comps):
-            for (lab, p, w, lc), q in zip(comps, paths): rows.append(("modified", lab, q, "simulate DC5 source file" + note))
+            for (lab, p, w, lc), q in zip(comps, paths): rows.append(("modified", lab, q, "simulate DC5 source file" + note + lc_note(q)))
         else:
-            rows.append(("modified", " + ".join(c[0] for c in comps), ", ".join(paths), "simulate DC5 source file" + note))
+            rows.append(("modified", " + ".join(c[0] for c in comps), ", ".join(paths), "simulate DC5 source file" + note + lc_note(", ".join(paths))))
     else:
         for lab, p, w, lc in comps:
             if u in ("NB_511", "Vela_SNR_511"):
                 rows.append(("reused (bug-fixed)", lab, D5[u][0], "re-simulate (511 keV map bug fixed)"))
+            elif u in LC_FLUX_FIXED:
+                q = [x for x in D5[u] if x.endswith("/" + lab)][0]
+                rows.append(("reused (bug-fixed)", lab, q, "re-simulate: same model, Flux keyword corrected to the time average over the light curve" + lc_note(q)))
             elif u in LC_TIMECHUNK:
                 rows.append(("reused", lab, p, "re-simulate with the same source file (time-chunk light-curve bug)"))
             elif p.startswith("("):
                 rows.append(("reused", lab, "(no library file)", f"reuse DC4 event file {w}"))
             else:
-                rows.append(("reused", lab, p, f"reuse DC4/DC3 event file {w}"))
-for q in NEW: rows.append(("new", os.path.basename(q), q, "simulate DC5 source file"))
+                rows.append(("reused", lab, p, f"reuse DC4/DC3 event file {w}" + lc_note(p)))
+for q in NEW: rows.append(("new", os.path.basename(q), q, "simulate DC5 source file" + lc_note(q)))
 for lab, d in GRB_BN:
     g = grbdraw["grbs"][d]["dc5"]
     rows.append(("GRB (modified)", lab, "DC5/sources/GRBs/" + d,
-                 f"simulate DC5 source file with the time-shifted inputs, t_ref = 1835487300.0 (day {g['day']:.2f}, off-axis {g['offaxis']:.1f} deg)"))
+                 f"simulate DC5 source file with the time-shifted inputs, t_ref = 1835487300.0 (day {g['day']:.2f}, off-axis {g['offaxis']:.1f} deg)" + lc_note("DC5/sources/GRBs/" + d)))
 for lab, d, w in MAGNETAR:
     if d in grbdraw["magnetar_kept"]:
         ev = f"{w}{lab}{sfx}" if w == W3 else f"{W4}MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz"
         rows.append(("magnetar burst (unchanged)", lab, "DC5/sources/GRBs/" + d,
-                     f"unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file {ev})"))
+                     f"unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file {ev})" + lc_note("DC5/sources/GRBs/" + d)))
     else:
         rows.append(("removed", lab, "-", "magnetar burst not included in DC5 (half of the DC4 magnetar bursts kept)"))
 

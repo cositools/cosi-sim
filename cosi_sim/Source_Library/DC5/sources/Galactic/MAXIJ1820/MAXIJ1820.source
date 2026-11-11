@@ -13,7 +13,8 @@ MAXIJ1820_0p1-0p4.ParticleType               1
 MAXIJ1820_0p1-0p4.Beam                       FarFieldPointSource 0 0
 MAXIJ1820_0p1-0p4.Orientation                Galactic Fixed 10.15915  35.8535
 MAXIJ1820_0p1-0p4.Spectrum                   File MAXIJ1820_0.1-0.4_spec.dat
-MAXIJ1820_0p1-0p4.Flux                       0.0967469
+# Flux = time average over the light curve (MEGAlib scales the light curve to mean 1): on-state flux 0.0967469 ph/cm2/s x light-curve mean 0.649627
+MAXIJ1820_0p1-0p4.Flux                       0.0628493775
 MAXIJ1820_0p1-0p4.Lightcurve                 File false MAXIJ1820_LC.dat
 MAXIJ1820_0p1-0p4.Polarization  galactic   0.17  120
 MAXIJ1820_0p1-0p4.EarthOccultation false
@@ -23,7 +24,8 @@ MAXIJ1820_0p4-10.ParticleType               1
 MAXIJ1820_0p4-10.Beam                       FarFieldPointSource 0 0
 MAXIJ1820_0p4-10.Orientation                Galactic Fixed 10.15915  35.8535
 MAXIJ1820_0p4-10.Spectrum                   File MAXIJ1820_0.4-10_spec.dat
-MAXIJ1820_0p4-10.Flux                       0.00417446
+# Flux = time average over the light curve (MEGAlib scales the light curve to mean 1): on-state flux 0.00417446 ph/cm2/s x light-curve mean 0.649627
+MAXIJ1820_0p4-10.Flux                       0.00271184102
 MAXIJ1820_0p4-10.Lightcurve                 File false MAXIJ1820_LC.dat
 MAXIJ1820_0p4-10.Polarization  galactic   0.35  105
 MAXIJ1820_0p4-10.EarthOccultation false

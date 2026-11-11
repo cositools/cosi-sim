@@ -1,0 +1,20 @@
+# Define DC3 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DataChallenge.Source                      PSRB1259
+PSRB1259.ParticleType                     1
+PSRB1259.Beam                             FarFieldPointSource 0 0
+# Orientation: Latitude b [deg], Longitude l [deg]
+PSRB1259.Orientation                      Galactic Fixed -0.99158457 304.18358257
+PSRB1259.Spectrum                         File PSRB1259_spec.dat
+PSRB1259.Lightcurve                       File false PSRB1259_lc.dat
+# Flux = time average over the light curve (MEGAlib scales the light curve to mean 1): on-state flux 0.00061253 ph/cm2/s x light-curve mean 0.324598
+PSRB1259.Flux                             0.000198825826
+PSRB1259.EarthOccultation false
