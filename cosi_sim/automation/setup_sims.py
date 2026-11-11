@@ -27,6 +27,9 @@ Modes (chosen automatically):
           orientation file in the source directory.
     flux  source with a repeating light curve: num_sims parallel runs over the full
           exposure, every .Flux in the copied source file divided by num_sims (flux chunks).
+          Choose "time" in the source list to simulate a repeating light curve in time
+          chunks instead: every chunk keeps the full light curve and the Flux, and cosima
+          keeps the phase continuous across chunks (the light curve must start at 0).
     time  everything else: the exposure split into num_sims time chunks
           (cosi_sim.pipeline.make_orientation_bins, as run_parallel_sims.py).
           A light curve that does not repeat is cut into the chunks
@@ -62,8 +65,9 @@ import cosi_sim
 from cosi_sim.pipeline.sim_setup import Setup
 from cosi_sim.pipeline.make_orientation_bins import make_bins
 from cosi_sim.pipeline.lightcurve_chunks import LightCurveError, write_chunks
-from cosi_sim.pipeline.time_reference import (check_lightcurves, orientation_time_range,
-                                             read_time_reference, write_shifted_orientation)
+from cosi_sim.pipeline.time_reference import (check_lightcurves, lightcurve_time_range, lightcurves,
+                                             orientation_time_range, read_time_reference,
+                                             write_shifted_orientation)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from run_pipeline import STATE_FILE, AUTOMATION_DIR, now, load_state, save_state, POST_PLOTS_PY  # noqa: E402
@@ -193,6 +197,29 @@ def lightcurve_flags(path):
         if m:
             flags.append(m.group(1).lower() == "true")
     return flags
+
+
+def check_repeating_for_time_chunks(source_file, ori_range):
+    """Problems with simulating the repeating light curves of a source in time chunks.
+
+    cosima starts each chunk at its first orientation time and moves the start to the first
+    light-curve time if that is later, and when a repeating light curve wraps around it
+    restarts at x = 0 (MFunction::FindX). So each repeating light curve must start at 0, and
+    the orientation times of the simulation must not be earlier than that.
+    """
+    problems = []
+    lc_dir = os.path.dirname(os.path.abspath(source_file))
+    for component, repeats, name in lightcurves(source_file):
+        if not repeats:
+            continue
+        t0, _ = lightcurve_time_range(os.path.join(lc_dir, name))
+        if t0 != 0:
+            problems.append("%s: light curve %s starts at %r s; a repeating light curve must start at 0"
+                            % (component, name, t0))
+        elif ori_range[0] < 0:
+            problems.append("%s: the orientation times start at %r s, before the light curve (0 s)"
+                            % (component, ori_range[0]))
+    return problems
 
 
 def detect_mode(src):
@@ -498,8 +525,17 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         ori_range = (o0 - t_ref, o1 - t_ref) if t_ref is not None else (o0, o1)
 
     lc_flags = lightcurve_flags(lib_file)
-    if mode == "time" and any(lc_flags):
-        raise SetupError("time chunks cannot split a repeating light curve; use flux mode")
+    repeating_time = mode == "time" and any(lc_flags)
+    if repeating_time:
+        # Opt-in (mode "time" in the source list): every chunk keeps the full repeating light
+        # curve and the Flux. cosima folds absolute times into the light curve, so the phase is
+        # continuous across chunks and each chunk gets Flux x the light-curve integral over it.
+        if not all(lc_flags):
+            raise SetupError("time chunks: this source has both repeating and non-repeating light curves; "
+                             "use flux mode")
+        problems = check_repeating_for_time_chunks(lib_file, ori_range)
+        if problems:
+            raise SetupError("time chunks for a repeating light curve: " + "; ".join(problems))
 
     # Light curves that do not repeat must match the orientation file (bursts: lie inside it):
     problems = check_lightcurves(lib_file, ori_range, burst=(mode == "grb"))
@@ -558,7 +594,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
 
     # Number of jobs (time chunks get one more if the orientation file does not divide evenly):
     extra_files, lc_chunks = None, None
-    if mode == "time" and lc_flags:
+    if mode == "time" and lc_flags and not repeating_time:
         sims = os.path.join(run_dir, "Simulations")
         if os.path.isdir(sims):
             shutil.rmtree(sims)
@@ -599,7 +635,8 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         "megalib_env": cfg["megalib_env"], "cosipy_env": cfg["cosipy_env"],
         "revan_geometry": cfg["revan_geometry"], "t_ref": t_ref,
         "orientation_file": keys.get("orientation_file", template["orientation_file"]),
-        "flux_scaling": flux_scaling, "lightcurve_chunks": lc_chunks, "slurm": cfg["slurm"],
+        "flux_scaling": flux_scaling, "lightcurve_chunks": lc_chunks, "repeating_lightcurve_time_chunks": repeating_time,
+        "slurm": cfg["slurm"],
         "stage": "setup", "attempt": 0, "completed": [], "jobs": [],
         "history": ["%s  set up (%s mode, %d job%s)" % (now(), mode, njobs, "s" if njobs > 1 else "")],
     }
@@ -618,6 +655,8 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     if lc_chunks:
         msg += ("\n    light curve: %d time chunks with equal expected photons over [%.1f, %.1f] s; "
                 "flux of each chunk from the light curve" % (lc_chunks["chunks"], lc_chunks["start"], lc_chunks["stop"]))
+    if repeating_time:
+        msg += "\n    repeating light curve: time chunks with the full light curve and the unchanged Flux in every chunk"
     if t_ref is not None:
         ori_note = "chunk orientation files" if lc_chunks else "orientation %s" % os.path.basename(keys["orientation_file"])
         msg += "\n    times relative to t_ref %r: %s; sim times fixed after cosima" % (t_ref, ori_note)
