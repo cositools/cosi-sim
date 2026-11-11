@@ -42,7 +42,7 @@ The mode is chosen from the library source file:
 | Mode | When | Simulation | Notes |
 |---|---|---|---|
 | `time` | no light curve, or light curves that do not repeat | `num_sims` time chunks, one array task each | no light curve: orientation bins from `cosi_sim.pipeline.make_orientation_bins`, as `run_parallel_sims.py` (+1 chunk if the orientation file does not divide evenly). Light curve: see [Light curves](#light-curves) |
-| `flux` | a repeating light curve (`Lightcurve File true`) | `num_sims` runs of the full exposure | every `.Flux` in the copied source file is divided by `num_sims` (the library file is not changed) |
+| `flux` | a repeating light curve (`Lightcurve File true`) | `num_sims` runs of the full exposure | every `.Flux` in the copied source file is divided by `num_sims` (the library file is not changed); choose `time` in the source list for time chunks instead, see [Light curves](#light-curves) |
 | `grb` | source under a `GRBs/` category | one job | uses the `*_normed.ori` in the source directory |
 
 Each sim runs exactly the steps of `run_sims.py`: `define_sim()`, `run_cosima(seed=random)` (the seed is saved in `cosima_seed.txt`), `run_revan(geo_file=revan_geometry)`.
@@ -61,7 +61,9 @@ Each job then runs `modify_sim_times(..., t_ref)`, so the events get their absol
 - components without a light curve get a flat one over the chunk;
 - the chunks run in times t − t_ref (t_ref = first orientation time) and `modify_sim_times` adds t_ref back, because MEGAlib's search for the next emission time loses precision at unix times when photons arrive quickly.
 
-Each `Simulations/sim_<i>` holds the chunk's `GalacticScan.ori` and `Sources/` (source file and light curves). Each job only reads its own short light curve, which is much faster than a flux chunk that walks the whole light curve. Repeating light curves stay in `flux` mode.
+Each `Simulations/sim_<i>` holds the chunk's `GalacticScan.ori` and `Sources/` (source file and light curves). Each job only reads its own short light curve, which is much faster than a flux chunk that walks the whole light curve.
+
+**Time chunks for repeating light curves (opt-in).** Repeating light curves use `flux` mode unless you put `time` after the source in the source list. The source then gets the standard `num_sims` time chunks, and every chunk uses the full light curve and the unchanged `Flux`. cosima folds the absolute time into a repeating light curve, counted from its first time stamp, so the phase is continuous across chunks and each chunk gets `Flux` × the light-curve integral over its own time range. Each repeating light curve must start at 0 (`setup_sims.py` checks this), and a source cannot mix repeating and non-repeating light curves. Each job covers only its chunk instead of the full exposure; cosima still searches a light curve from its start for every photon, so very long light-curve files (e.g. the magnetars) stay slow per photon. `flux` stays the default until this has been compared with flux chunks in real MEGAlib.
 
 **Start and stop times.** A light curve that does not repeat must have the same start and stop times as the orientation file of the simulation. For bursts (`grb` mode), it must lie inside it. A repeating light curve must not need more than 2^31 repeats to reach the orientation times. Otherwise `setup_sims.py` skips the source and says why (also with `--dry-run`); `Setup.setup_srcs()` stops with the same error.
 
