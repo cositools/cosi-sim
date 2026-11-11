@@ -44,6 +44,13 @@ FIX = {
     "nova_co_478keV": ("Galactic/nova_co_478keV", None, ["nova_co_478keV"], "peak", GD),
 }
 FIXED_NOTE = "# Flux = time average over the light curve (MEGAlib scales the light curve to mean 1):"
+# Nova: Flux keywords set to the time averages of the Hernanz (2014) CO nova model at 1 kpc (DC team,
+# 2026-11-11). This is the correct model for the DC4 nova; the earlier DC5 x1.5 modification is dropped,
+# so the nova is the DC4 model with corrected Flux keywords (reused, bug-fixed).
+HERNANZ = {"nova_co_cont": 2.12e-05, "nova_co_511keV": 3e-06, "nova_co_478keV": 1.27e-06}
+HERNANZ_NOTE = "# Flux = time average over the light curve of the Hernanz (2014) CO nova model at 1 kpc (the correct model):"
+HERNANZ_REASON = ("Flux set to the time average of the Hernanz (2014) CO nova model at 1 kpc, which should be the correct model "
+                  "(Hernanz 2014). The DC3/DC4 file gave the peak flux (%r), and the earlier DC5 x1.5 modification is dropped")
 
 # Light-curve components whose Flux keyword is kept: path -> (components, verdict, short label, note)
 KEEP = {
@@ -93,6 +100,25 @@ for key, (rel, origin, comps, state, reason) in FIX.items():
     text = open(src).read()
     rec = log.setdefault(key, {"status": "reused (bug-fixed)", "origin": origin, "change": ""}).setdefault("lc_flux", {})
     for c in comps:
+        if c in HERNANZ:
+            lc = re.search(r"^\s*%s\.Lightcurve\s+File\s+\S+\s+(\S+)" % re.escape(c), text, re.M).group(1)
+            mean, span = lc_mean(os.path.join(d, lc))
+            orig = log[key]["origin"]
+            orig_text = open(os.path.join(LIB, orig, os.path.basename(orig) + ".source")).read()
+            peak = float(re.search(r"^\s*%s\.Flux\s+(\S+)" % re.escape(c), orig_text, re.M).group(1))
+            rec.clear()
+            rec[c] = {"dc4_peak_flux": peak, "lc_mean": mean, "flux": HERNANZ[c], "state": "Hernanz (2014) time average"}
+            text = re.sub(r"^# Flux = time average over the light curve.*\n(?=\s*%s\.Flux)" % re.escape(c), "", text, flags=re.M)
+            text = re.sub(r"^(\s*)(%s\.Flux)(\s+)\S+" % re.escape(c),
+                          lambda m: "%s DC3/DC4 peak flux %r\n%s%s%s%.9g" % (HERNANZ_NOTE, peak, m.group(1), m.group(2), m.group(3), HERNANZ[c]),
+                          text, count=1, flags=re.M)
+            check.append({"source": "DC5/sources/" + rel, "component": c, "verdict": "fixed", "short": "time average of the Hernanz (2014) model",
+                          "flux_old": peak, "flux_new": HERNANZ[c], "lc_mean": mean, "note": HERNANZ_REASON % peak})
+            log[key]["status"] = "reused (bug-fixed)"
+            log[key]["change"] = ("same model as DC4 (Hernanz 2014 CO nova at 1 kpc); Flux keyword set to the time average of the "
+                                  "Hernanz (2014) model, which should be the correct model (the DC3/DC4 file gave the peak flux). "
+                                  "The earlier DC5 x1.5 modification (0.82 kpc) is dropped")
+            continue
         lc = re.search(r"^\s*%s\.Lightcurve\s+File\s+\S+\s+(\S+)" % re.escape(c), text, re.M).group(1)
         mean, span = lc_mean(os.path.join(d, lc))
         if c in rec:
@@ -101,12 +127,12 @@ for key, (rel, origin, comps, state, reason) in FIX.items():
             state_flux = float(re.search(r"^\s*%s\.Flux\s+(\S+)" % re.escape(c), text, re.M).group(1))
         flux = state_flux * mean
         rec[c] = {"state_flux": state_flux, "lc_mean": mean, "flux": flux, "state": state}
-        text = re.sub(r"^%s .*\n(?=\s*%s\.Flux)" % (re.escape(FIXED_NOTE), re.escape(c)), "", text, flags=re.M)
+        text = re.sub(r"^# Flux = time average over the light curve.*\n(?=\s*%s\.Flux)" % re.escape(c), "", text, flags=re.M)
         text = re.sub(r"^(\s*)(%s\.Flux)(\s+)\S+" % re.escape(c),
                       lambda m: "%s %s flux %r ph/cm2/s x light-curve mean %.6f\n%s%s%s%.9g" % (
                           FIXED_NOTE, state, state_flux, mean, m.group(1), m.group(2), m.group(3), flux),
                       text, count=1, flags=re.M)
-        check.append({"source": "DC5/sources/" + rel, "component": c, "verdict": "fixed", "short": state + " flux x light-curve mean",
+        check.append({"source": "DC5/sources/" + rel, "component": c, "verdict": "fixed", "short": "%s flux x light-curve mean %.4g" % (state, mean),
                       "flux_old": state_flux, "flux_new": flux, "lc_mean": mean,
                       "note": "Flux was the %s flux; it is now that flux x the light-curve mean (%.4g). Basis: %s" % (state, mean, reason)})
     open(src, "w").write(text)

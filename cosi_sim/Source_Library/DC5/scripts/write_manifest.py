@@ -103,7 +103,9 @@ grbdraw = json.load(open(os.path.join(ROOT, "DC5_grb_draw.json")))
 lcflux = {}
 for r in json.load(open(os.path.join(ROOT, "lc_flux_check.json"))):
     lcflux.setdefault(r["source"], []).append(r)
-LC_FLUX_FIXED = {"3C454p3", "PSRB1259"}   # reused sources whose DC5 copy only corrects the Flux keyword
+LC_FLUX_FIXED = {"3C454p3", "PSRB1259", "nova_co"}   # DC5 copies that only correct the Flux keyword
+# Drawn as modified, but DC5 now keeps the DC4 model with corrected Flux keywords (nova: Hernanz 2014 model, 2026-11-11):
+BACK_TO_DC4 = {"nova_co"}
 
 def lc_note(path):
     """Flux-keyword verdict for the light-curve components of a source path."""
@@ -111,8 +113,8 @@ def lc_note(path):
     if not rs: return ""
     if all(r["verdict"] == "correct" for r in rs): return " — LC flux: correct (%s)" % rs[0]["short"]
     if any(r["verdict"] == "check" for r in rs): return " — LC flux: **CHECK**, not changed (see the light-curve flux table in README.md)"
-    return " — LC flux: fixed, " + "; ".join("%s %.4g -> %.4g ph/cm2/s (%s %.4g)" % (
-        r["component"], r["flux_old"], r["flux_new"], r["short"], r["lc_mean"]) for r in rs if r["verdict"] == "fixed")
+    return " — LC flux: fixed, " + "; ".join("%s %.4g -> %.4g ph/cm2/s (%s)" % (
+        r["component"], r["flux_old"], r["flux_new"], r["short"]) for r in rs if r["verdict"] == "fixed")
 
 # Light-curve bugs (cosi-data-challenges bug report):
 #  - time-chunk normalisation bug: nova_co (x3), 3C454p3 (low/high), 4C21p35 (flare/noflare), PSRB1259, MAXIJ1820, MAXIJ1348
@@ -128,7 +130,7 @@ for u, comps in U.items():
     if u in LC_PERIOD: note = " — light curve trimmed to whole pulse periods (period bug fixed in the DC5 file)"
     if u in draw["removed"]:
         for lab, p, w, lc in comps: rows.append(("removed", lab, "-", "not included in DC5"))
-    elif u in draw["modified"]:
+    elif u in draw["modified"] and u not in BACK_TO_DC4:
         paths = D5[u]
         if len(paths) == len(comps):
             for (lab, p, w, lc), q in zip(comps, paths): rows.append(("modified", lab, q, "simulate DC5 source file" + note + lc_note(q)))
@@ -140,6 +142,10 @@ for u, comps in U.items():
                 rows.append(("reused (bug-fixed)", lab, D5[u][0], "re-simulate (511 keV map bug fixed)"))
             elif u in LC_FLUX_FIXED:
                 q = [x for x in D5[u] if x.endswith("/" + lab)][0]
+                if u == "nova_co":
+                    rows.append(("reused (bug-fixed)", lab, q, "re-simulate: same model as DC4, Flux keyword set to the time average of the "
+                                 "Hernanz (2014) model, which should be the correct model" + lc_note(q)))
+                    continue
                 rows.append(("reused (bug-fixed)", lab, q, "re-simulate: same model, Flux keyword corrected to the time average over the light curve" + lc_note(q)))
             elif u in LC_TIMECHUNK:
                 rows.append(("reused", lab, p, "re-simulate with the same source file (time-chunk light-curve bug)"))

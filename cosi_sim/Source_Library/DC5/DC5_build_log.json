@@ -69,41 +69,41 @@
   }
  },
  "nova_co_continuum": {
-  "status": "modified",
+  "status": "reused (bug-fixed)",
   "origin": "DC3/sources/Galactic/nova_co_continuum",
-  "change": "flux 0.1221 -> 0.1831 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)",
+  "change": "same model as DC4 (Hernanz 2014 CO nova at 1 kpc); Flux keyword set to the time average of the Hernanz (2014) model, which should be the correct model (the DC3/DC4 file gave the peak flux). The earlier DC5 x1.5 modification (0.82 kpc) is dropped",
   "lc_flux": {
    "nova_co_cont": {
-    "state_flux": 0.183107,
+    "dc4_peak_flux": 0.122071,
     "lc_mean": 0.00016460468495749662,
-    "flux": 3.0140270048512333e-05,
-    "state": "peak"
+    "flux": 2.12e-05,
+    "state": "Hernanz (2014) time average"
    }
   }
  },
  "nova_co_511keV": {
-  "status": "modified",
+  "status": "reused (bug-fixed)",
   "origin": "DC3/sources/Galactic/nova_co_511keV",
-  "change": "flux 0.01537 -> 0.02305 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)",
+  "change": "same model as DC4 (Hernanz 2014 CO nova at 1 kpc); Flux keyword set to the time average of the Hernanz (2014) model, which should be the correct model (the DC3/DC4 file gave the peak flux). The earlier DC5 x1.5 modification (0.82 kpc) is dropped",
   "lc_flux": {
    "nova_co_511keV": {
-    "state_flux": 0.023055,
+    "dc4_peak_flux": 0.01537,
     "lc_mean": 0.00018548934134027072,
-    "flux": 4.2764567645999415e-06,
-    "state": "peak"
+    "flux": 3e-06,
+    "state": "Hernanz (2014) time average"
    }
   }
  },
  "nova_co_478keV": {
-  "status": "modified",
+  "status": "reused (bug-fixed)",
   "origin": "DC3/sources/Galactic/nova_co_478keV",
-  "change": "flux 2.044e-06 -> 3.066e-06 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)",
+  "change": "same model as DC4 (Hernanz 2014 CO nova at 1 kpc); Flux keyword set to the time average of the Hernanz (2014) model, which should be the correct model (the DC3/DC4 file gave the peak flux). The earlier DC5 x1.5 modification (0.82 kpc) is dropped",
   "lc_flux": {
    "nova_co_478keV": {
-    "state_flux": 3.066e-06,
+    "dc4_peak_flux": 2.044e-06,
     "lc_mean": 0.6137884667223216,
-    "flux": 1.881875438970638e-06,
-    "state": "peak"
+    "flux": 1.27e-06,
+    "state": "Hernanz (2014) time average"
    }
   }
  },

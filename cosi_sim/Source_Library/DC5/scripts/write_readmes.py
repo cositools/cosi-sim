@@ -86,8 +86,8 @@ CAT = {  # key in log -> (DC5 relative dir(s), title, refs, model text)
  "MAXIJ1820": (["Galactic/MAXIJ1820"], "MAXI J1820+070 (hard-state outburst)", ["cangemi23"],
    "DC3 two-component spectral/polarisation model with the 60-day ON light curve. Both components scaled by 0.7 (a fainter hard-state outburst than the exceptional 2018 one)."),
  "nova_co": (["Galactic/nova_co_continuum", "Galactic/nova_co_511keV", "Galactic/nova_co_478keV"], "Classical CO nova", ["hernanz14", "gomezgomar98"],
-   "DC3 CO-nova model (continuum, 511 keV line, 478 keV 7Be line with their light curves) at the position of V1369 Cen. "
-   "DC5 places the nova at 0.82 kpc instead of 1 kpc, so all three components are 1.5x brighter."),
+   "DC3 CO-nova model (continuum, 511 keV line, 478 keV 7Be line with their light curves) at the position of V1369 Cen, at 1 kpc. "
+   "DC5 keeps this model, with the Flux keywords set to the time averages of the Hernanz (2014) model, which should be the correct model."),
  "4C21p35": (["Extragalactic/4C21p35_noflare", "Extragalactic/4C21p35_flare"], "FSRQ 4C +21.35", ["4c21"],
    "DC3 two-state model (quiescent index 1.6, flaring index 2.5, flare light curve from Fermi-LAT). Both states scaled by 1.5 in DC5 (a brighter activity epoch)."),
  "NGC_4151": (["Extragalactic/NGC_4151"], "Seyfert galaxy NGC 4151", ["lubinski10", "inoue08"],

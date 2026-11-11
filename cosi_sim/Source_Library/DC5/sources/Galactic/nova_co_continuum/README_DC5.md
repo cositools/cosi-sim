@@ -1,23 +1,23 @@
 # Classical CO nova — DC5
 
-**DC5 status:** modified  
+**DC5 status:** reused (bug-fixed)  
 **Based on:** `DC3/sources/Galactic/nova_co_continuum`  
 
 ## Model
 
-DC3 CO-nova model (continuum, 511 keV line, 478 keV 7Be line with their light curves) at the position of V1369 Cen. DC5 places the nova at 0.82 kpc instead of 1 kpc, so all three components are 1.5x brighter.
+DC3 CO-nova model (continuum, 511 keV line, 478 keV 7Be line with their light curves) at the position of V1369 Cen, at 1 kpc. DC5 keeps this model, with the Flux keywords set to the time averages of the Hernanz (2014) model, which should be the correct model.
 
 ## Change relative to the DC4 mock dataset
 
-- nova_co_continuum: flux 0.1221 -> 0.1831 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)
-- nova_co_511keV: flux 0.01537 -> 0.02305 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)
-- nova_co_478keV: flux 2.044e-06 -> 3.066e-06 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)
+- nova_co_continuum: same model as DC4 (Hernanz 2014 CO nova at 1 kpc); Flux keyword set to the time average of the Hernanz (2014) model, which should be the correct model (the DC3/DC4 file gave the peak flux). The earlier DC5 x1.5 modification (0.82 kpc) is dropped
+- nova_co_511keV: same model as DC4 (Hernanz 2014 CO nova at 1 kpc); Flux keyword set to the time average of the Hernanz (2014) model, which should be the correct model (the DC3/DC4 file gave the peak flux). The earlier DC5 x1.5 modification (0.82 kpc) is dropped
+- nova_co_478keV: same model as DC4 (Hernanz 2014 CO nova at 1 kpc); Flux keyword set to the time average of the Hernanz (2014) model, which should be the correct model (the DC3/DC4 file gave the peak flux). The earlier DC5 x1.5 modification (0.82 kpc) is dropped
 
 ## Light-curve flux
 
 MEGAlib scales a light curve so that its mean over the light curve's time range is 1, so the Flux keyword must be the time-averaged flux over that range.
 
-- nova_co_cont: **fixed**, Flux 0.183107 -> 3.01403e-05 ph/cm2/s. Flux was the peak flux; it is now that flux x the light-curve mean (0.0001646). Basis: the spectrum-file normalisation equals the flux at the light-curve peak (t = 0); Gomez-Gomar et al. 1998 (MNRAS 296, 913): CO nova at 1 kpc, peak continuum (170-470 keV) ~0.17, peak 511 keV line ~1e-2, late 478 keV maximum 1.4-2.6e-6 ph/cm2/s.
+- nova_co_cont: **fixed**, Flux 0.122071 -> 2.12e-05 ph/cm2/s. Flux set to the time average of the Hernanz (2014) CO nova model at 1 kpc, which should be the correct model (Hernanz 2014). The DC3/DC4 file gave the peak flux (0.122071), and the earlier DC5 x1.5 modification is dropped.
 
 Any other README in this directory describes the original (DC2/DC3/DC4) model; where it conflicts with this file, this file describes what DC5 simulates.
 
