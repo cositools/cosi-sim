@@ -6,8 +6,8 @@ The DC5 mock dataset starts from the DC4 mock dataset (3 months, same orbit, ori
 
 | | DC4 components | Fraction |
 |---|---|---|
-| Reused (same source files; 5 of these carry only a bug fix: 2 for the 511 keV map, 3 for the light-curve Flux keyword) | 27 | 51% |
-| Modified | 21 | 40% |
+| Reused (same source files; 8 of these carry only a bug fix: 2 for the 511 keV map, 6 for the light-curve Flux keyword) | 30 | 57% |
+| Modified | 18 | 34% |
 | Removed | 5 | 9% |
 | **New** (relative to the ~71 DC4 components) | 18 | 25% |
 | GRBs (`GRB_bn*`): new time, spectrum and polarization | 11 | all |
@@ -53,6 +53,9 @@ Files:
 | 3C454p3_high | `DC5/sources/Extragalactic/3C454p3_high` | re-simulate: same model, Flux keyword corrected to the time average over the light curve — LC flux: fixed, 3C454p3_high 0.00624 -> 0.002186 ph/cm2/s (on-state flux x light-curve mean 0.3504) |
 | Narrow_Bulge_511 | `DC5/sources/511/NB_511` | re-simulate (511 keV map bug fixed) |
 | Vela_SNR_511 | `DC5/sources/511/Vela_SNR_511` | re-simulate (511 keV map bug fixed) |
+| nova_co_511keV | `DC5/sources/Galactic/nova_co_511keV` | re-simulate: same model as DC4, Flux keyword set to the time average of the Hernanz (2014) model, which should be the correct model — LC flux: fixed, nova_co_511keV 0.01537 -> 3e-06 ph/cm2/s (time average of the Hernanz (2014) model) |
+| nova_co_continuum | `DC5/sources/Galactic/nova_co_continuum` | re-simulate: same model as DC4, Flux keyword set to the time average of the Hernanz (2014) model, which should be the correct model — LC flux: fixed, nova_co_cont 0.1221 -> 2.12e-05 ph/cm2/s (time average of the Hernanz (2014) model) |
+| nova_co_478keV | `DC5/sources/Galactic/nova_co_478keV` | re-simulate: same model as DC4, Flux keyword set to the time average of the Hernanz (2014) model, which should be the correct model — LC flux: fixed, nova_co_478keV 2.044e-06 -> 1.27e-06 ph/cm2/s (time average of the Hernanz (2014) model) |
 | PSRB1259 | `DC5/sources/Galactic/PSRB1259` | re-simulate: same model, Flux keyword corrected to the time average over the light curve — LC flux: fixed, PSRB1259 0.0006125 -> 0.0001988 ph/cm2/s (on-state flux x light-curve mean 0.3246) |
 
 ## Modified sources
@@ -68,9 +71,6 @@ Files:
 | 1RXSJ170849 | `DC5/sources/Galactic/1RXSJ170849` | flux 0.00033 -> 0.000247 ph/cm2/s (x0.75, long-term hard X-ray variability, den Hartog et al. 2008); light curve trimmed to 235528 whole pulse periods so that the periodic repeat keeps the pulse phase continuous (DC4 period bug fix) |
 | magnetar2 | `DC5/sources/Galactic/magnetar2` | flux 0.00033 -> 0.000495 ph/cm2/s (x1.5); light curve trimmed to 109913 whole pulse periods so that the periodic repeat keeps the pulse phase continuous (DC4 period bug fix) |
 | Broad_Bulge_511 | `DC5/sources/511/BB_511` | 511 keV side nodes set to zero (bug fix) and broad-bulge intensity scaled x0.85; integrated flux 1.480e-03 -> 6.290e-04 ph/cm2/s |
-| nova_co_511keV | `DC5/sources/Galactic/nova_co_511keV` | flux 0.01537 -> 0.02305 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc) |
-| nova_co_continuum | `DC5/sources/Galactic/nova_co_continuum` | flux 0.1221 -> 0.1831 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc) |
-| nova_co_478keV | `DC5/sources/Galactic/nova_co_478keV` | flux 2.044e-06 -> 3.066e-06 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc) |
 | 4C21p35_noflare | `DC5/sources/Extragalactic/4C21p35_noflare` | flux 0.0005535 -> 0.0008302 ph/cm2/s (x1.5) |
 | 4C21p35_flare | `DC5/sources/Extragalactic/4C21p35_flare` | flux 0.01729 -> 0.02594 ph/cm2/s (x1.5) |
 | 1E1740_compow | `DC5/sources/Galactic/1E1740_twocompt` | swapped compow model for the alternative twocompt model (Bouchet et al. 2009) |
@@ -170,7 +170,7 @@ Not included in DC5 (random draw, seed 3662968627): GRB_MGF070201, GRB_MGF070222
 ## Light-curve bugs — what needs to be re-simulated
 From the [bug report](https://github.com/cositools/cosi-data-challenges/blob/develop/README.md#bug-report):
 
-- **Time-chunk normalisation bug:** nova_co (all three components), 3C454p3 (low/high), 4C21p35 (flare/no flare), PSRB1259, MAXIJ1820, MAXIJ1348. In DC5, 3C454p3 and PSRB1259 are reused and must be re-simulated, from DC5 copies whose only change is the Flux keyword (see below). nova_co, 4C21p35 and MAXIJ1820 are modified, so they are simulated anyway. MAXIJ1348 is removed. Any light-curve source simulated in time chunks must use the corrected normalisation.
+- **Time-chunk normalisation bug:** nova_co (all three components), 3C454p3 (low/high), 4C21p35 (flare/no flare), PSRB1259, MAXIJ1820, MAXIJ1348. In DC5, 3C454p3, PSRB1259 and nova_co keep their DC4 models and are re-simulated from DC5 copies whose only change is the Flux keyword (see below; for the nova, the Hernanz 2014 model). 4C21p35 and MAXIJ1820 are modified, so they are simulated anyway. MAXIJ1348 is removed. Any light-curve source simulated in time chunks must use the corrected normalisation.
 - **Period bug:** 1RXSJ170849 and magnetar2 (both modified in DC5). Their light curves repeat periodically, but the DC4 files covered a non-whole number of rotations (235528.7 periods over 30 days and 109913.4 over 7 days), so the pulse phase jumped at every repeat. The DC5 copies are cut at 235528 and 109913 whole periods, ending on the phase-0 value (`scripts/fix_magnetar_lightcurves.py`). The time-averaged light curve stays at 1.000000, so the Flux keyword is unchanged in meaning.
 - **Not affected:** the Crab (all components), LS5039 and PSRJ1846 (simulated by splitting the flux), and all GRBs and magnetar bursts (no splitting).
 - **Repeating light curves in t − t_ref:** the repeating sources of the DC4 and DC5 sets (the Crab, LS5039, 1RXSJ170849, magnetar2, PSRB1509, and PSRJ1846 in DC4) have a `sim_time_reference.txt` with t_ref = 1835487300.0: they are simulated with the orientation file in t − t_ref, and t_ref is added back to the simulated times. Their light curves hold one cycle starting at 0 and are used as they are, so the first cycle starts at t_ref, as in DC4. MEGAlib counts the repeats of a light curve with a 32-bit integer (`MFunction::FindX`), which overflows at absolute times for periods below ~0.9 s.
@@ -185,9 +185,9 @@ MEGAlib scales a light curve so that its mean over the light curve's time range 
 | `DC5/sources/Galactic/PSRB1259` | PSRB1259 | **fixed** | 0.0006125 → 0.0001988 | Flux was the on-state flux; it is now that flux x the light-curve mean (0.3246). Basis: README and DC4 docs: 30-day constant emission at the nominal Abdo et al. (2011) flux of 6.13e-4 ph/cm2/s; on/off light curve, on 32.5% of the time |
 | `DC5/sources/Galactic/MAXIJ1820` | MAXIJ1820_0p1-0p4 | **fixed** | 0.09675 → 0.06285 | Flux was the on-state flux; it is now that flux x the light-curve mean (0.6496). Basis: hard-state spectra (Cangemi et al. 2023) with the source 'on' for 60 days (README, DC4 docs); on/off light curve, on 65.0% of the time |
 | `DC5/sources/Galactic/MAXIJ1820` | MAXIJ1820_0p4-10 | **fixed** | 0.004174 → 0.002712 | Flux was the on-state flux; it is now that flux x the light-curve mean (0.6496). Basis: hard-state spectra (Cangemi et al. 2023) with the source 'on' for 60 days (README, DC4 docs); on/off light curve, on 65.0% of the time |
-| `DC5/sources/Galactic/nova_co_continuum` | nova_co_cont | **fixed** | 0.1831 → 3.014e-05 | Flux was the peak flux; it is now that flux x the light-curve mean (0.0001646). Basis: the spectrum-file normalisation equals the flux at the light-curve peak (t = 0); Gomez-Gomar et al. 1998 (MNRAS 296, 913): CO nova at 1 kpc, peak continuum (170-470 keV) ~0.17, peak 511 keV line ~1e-2, late 478 keV maximum 1.4-2.6e-6 ph/cm2/s |
-| `DC5/sources/Galactic/nova_co_511keV` | nova_co_511keV | **fixed** | 0.02305 → 4.276e-06 | Flux was the peak flux; it is now that flux x the light-curve mean (0.0001855). Basis: Gomez-Gomar et al. 1998 (MNRAS 296, 913): CO nova at 1 kpc, peak continuum (170-470 keV) ~0.17, peak 511 keV line ~1e-2, late 478 keV maximum 1.4-2.6e-6 ph/cm2/s |
-| `DC5/sources/Galactic/nova_co_478keV` | nova_co_478keV | **fixed** | 3.066e-06 → 1.882e-06 | Flux was the peak flux; it is now that flux x the light-curve mean (0.6138). Basis: Gomez-Gomar et al. 1998 (MNRAS 296, 913): CO nova at 1 kpc, peak continuum (170-470 keV) ~0.17, peak 511 keV line ~1e-2, late 478 keV maximum 1.4-2.6e-6 ph/cm2/s |
+| `DC5/sources/Galactic/nova_co_continuum` | nova_co_cont | **fixed** | 0.1221 → 2.12e-05 | Flux set to the time average of the Hernanz (2014) CO nova model at 1 kpc, which should be the correct model (Hernanz 2014). The DC3/DC4 file gave the peak flux (0.122071), and the earlier DC5 x1.5 modification is dropped |
+| `DC5/sources/Galactic/nova_co_511keV` | nova_co_511keV | **fixed** | 0.01537 → 3e-06 | Flux set to the time average of the Hernanz (2014) CO nova model at 1 kpc, which should be the correct model (Hernanz 2014). The DC3/DC4 file gave the peak flux (0.01537), and the earlier DC5 x1.5 modification is dropped |
+| `DC5/sources/Galactic/nova_co_478keV` | nova_co_478keV | **fixed** | 2.044e-06 → 1.27e-06 | Flux set to the time average of the Hernanz (2014) CO nova model at 1 kpc, which should be the correct model (Hernanz 2014). The DC3/DC4 file gave the peak flux (2.044e-06), and the earlier DC5 x1.5 modification is dropped |
 | `DC4/sources/Galactic/Crab` | Crab_P1 | correct | not changed | phase-averaged pulsar fluxes of the DC4 Crab model: the three pulsed components add up to 19% of the nebula flux (0.1-10 MeV), while read as fluxes at the light-curve maximum they would give 2.3%; repeating light curve |
 | `DC4/sources/Galactic/Crab` | Crab_Brg | correct | not changed | phase-averaged pulsar fluxes of the DC4 Crab model: the three pulsed components add up to 19% of the nebula flux (0.1-10 MeV), while read as fluxes at the light-curve maximum they would give 2.3%; repeating light curve |
 | `DC4/sources/Galactic/Crab` | Crab_P2 | correct | not changed | phase-averaged pulsar fluxes of the DC4 Crab model: the three pulsed components add up to 19% of the nebula flux (0.1-10 MeV), while read as fluxes at the light-curve maximum they would give 2.3%; repeating light curve |
