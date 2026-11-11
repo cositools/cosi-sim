@@ -11,6 +11,14 @@ DC2 three-band pulsar model with pulse profiles (100-250 keV, 250-750 keV, 0.75-
 
 3 energy bands with periodic pulse profiles (Kuiper et al. 2015); DC2 transmission-probability lines replaced by DC3+ settings
 
+## Light-curve flux
+
+MEGAlib scales a light curve so that its mean over the light curve's time range is 1, so the Flux keyword must be the time-averaged flux over that range.
+
+- B1509_band1: correct, not changed (phase-averaged pulsed spectra (Kuiper & Hermsen 2015); repeating light curve).
+- B1509_band2: correct, not changed (phase-averaged pulsed spectra (Kuiper & Hermsen 2015); repeating light curve).
+- B1509_band3: correct, not changed (phase-averaged pulsed spectra (Kuiper & Hermsen 2015); repeating light curve).
+
 Any other README in this directory describes the original (DC2/DC3/DC4) model; where it conflicts with this file, this file describes what DC5 simulates.
 
 ## References

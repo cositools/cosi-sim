@@ -14,5 +14,6 @@ nova_co_511keV.Beam				FarFieldPointSource 0 0
 nova_co_511keV.Orientation			Galactic Fixed 2.7256 310.9847
 nova_co_511keV.Spectrum				Gaussian 511 1.27 3
 nova_co_511keV.Lightcurve			File false nova_co_511keV_lc.dat
-nova_co_511keV.Flux				0.023055
+# Flux = time average over the light curve (MEGAlib scales the light curve to mean 1): peak flux 0.023055 ph/cm2/s x light-curve mean 0.000185
+nova_co_511keV.Flux				4.27645676e-06
 nova_co_511keV.EarthOccultation false

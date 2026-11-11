@@ -7,6 +7,18 @@ rows = json.load(open(sys.argv[2]))
 log = json.load(open(os.path.join(ROOT, "DC5_build_log.json")))
 draw = json.load(open(os.path.join(ROOT, "DC5_draw.json")))
 gd = json.load(open(os.path.join(ROOT, "DC5_grb_draw.json")))
+lcf = json.load(open(os.path.join(ROOT, "lc_flux_check.json")))
+
+def lcrow(r):
+    if r["verdict"] == "fixed":
+        return f"| `{r['source']}` | {r['component']} | **fixed** | {r['flux_old']:.4g} → {r['flux_new']:.4g} | {r['note']} |"
+    if r["verdict"] == "check":
+        return f"| `{r['source']}` | {r['component']} | **CHECK** | not changed | {r['note']} |"
+    return f"| `{r['source']}` | {r['component']} | correct | not changed | {r['note']} |"
+lc_bursts = [r for r in lcf if r["source"].startswith("DC5/sources/GRBs/")]
+lc_table = "\n".join(lcrow(r) for r in lcf if r not in lc_bursts)
+lc_table += f"\n| `DC5/sources/GRBs/*` ({len(lc_bursts)} bursts) | all | correct | not changed | {lc_bursts[0]['note']} |"
+n_lc_fix = sum(1 for r in rows if r[0] == "reused (bug-fixed)" and "Flux keyword" in r[3])
 
 def count(st): return sum(1 for r in rows if r[0] == st)
 def tab(st): return "\n".join(f"| {r[1]} | `{r[2]}` | {r[3]} |" for r in rows if r[0] == st)
@@ -53,7 +65,7 @@ The DC5 mock dataset starts from the DC4 mock dataset (3 months, same orbit, ori
 
 | | DC4 components | Fraction |
 |---|---|---|
-| Reused (same source files; 2 of these carry only the 511 keV bug fix) | {n_reused} | {n_reused/n_non:.0%} |
+| Reused (same source files; {count('reused (bug-fixed)')} of these carry only a bug fix: {count('reused (bug-fixed)') - n_lc_fix} for the 511 keV map, {n_lc_fix} for the light-curve Flux keyword) | {n_reused} | {n_reused/n_non:.0%} |
 | Modified | {n_mod} | {n_mod/n_non:.0%} |
 | Removed | {n_rem} | {n_rem/n_non:.0%} |
 | **New** (relative to the ~71 DC4 components) | {n_new} | {n_new/71:.0%} |
@@ -68,7 +80,7 @@ Files:
 - `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim ({sum(1 for r in rows if r[0] != 'removed' and r[2].startswith('DC')) + sum(r[2].count(',') for r in rows if r[0] != 'removed' and r[2].startswith('DC'))} entries; checked with `Setup.setup_srcs()`).
 - `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do (simulate / re-simulate / reuse the existing DC3/DC4 event file).
 - `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json` — machine-readable record of the draws and of every change.
-- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → `python -m cosi_sim.pipeline.time_reference --ori <9-column ori> DC5/sources/Galactic/{{1RXSJ170849,magnetar2,PSRB1509}}` (repeating light curves in t − t_ref) → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → write_manifest → write_readmes → write_dc5_readme.
+- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `fix_lightcurve_fluxes.py` (light-curve Flux keywords; writes `lc_flux_check.json`), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → fix_lightcurve_fluxes → `python -m cosi_sim.pipeline.time_reference --ori <9-column ori> DC5/sources/Galactic/{{1RXSJ170849,magnetar2,PSRB1509}}` (repeating light curves in t − t_ref) → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → write_manifest → write_readmes → write_dc5_readme.
 - `sources/` — one directory per modified, bug-fixed or new source, each with a `README_DC5.md` describing the model, the change, and references.
 
 ## Reused sources (same source files)
@@ -138,10 +150,17 @@ Not included in DC5 (random draw, seed {gd['seed']}): {', '.join(r[1] for r in g
 ## Light-curve bugs — what needs to be re-simulated
 From the [bug report](https://github.com/cositools/cosi-data-challenges/blob/develop/README.md#bug-report):
 
-- **Time-chunk normalisation bug:** nova_co (all three components), 3C454p3 (low/high), 4C21p35 (flare/no flare), PSRB1259, MAXIJ1820, MAXIJ1348. In DC5, 3C454p3 and PSRB1259 are reused and must be re-simulated with the same source file. nova_co, 4C21p35 and MAXIJ1820 are modified, so they are simulated anyway. MAXIJ1348 is removed. Any light-curve source simulated in time chunks must use the corrected normalisation.
+- **Time-chunk normalisation bug:** nova_co (all three components), 3C454p3 (low/high), 4C21p35 (flare/no flare), PSRB1259, MAXIJ1820, MAXIJ1348. In DC5, 3C454p3 and PSRB1259 are reused and must be re-simulated, from DC5 copies whose only change is the Flux keyword (see below). nova_co, 4C21p35 and MAXIJ1820 are modified, so they are simulated anyway. MAXIJ1348 is removed. Any light-curve source simulated in time chunks must use the corrected normalisation.
 - **Period bug:** 1RXSJ170849 and magnetar2 (both modified in DC5). Their light curves repeat periodically, but the DC4 files covered a non-whole number of rotations (235528.7 periods over 30 days and 109913.4 over 7 days), so the pulse phase jumped at every repeat. The DC5 copies are cut at 235528 and 109913 whole periods, ending on the phase-0 value (`scripts/fix_magnetar_lightcurves.py`). The time-averaged light curve stays at 1.000000, so the Flux keyword is unchanged in meaning.
 - **Not affected:** the Crab (all components), LS5039 and PSRJ1846 (simulated by splitting the flux), and all GRBs and magnetar bursts (no splitting).
 - **Repeating light curves in t − t_ref:** the repeating sources of the DC4 and DC5 sets (the Crab, LS5039, 1RXSJ170849, magnetar2, PSRB1509, and PSRJ1846 in DC4) have a `sim_time_reference.txt` with t_ref = 1835487300.0: they are simulated with the orientation file in t − t_ref, and t_ref is added back to the simulated times. Their light curves hold one cycle starting at 0 and are used as they are, so the first cycle starts at t_ref, as in DC4. MEGAlib counts the repeats of a light curve with a 32-bit integer (`MFunction::FindX`), which overflows at absolute times for periods below ~0.9 s.
+
+## Light-curve fluxes
+MEGAlib scales a light curve so that its mean over the light curve's time range is 1, so the `Flux` keyword must be the time-averaged flux over that range (as the bug report states). Every DC5 component with a light curve was checked against its README, spectrum file and the literature (`scripts/fix_lightcurve_fluxes.py`, results in `lc_flux_check.json`). Where the DC3/DC4 value was the flux while the source is on (on/off light curves) or the peak flux (nova), the DC5 file has `Flux` = that flux × the light-curve mean, so the intended flux at every time is unchanged. The changed `Flux` lines carry a comment with the calculation. **CHECK** marks values that could not be settled from the README or the literature; they are left unchanged for review.
+
+| Source | Component | Verdict | Flux (ph/cm2/s) | Basis |
+|---|---|---|---|---|
+{lc_table}
 
 ## 511 keV and in-flight annihilation bug fixes
 **In-flight annihilation position.** `DC5/sources/511/Positrons_In_Flight_Annihilation` now declares `Galactic Fixed -0.2 -1.4`. MEGAlib reads Galactic Fixed as (b, l): every other library source follows this order, e.g. the Crab `-5.78434 184.5575` (l = 184.56°, b = −5.78°, recomputed independently from RA/Dec with `scripts/eq2gal.py`), the LMC `-32.89 280.46` and Kepler `6.8 4.5`. The source is therefore centred at (l, b) = (−1.4°, −0.2°) as intended. The final check is a short cosima run (a few minutes on one core) imaged with mimrec; MEGAlib was not available where this directory was built.

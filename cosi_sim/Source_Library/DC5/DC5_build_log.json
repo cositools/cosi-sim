@@ -52,22 +52,60 @@
  "MAXIJ1820": {
   "status": "modified",
   "origin": "DC3/sources/Galactic/MAXIJ1820",
-  "change": "MAXIJ1820_0p1-0p4: 0.1382 -> 0.09675; MAXIJ1820_0p4-10: 0.005964 -> 0.004174 ph/cm2/s (x0.7, fainter hard-state outburst)"
+  "change": "MAXIJ1820_0p1-0p4: 0.1382 -> 0.09675; MAXIJ1820_0p4-10: 0.005964 -> 0.004174 ph/cm2/s (x0.7, fainter hard-state outburst)",
+  "lc_flux": {
+   "MAXIJ1820_0p1-0p4": {
+    "state_flux": 0.0967469,
+    "lc_mean": 0.649626783609682,
+    "flux": 0.06284937747120754,
+    "state": "on-state"
+   },
+   "MAXIJ1820_0p4-10": {
+    "state_flux": 0.00417446,
+    "lc_mean": 0.649626783609682,
+    "flux": 0.0027118410231072726,
+    "state": "on-state"
+   }
+  }
  },
  "nova_co_continuum": {
   "status": "modified",
   "origin": "DC3/sources/Galactic/nova_co_continuum",
-  "change": "flux 0.1221 -> 0.1831 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)"
+  "change": "flux 0.1221 -> 0.1831 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)",
+  "lc_flux": {
+   "nova_co_cont": {
+    "state_flux": 0.183107,
+    "lc_mean": 0.00016460468495749662,
+    "flux": 3.0140270048512333e-05,
+    "state": "peak"
+   }
+  }
  },
  "nova_co_511keV": {
   "status": "modified",
   "origin": "DC3/sources/Galactic/nova_co_511keV",
-  "change": "flux 0.01537 -> 0.02305 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)"
+  "change": "flux 0.01537 -> 0.02305 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)",
+  "lc_flux": {
+   "nova_co_511keV": {
+    "state_flux": 0.023055,
+    "lc_mean": 0.00018548934134027072,
+    "flux": 4.2764567645999415e-06,
+    "state": "peak"
+   }
+  }
  },
  "nova_co_478keV": {
   "status": "modified",
   "origin": "DC3/sources/Galactic/nova_co_478keV",
-  "change": "flux 2.044e-06 -> 3.066e-06 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)"
+  "change": "flux 2.044e-06 -> 3.066e-06 ph/cm2/s (x1.5: nova at 0.82 kpc instead of 1 kpc)",
+  "lc_flux": {
+   "nova_co_478keV": {
+    "state_flux": 3.066e-06,
+    "lc_mean": 0.6137884667223216,
+    "flux": 1.881875438970638e-06,
+    "state": "peak"
+   }
+  }
  },
  "4C21p35_noflare": {
   "status": "modified",
@@ -232,5 +270,44 @@
   "origin": "DC4/sources/DarkMatter/Annihilation_eeg_NFW",
   "change": "annihilating DM, chi chi -> e+ e- gamma (FSR), NFW: m = 17.3 MeV, <sigma v> = 3.9e-28 cm3/s (DC4: 30 MeV, 1e-25); 5.9e-4 ph/cm2/s in 0.1-10 MeV, ~5 sigma expected in 3 months",
   "skip_readme": true
+ },
+ "3C454p3_low": {
+  "status": "reused (bug-fixed)",
+  "origin": "DC4/sources/Extragalactic/3C454p3_low",
+  "change": "same model; Flux keyword corrected to the time average over the light curve (the DC3/DC4 file gave the on-state flux, which MEGAlib would treat as the time average)",
+  "lc_flux": {
+   "3C454p3_low": {
+    "state_flux": 0.00029,
+    "lc_mean": 0.6496258437547581,
+    "flux": 0.00018839149468887983,
+    "state": "on-state"
+   }
+  }
+ },
+ "3C454p3_high": {
+  "status": "reused (bug-fixed)",
+  "origin": "DC4/sources/Extragalactic/3C454p3_high",
+  "change": "same model; Flux keyword corrected to the time average over the light curve (the DC3/DC4 file gave the on-state flux, which MEGAlib would treat as the time average)",
+  "lc_flux": {
+   "3C454p3_high": {
+    "state_flux": 0.00624,
+    "lc_mean": 0.350370396825546,
+    "flux": 0.002186311276191407,
+    "state": "on-state"
+   }
+  }
+ },
+ "PSRB1259": {
+  "status": "reused (bug-fixed)",
+  "origin": "DC3/sources/Galactic/PSRB1259",
+  "change": "same model; Flux keyword corrected to the time average over the light curve (the DC3/DC4 file gave the on-state flux, which MEGAlib would treat as the time average)",
+  "lc_flux": {
+   "PSRB1259": {
+    "state_flux": 0.00061253,
+    "lc_mean": 0.3245976950997844,
+    "flux": 0.00019882582617947097,
+    "state": "on-state"
+   }
+  }
  }
 }
