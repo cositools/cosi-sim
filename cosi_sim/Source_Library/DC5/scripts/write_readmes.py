@@ -2,11 +2,15 @@
 
 Usage: python3 write_readmes.py <Source_Library/DC5 dir>
 Entries flagged "skip_readme" in the build log (dark matter) keep their hand-written README_DC5.md;
-GRB READMEs are written by build_dc5_grbs.py.
+GRB READMEs are written by build_dc5_grbs.py. Sources with a light curve get a "Light-curve flux"
+section from lc_flux_check.json (written by fix_lightcurve_fluxes.py).
 """
 import json, os, sys
 ROOT = sys.argv[1]                      # .../Source_Library/DC5
 log = json.load(open(os.path.join(ROOT, "DC5_build_log.json")))
+lcflux = {}
+for r in json.load(open(os.path.join(ROOT, "lc_flux_check.json"))):
+    lcflux.setdefault(r["source"], []).append(r)
 
 ADS = lambda b: f"https://ui.adsabs.harvard.edu/abs/{b}/abstract"
 R = {
@@ -42,9 +46,17 @@ R = {
  "kuiper06": ("Kuiper et al. 2006, ApJ 645, 556 (hard X-ray tails of AXPs)", "https://arxiv.org/abs/astro-ph/0603467"),
  "guessoum05": ("Guessoum et al. 2005, A&A 436, 171 (positron annihilation spectra)", ADS("2005A%26A...436..171G")),
  "bonnoli11": ("Bonnoli et al. 2011, MNRAS 410, 368 (MeV blazar SED shapes)", ADS("2011MNRAS.410..368B")),
+ "abdo11": ("Abdo et al. 2011, ApJL 736, L11 (Fermi-LAT PSR B1259-63 periastron flare)", "https://doi.org/10.1088/2041-8205/736/1/L11"),
+ "gomezgomar98": ("Gómez-Gomar et al. 1998, MNRAS 296, 913 (gamma-ray emission of individual classical novae)", "https://arxiv.org/abs/astro-ph/9711322"),
 }
 
 CAT = {  # key in log -> (DC5 relative dir(s), title, refs, model text)
+ "3C454p3_low": (["Extragalactic/3C454p3_low"], "Blazar 3C 454.3, low state", ["bonnoli11"],
+   "DC4 model: low-state spectrum of Bonnoli et al. (2011), unpolarised, on whenever the source is not flaring (65% of the 3 months; on/off light curve)."),
+ "3C454p3_high": (["Extragalactic/3C454p3_high"], "Blazar 3C 454.3, flare", ["bonnoli11"],
+   "DC4 model: flare spectrum (03/12 model of Bonnoli et al. 2011), 50% polarisation at 45 deg, on during the flare (35% of the 3 months; on/off light curve)."),
+ "PSRB1259": (["Galactic/PSRB1259"], "Gamma-ray binary PSR B1259-63, periastron flare", ["abdo11"],
+   "DC3/DC4 model: 30 days of constant emission (T > 1839487305.0) at the nominal Fermi-LAT flux of Abdo et al. (2011), 6.13e-4 ph/cm2/s in 0.1-10 MeV."),
  "NB_511": (["511/NB_511"], "Narrow Galactic bulge, 511 keV line", ["siegert16"],
    "DC3 narrow-bulge 511 keV intensity map (1 deg grid). Same model as DC3/DC4."),
  "BB_511": (["511/BB_511"], "Broad Galactic bulge, 511 keV line", ["siegert16"],
@@ -73,7 +85,7 @@ CAT = {  # key in log -> (DC5 relative dir(s), title, refs, model text)
    "DC4 generic magnetar (log-parabola, 40% polarisation, 5.5 s pulsation light curve). DC5 flux scaled by 1.5 (4.95e-4 ph/cm2/s)."),
  "MAXIJ1820": (["Galactic/MAXIJ1820"], "MAXI J1820+070 (hard-state outburst)", ["cangemi23"],
    "DC3 two-component spectral/polarisation model with the 60-day ON light curve. Both components scaled by 0.7 (a fainter hard-state outburst than the exceptional 2018 one)."),
- "nova_co": (["Galactic/nova_co_continuum", "Galactic/nova_co_511keV", "Galactic/nova_co_478keV"], "Classical CO nova", ["hernanz14"],
+ "nova_co": (["Galactic/nova_co_continuum", "Galactic/nova_co_511keV", "Galactic/nova_co_478keV"], "Classical CO nova", ["hernanz14", "gomezgomar98"],
    "DC3 CO-nova model (continuum, 511 keV line, 478 keV 7Be line with their light curves) at the position of V1369 Cen. "
    "DC5 places the nova at 0.82 kpc instead of 1 kpc, so all three components are 1.5x brighter."),
  "4C21p35": (["Extragalactic/4C21p35_noflare", "Extragalactic/4C21p35_flare"], "FSRQ 4C +21.35", ["4c21"],
@@ -146,6 +158,18 @@ for key, info in log.items():
         txt += "\n## Model\n\n" + model + "\n\n## Change relative to the DC4 mock dataset\n\n"
         for c in comps:
             txt += f"- {c}: {log[c]['change']}\n" if len(comps) > 1 else f"{log[c]['change']}\n"
+        lc = lcflux.get("DC5/sources/" + d, [])
+        if lc:
+            txt += "\n## Light-curve flux\n\n"
+            txt += ("MEGAlib scales a light curve so that its mean over the light curve's time range is 1, so the Flux "
+                    "keyword must be the time-averaged flux over that range.\n\n")
+            for r in lc:
+                if r["verdict"] == "fixed":
+                    txt += "- %s: **fixed**, Flux %.6g -> %.6g ph/cm2/s. %s.\n" % (r["component"], r["flux_old"], r["flux_new"], r["note"])
+                elif r["verdict"] == "check":
+                    txt += "- %s: **to be checked**, not changed. %s.\n" % (r["component"], r["note"])
+                else:
+                    txt += "- %s: correct, not changed (%s).\n" % (r["component"], r["note"])
         txt += "\nAny other README in this directory describes the original (DC2/DC3/DC4) model; where it conflicts with this file, this file describes what DC5 simulates.\n"
         txt += "\n## References\n\n"
         for r in refs:

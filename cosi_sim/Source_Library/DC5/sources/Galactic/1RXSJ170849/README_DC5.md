@@ -11,6 +11,12 @@ DC4 log-parabola spectrum, 80% polarisation and 11 s pulsation light curve. DC5 
 
 flux 0.00033 -> 0.000247 ph/cm2/s (x0.75, long-term hard X-ray variability, den Hartog et al. 2008); light curve trimmed to 235528 whole pulse periods so that the periodic repeat keeps the pulse phase continuous (DC4 period bug fix)
 
+## Light-curve flux
+
+MEGAlib scales a light curve so that its mean over the light curve's time range is 1, so the Flux keyword must be the time-averaged flux over that range.
+
+- 1RXSJ170849: correct, not changed (phase-integrated flux; the light curve 1 + 0.5 sin(2 pi t/P) has mean 1).
+
 Any other README in this directory describes the original (DC2/DC3/DC4) model; where it conflicts with this file, this file describes what DC5 simulates.
 
 ## References

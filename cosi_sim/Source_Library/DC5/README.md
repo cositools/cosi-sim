@@ -6,7 +6,7 @@ The DC5 mock dataset starts from the DC4 mock dataset (3 months, same orbit, ori
 
 | | DC4 components | Fraction |
 |---|---|---|
-| Reused (same source files; 2 of these carry only the 511 keV bug fix) | 27 | 51% |
+| Reused (same source files; 5 of these carry only a bug fix: 2 for the 511 keV map, 3 for the light-curve Flux keyword) | 27 | 51% |
 | Modified | 21 | 40% |
 | Removed | 5 | 9% |
 | **New** (relative to the ~71 DC4 components) | 18 | 25% |
@@ -21,7 +21,7 @@ Files:
 - `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (80 entries; checked with `Setup.setup_srcs()`).
 - `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do (simulate / re-simulate / reuse the existing DC3/DC4 event file).
 - `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json` — machine-readable record of the draws and of every change.
-- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → `python -m cosi_sim.pipeline.time_reference --ori <9-column ori> DC5/sources/Galactic/{1RXSJ170849,magnetar2,PSRB1509}` (repeating light curves in t − t_ref) → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → write_manifest → write_readmes → write_dc5_readme.
+- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `fix_lightcurve_fluxes.py` (light-curve Flux keywords; writes `lc_flux_check.json`), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → fix_lightcurve_fluxes → `python -m cosi_sim.pipeline.time_reference --ori <9-column ori> DC5/sources/Galactic/{1RXSJ170849,magnetar2,PSRB1509}` (repeating light curves in t − t_ref) → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → write_manifest → write_readmes → write_dc5_readme.
 - `sources/` — one directory per modified, bug-fixed or new source, each with a `README_DC5.md` describing the model, the change, and references.
 
 ## Reused sources (same source files)
@@ -36,10 +36,8 @@ Files:
 | Virgo_511 | `(no library file)` | reuse DC4 event file COSI-SMEX/DC4/Data/Sources/Virgo_511_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | NGC_1068 | `DC4/sources/Extragalactic/NGC_1068` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/NGC_1068_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | 4C71p07 | `DC4/sources/Extragalactic/4C71p07` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/4C71p07_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| 3C454p3_low | `DC4/sources/Extragalactic/3C454p3_low` | re-simulate with the same source file (time-chunk light-curve bug) |
-| 3C454p3_high | `DC4/sources/Extragalactic/3C454p3_high` | re-simulate with the same source file (time-chunk light-curve bug) |
 | CenA | `DC4/sources/Extragalactic/CenA` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/CenA_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| Crab_DC4 | `DC4/sources/Galactic/Crab` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/Crab_DC4_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
+| Crab_DC4 | `DC4/sources/Galactic/Crab` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/Crab_DC4_3months_unbinned_data_filtered_with_SAAcut.fits.gz — LC flux: correct (phase average) |
 | Globular_Cluster_Tuc_47 | `DC3/sources/511/Globular_Cluster_Tuc_47` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_Tuc_47_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | Globular_Cluster_Omega_Cen | `DC3/sources/511/Globular_Cluster_Omega_Cen` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_Omega_Cen_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | Globular_Cluster_NGC_6397 | `DC3/sources/511/Globular_Cluster_NGC_6397` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_NGC_6397_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
@@ -48,12 +46,14 @@ Files:
 | Positrons_from_26Al_cont | `DC3/sources/511/Positrons_from_26Al_cont` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Positrons_from_26Al_cont_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | Positrons_from_44Ti_line | `DC3/sources/511/Positrons_from_44Ti_line` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Positrons_from_44Ti_line_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | Positrons_from_44Ti_cont | `DC3/sources/511/Positrons_from_44Ti_cont` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Positrons_from_44Ti_cont_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| PSRB1259 | `DC3/sources/Galactic/PSRB1259` | re-simulate with the same source file (time-chunk light-curve bug) |
-| LS5039 | `DC3/sources/Galactic/LS5039` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/LS5039_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
+| LS5039 | `DC3/sources/Galactic/LS5039` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/LS5039_3months_unbinned_data_filtered_with_SAAcut.fits.gz — LC flux: correct (orbit average) |
 | 26Al_NE2001 | `DC3/sources/Al26/26Al_NE2001` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/26Al_NE2001_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | 60Fe_Cyg_Region | `DC3/sources/Fe60/60Fe_Cyg_Region` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/60Fe_Cyg_Region_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
+| 3C454p3_low | `DC5/sources/Extragalactic/3C454p3_low` | re-simulate: same model, Flux keyword corrected to the time average over the light curve — LC flux: fixed, 3C454p3_low 0.00029 -> 0.0001884 ph/cm2/s (on-state flux x light-curve mean 0.6496) |
+| 3C454p3_high | `DC5/sources/Extragalactic/3C454p3_high` | re-simulate: same model, Flux keyword corrected to the time average over the light curve — LC flux: fixed, 3C454p3_high 0.00624 -> 0.002186 ph/cm2/s (on-state flux x light-curve mean 0.3504) |
 | Narrow_Bulge_511 | `DC5/sources/511/NB_511` | re-simulate (511 keV map bug fixed) |
 | Vela_SNR_511 | `DC5/sources/511/Vela_SNR_511` | re-simulate (511 keV map bug fixed) |
+| PSRB1259 | `DC5/sources/Galactic/PSRB1259` | re-simulate: same model, Flux keyword corrected to the time average over the light curve — LC flux: fixed, PSRB1259 0.0006125 -> 0.0001988 ph/cm2/s (on-state flux x light-curve mean 0.3246) |
 
 ## Modified sources
 | DC4 mock component | DC5 source path | Modification |
@@ -160,20 +160,46 @@ The models are unchanged from DC3/DC4. The kept bursts are copied to `DC5/source
 
 | Component | Source path | Action |
 |---|---|---|
-| GRB_MGF051103 | `DC5/sources/GRBs/MGF051103` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF051103_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
-| GRB_MGF180128A | `DC5/sources/GRBs/MGF180128A` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF180128A_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
-| GRB_MGF200415A | `DC5/sources/GRBs/MGF200415A` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF200415A_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
-| MgtBurst_bright_complex | `DC5/sources/GRBs/MgtBurst_bright_complex` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC4/Data/Sources/MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| GRB_MGF051103 | `DC5/sources/GRBs/MGF051103` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF051103_3months_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (burst average) |
+| GRB_MGF180128A | `DC5/sources/GRBs/MGF180128A` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF180128A_3months_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (burst average) |
+| GRB_MGF200415A | `DC5/sources/GRBs/MGF200415A` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF200415A_3months_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (burst average) |
+| MgtBurst_bright_complex | `DC5/sources/GRBs/MgtBurst_bright_complex` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC4/Data/Sources/MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (burst average) |
 
 Not included in DC5 (random draw, seed 3662968627): GRB_MGF070201, GRB_MGF070222, GRB_MGF231115A. Four of the seven DC4 magnetar bursts are kept (half, rounded up).
 
 ## Light-curve bugs — what needs to be re-simulated
 From the [bug report](https://github.com/cositools/cosi-data-challenges/blob/develop/README.md#bug-report):
 
-- **Time-chunk normalisation bug:** nova_co (all three components), 3C454p3 (low/high), 4C21p35 (flare/no flare), PSRB1259, MAXIJ1820, MAXIJ1348. In DC5, 3C454p3 and PSRB1259 are reused and must be re-simulated with the same source file. nova_co, 4C21p35 and MAXIJ1820 are modified, so they are simulated anyway. MAXIJ1348 is removed. Any light-curve source simulated in time chunks must use the corrected normalisation.
+- **Time-chunk normalisation bug:** nova_co (all three components), 3C454p3 (low/high), 4C21p35 (flare/no flare), PSRB1259, MAXIJ1820, MAXIJ1348. In DC5, 3C454p3 and PSRB1259 are reused and must be re-simulated, from DC5 copies whose only change is the Flux keyword (see below). nova_co, 4C21p35 and MAXIJ1820 are modified, so they are simulated anyway. MAXIJ1348 is removed. Any light-curve source simulated in time chunks must use the corrected normalisation.
 - **Period bug:** 1RXSJ170849 and magnetar2 (both modified in DC5). Their light curves repeat periodically, but the DC4 files covered a non-whole number of rotations (235528.7 periods over 30 days and 109913.4 over 7 days), so the pulse phase jumped at every repeat. The DC5 copies are cut at 235528 and 109913 whole periods, ending on the phase-0 value (`scripts/fix_magnetar_lightcurves.py`). The time-averaged light curve stays at 1.000000, so the Flux keyword is unchanged in meaning.
 - **Not affected:** the Crab (all components), LS5039 and PSRJ1846 (simulated by splitting the flux), and all GRBs and magnetar bursts (no splitting).
 - **Repeating light curves in t − t_ref:** the repeating sources of the DC4 and DC5 sets (the Crab, LS5039, 1RXSJ170849, magnetar2, PSRB1509, and PSRJ1846 in DC4) have a `sim_time_reference.txt` with t_ref = 1835487300.0: they are simulated with the orientation file in t − t_ref, and t_ref is added back to the simulated times. Their light curves hold one cycle starting at 0 and are used as they are, so the first cycle starts at t_ref, as in DC4. MEGAlib counts the repeats of a light curve with a 32-bit integer (`MFunction::FindX`), which overflows at absolute times for periods below ~0.9 s.
+
+## Light-curve fluxes
+MEGAlib scales a light curve so that its mean over the light curve's time range is 1, so the `Flux` keyword must be the time-averaged flux over that range (as the bug report states). Every DC5 component with a light curve was checked against its README, spectrum file and the literature (`scripts/fix_lightcurve_fluxes.py`, results in `lc_flux_check.json`). Where the DC3/DC4 value was the flux while the source is on (on/off light curves) or the peak flux (nova), the DC5 file has `Flux` = that flux × the light-curve mean, so the intended flux at every time is unchanged. The changed `Flux` lines carry a comment with the calculation. **CHECK** marks values that could not be settled from the README or the literature; they are left unchanged for review.
+
+| Source | Component | Verdict | Flux (ph/cm2/s) | Basis |
+|---|---|---|---|---|
+| `DC5/sources/Extragalactic/3C454p3_low` | 3C454p3_low | **fixed** | 0.00029 → 0.0001884 | Flux was the on-state flux; it is now that flux x the light-curve mean (0.6496). Basis: the spectrum file and README describe the low state (Bonnoli et al. 2011); on/off light curve, on 65.0% of the time |
+| `DC5/sources/Extragalactic/3C454p3_high` | 3C454p3_high | **fixed** | 0.00624 → 0.002186 | Flux was the on-state flux; it is now that flux x the light-curve mean (0.3504). Basis: the spectrum file and README describe the flare (03/12 model of Bonnoli et al. 2011); on/off light curve, on 35.0% of the time |
+| `DC5/sources/Galactic/PSRB1259` | PSRB1259 | **fixed** | 0.0006125 → 0.0001988 | Flux was the on-state flux; it is now that flux x the light-curve mean (0.3246). Basis: README and DC4 docs: 30-day constant emission at the nominal Abdo et al. (2011) flux of 6.13e-4 ph/cm2/s; on/off light curve, on 32.5% of the time |
+| `DC5/sources/Galactic/MAXIJ1820` | MAXIJ1820_0p1-0p4 | **fixed** | 0.09675 → 0.06285 | Flux was the on-state flux; it is now that flux x the light-curve mean (0.6496). Basis: hard-state spectra (Cangemi et al. 2023) with the source 'on' for 60 days (README, DC4 docs); on/off light curve, on 65.0% of the time |
+| `DC5/sources/Galactic/MAXIJ1820` | MAXIJ1820_0p4-10 | **fixed** | 0.004174 → 0.002712 | Flux was the on-state flux; it is now that flux x the light-curve mean (0.6496). Basis: hard-state spectra (Cangemi et al. 2023) with the source 'on' for 60 days (README, DC4 docs); on/off light curve, on 65.0% of the time |
+| `DC5/sources/Galactic/nova_co_continuum` | nova_co_cont | **fixed** | 0.1831 → 3.014e-05 | Flux was the peak flux; it is now that flux x the light-curve mean (0.0001646). Basis: the spectrum-file normalisation equals the flux at the light-curve peak (t = 0); Gomez-Gomar et al. 1998 (MNRAS 296, 913): CO nova at 1 kpc, peak continuum (170-470 keV) ~0.17, peak 511 keV line ~1e-2, late 478 keV maximum 1.4-2.6e-6 ph/cm2/s |
+| `DC5/sources/Galactic/nova_co_511keV` | nova_co_511keV | **fixed** | 0.02305 → 4.276e-06 | Flux was the peak flux; it is now that flux x the light-curve mean (0.0001855). Basis: Gomez-Gomar et al. 1998 (MNRAS 296, 913): CO nova at 1 kpc, peak continuum (170-470 keV) ~0.17, peak 511 keV line ~1e-2, late 478 keV maximum 1.4-2.6e-6 ph/cm2/s |
+| `DC5/sources/Galactic/nova_co_478keV` | nova_co_478keV | **fixed** | 3.066e-06 → 1.882e-06 | Flux was the peak flux; it is now that flux x the light-curve mean (0.6138). Basis: Gomez-Gomar et al. 1998 (MNRAS 296, 913): CO nova at 1 kpc, peak continuum (170-470 keV) ~0.17, peak 511 keV line ~1e-2, late 478 keV maximum 1.4-2.6e-6 ph/cm2/s |
+| `DC4/sources/Galactic/Crab` | Crab_P1 | correct | not changed | phase-averaged pulsar fluxes of the DC4 Crab model: the three pulsed components add up to 19% of the nebula flux (0.1-10 MeV), while read as fluxes at the light-curve maximum they would give 2.3%; repeating light curve |
+| `DC4/sources/Galactic/Crab` | Crab_Brg | correct | not changed | phase-averaged pulsar fluxes of the DC4 Crab model: the three pulsed components add up to 19% of the nebula flux (0.1-10 MeV), while read as fluxes at the light-curve maximum they would give 2.3%; repeating light curve |
+| `DC4/sources/Galactic/Crab` | Crab_P2 | correct | not changed | phase-averaged pulsar fluxes of the DC4 Crab model: the three pulsed components add up to 19% of the nebula flux (0.1-10 MeV), while read as fluxes at the light-curve maximum they would give 2.3%; repeating light curve |
+| `DC3/sources/Galactic/LS5039` | LS5039 | correct | not changed | spectrum averaged over the orbital period (README); repeating light curve |
+| `DC5/sources/Galactic/1RXSJ170849` | 1RXSJ170849 | correct | not changed | phase-integrated flux; the light curve 1 + 0.5 sin(2 pi t/P) has mean 1 |
+| `DC5/sources/Galactic/magnetar2` | magnetar2 | correct | not changed | phase-integrated flux; the light curve 1 + 0.5 sin(2 pi t/P) has mean 1 |
+| `DC5/sources/Galactic/PSRB1509` | B1509_band1 | correct | not changed | phase-averaged pulsed spectra (Kuiper & Hermsen 2015); repeating light curve |
+| `DC5/sources/Galactic/PSRB1509` | B1509_band2 | correct | not changed | phase-averaged pulsed spectra (Kuiper & Hermsen 2015); repeating light curve |
+| `DC5/sources/Galactic/PSRB1509` | B1509_band3 | correct | not changed | phase-averaged pulsed spectra (Kuiper & Hermsen 2015); repeating light curve |
+| `DC5/sources/Extragalactic/4C21p35_noflare` | 4C21p35_noflare | **CHECK** | not changed | Unclear: the light curve varies within the quiescent state (on 77.3% of the time) and the README does not say whether Flux (the integral of the 4FGL-DR3 extrapolation, 5.5e-4 in DC4) is the 3-month average or the average while quiescent. If the latter, Flux should be 0.00083025 x 0.7726 = 6.41e-4. Not changed |
+| `DC5/sources/Extragalactic/4C21p35_flare` | 4C21p35_flare | **CHECK** | not changed | Unclear: the light curve varies within the flare (on 29.2% of the time) and the README does not say whether Flux (the integral of the flare-state extrapolation, 0.0173 in DC4) is the 3-month average or the average during the flare. If the latter, Flux should be 0.0259398 x 0.2923 = 7.58e-3. Not changed |
+| `DC5/sources/GRBs/*` (15 bursts) | all | correct | not changed | average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve |
 
 ## 511 keV and in-flight annihilation bug fixes
 **In-flight annihilation position.** `DC5/sources/511/Positrons_In_Flight_Annihilation` now declares `Galactic Fixed -0.2 -1.4`. MEGAlib reads Galactic Fixed as (b, l): every other library source follows this order, e.g. the Crab `-5.78434 184.5575` (l = 184.56°, b = −5.78°, recomputed independently from RA/Dec with `scripts/eq2gal.py`), the LMC `-32.89 280.46` and Kepler `6.8 4.5`. The source is therefore centred at (l, b) = (−1.4°, −0.2°) as intended. The final check is a short cosima run (a few minutes on one core) imaged with mimrec; MEGAlib was not available where this directory was built.

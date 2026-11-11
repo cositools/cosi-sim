@@ -1,0 +1,264 @@
+[
+ {
+  "source": "DC5/sources/Extragalactic/3C454p3_low",
+  "component": "3C454p3_low",
+  "verdict": "fixed",
+  "short": "on-state flux x light-curve mean",
+  "flux_old": 0.00029,
+  "flux_new": 0.00018839149468887983,
+  "lc_mean": 0.6496258437547581,
+  "note": "Flux was the on-state flux; it is now that flux x the light-curve mean (0.6496). Basis: the spectrum file and README describe the low state (Bonnoli et al. 2011); on/off light curve, on 65.0% of the time"
+ },
+ {
+  "source": "DC5/sources/Extragalactic/3C454p3_high",
+  "component": "3C454p3_high",
+  "verdict": "fixed",
+  "short": "on-state flux x light-curve mean",
+  "flux_old": 0.00624,
+  "flux_new": 0.002186311276191407,
+  "lc_mean": 0.350370396825546,
+  "note": "Flux was the on-state flux; it is now that flux x the light-curve mean (0.3504). Basis: the spectrum file and README describe the flare (03/12 model of Bonnoli et al. 2011); on/off light curve, on 35.0% of the time"
+ },
+ {
+  "source": "DC5/sources/Galactic/PSRB1259",
+  "component": "PSRB1259",
+  "verdict": "fixed",
+  "short": "on-state flux x light-curve mean",
+  "flux_old": 0.00061253,
+  "flux_new": 0.00019882582617947097,
+  "lc_mean": 0.3245976950997844,
+  "note": "Flux was the on-state flux; it is now that flux x the light-curve mean (0.3246). Basis: README and DC4 docs: 30-day constant emission at the nominal Abdo et al. (2011) flux of 6.13e-4 ph/cm2/s; on/off light curve, on 32.5% of the time"
+ },
+ {
+  "source": "DC5/sources/Galactic/MAXIJ1820",
+  "component": "MAXIJ1820_0p1-0p4",
+  "verdict": "fixed",
+  "short": "on-state flux x light-curve mean",
+  "flux_old": 0.0967469,
+  "flux_new": 0.06284937747120754,
+  "lc_mean": 0.649626783609682,
+  "note": "Flux was the on-state flux; it is now that flux x the light-curve mean (0.6496). Basis: hard-state spectra (Cangemi et al. 2023) with the source 'on' for 60 days (README, DC4 docs); on/off light curve, on 65.0% of the time"
+ },
+ {
+  "source": "DC5/sources/Galactic/MAXIJ1820",
+  "component": "MAXIJ1820_0p4-10",
+  "verdict": "fixed",
+  "short": "on-state flux x light-curve mean",
+  "flux_old": 0.00417446,
+  "flux_new": 0.0027118410231072726,
+  "lc_mean": 0.649626783609682,
+  "note": "Flux was the on-state flux; it is now that flux x the light-curve mean (0.6496). Basis: hard-state spectra (Cangemi et al. 2023) with the source 'on' for 60 days (README, DC4 docs); on/off light curve, on 65.0% of the time"
+ },
+ {
+  "source": "DC5/sources/Galactic/nova_co_continuum",
+  "component": "nova_co_cont",
+  "verdict": "fixed",
+  "short": "peak flux x light-curve mean",
+  "flux_old": 0.183107,
+  "flux_new": 3.0140270048512333e-05,
+  "lc_mean": 0.00016460468495749662,
+  "note": "Flux was the peak flux; it is now that flux x the light-curve mean (0.0001646). Basis: the spectrum-file normalisation equals the flux at the light-curve peak (t = 0); Gomez-Gomar et al. 1998 (MNRAS 296, 913): CO nova at 1 kpc, peak continuum (170-470 keV) ~0.17, peak 511 keV line ~1e-2, late 478 keV maximum 1.4-2.6e-6 ph/cm2/s"
+ },
+ {
+  "source": "DC5/sources/Galactic/nova_co_511keV",
+  "component": "nova_co_511keV",
+  "verdict": "fixed",
+  "short": "peak flux x light-curve mean",
+  "flux_old": 0.023055,
+  "flux_new": 4.2764567645999415e-06,
+  "lc_mean": 0.00018548934134027072,
+  "note": "Flux was the peak flux; it is now that flux x the light-curve mean (0.0001855). Basis: Gomez-Gomar et al. 1998 (MNRAS 296, 913): CO nova at 1 kpc, peak continuum (170-470 keV) ~0.17, peak 511 keV line ~1e-2, late 478 keV maximum 1.4-2.6e-6 ph/cm2/s"
+ },
+ {
+  "source": "DC5/sources/Galactic/nova_co_478keV",
+  "component": "nova_co_478keV",
+  "verdict": "fixed",
+  "short": "peak flux x light-curve mean",
+  "flux_old": 3.066e-06,
+  "flux_new": 1.881875438970638e-06,
+  "lc_mean": 0.6137884667223216,
+  "note": "Flux was the peak flux; it is now that flux x the light-curve mean (0.6138). Basis: Gomez-Gomar et al. 1998 (MNRAS 296, 913): CO nova at 1 kpc, peak continuum (170-470 keV) ~0.17, peak 511 keV line ~1e-2, late 478 keV maximum 1.4-2.6e-6 ph/cm2/s"
+ },
+ {
+  "source": "DC4/sources/Galactic/Crab",
+  "component": "Crab_P1",
+  "verdict": "correct",
+  "short": "phase average",
+  "note": "phase-averaged pulsar fluxes of the DC4 Crab model: the three pulsed components add up to 19% of the nebula flux (0.1-10 MeV), while read as fluxes at the light-curve maximum they would give 2.3%; repeating light curve"
+ },
+ {
+  "source": "DC4/sources/Galactic/Crab",
+  "component": "Crab_Brg",
+  "verdict": "correct",
+  "short": "phase average",
+  "note": "phase-averaged pulsar fluxes of the DC4 Crab model: the three pulsed components add up to 19% of the nebula flux (0.1-10 MeV), while read as fluxes at the light-curve maximum they would give 2.3%; repeating light curve"
+ },
+ {
+  "source": "DC4/sources/Galactic/Crab",
+  "component": "Crab_P2",
+  "verdict": "correct",
+  "short": "phase average",
+  "note": "phase-averaged pulsar fluxes of the DC4 Crab model: the three pulsed components add up to 19% of the nebula flux (0.1-10 MeV), while read as fluxes at the light-curve maximum they would give 2.3%; repeating light curve"
+ },
+ {
+  "source": "DC3/sources/Galactic/LS5039",
+  "component": "LS5039",
+  "verdict": "correct",
+  "short": "orbit average",
+  "note": "spectrum averaged over the orbital period (README); repeating light curve"
+ },
+ {
+  "source": "DC5/sources/Galactic/1RXSJ170849",
+  "component": "1RXSJ170849",
+  "verdict": "correct",
+  "short": "phase average",
+  "note": "phase-integrated flux; the light curve 1 + 0.5 sin(2 pi t/P) has mean 1"
+ },
+ {
+  "source": "DC5/sources/Galactic/magnetar2",
+  "component": "magnetar2",
+  "verdict": "correct",
+  "short": "phase average",
+  "note": "phase-integrated flux; the light curve 1 + 0.5 sin(2 pi t/P) has mean 1"
+ },
+ {
+  "source": "DC5/sources/Galactic/PSRB1509",
+  "component": "B1509_band1",
+  "verdict": "correct",
+  "short": "phase average",
+  "note": "phase-averaged pulsed spectra (Kuiper & Hermsen 2015); repeating light curve"
+ },
+ {
+  "source": "DC5/sources/Galactic/PSRB1509",
+  "component": "B1509_band2",
+  "verdict": "correct",
+  "short": "phase average",
+  "note": "phase-averaged pulsed spectra (Kuiper & Hermsen 2015); repeating light curve"
+ },
+ {
+  "source": "DC5/sources/Galactic/PSRB1509",
+  "component": "B1509_band3",
+  "verdict": "correct",
+  "short": "phase average",
+  "note": "phase-averaged pulsed spectra (Kuiper & Hermsen 2015); repeating light curve"
+ },
+ {
+  "source": "DC5/sources/Extragalactic/4C21p35_noflare",
+  "component": "4C21p35_noflare",
+  "verdict": "check",
+  "short": "unclear",
+  "note": "Unclear: the light curve varies within the quiescent state (on 77.3% of the time) and the README does not say whether Flux (the integral of the 4FGL-DR3 extrapolation, 5.5e-4 in DC4) is the 3-month average or the average while quiescent. If the latter, Flux should be 0.00083025 x 0.7726 = 6.41e-4. Not changed"
+ },
+ {
+  "source": "DC5/sources/Extragalactic/4C21p35_flare",
+  "component": "4C21p35_flare",
+  "verdict": "check",
+  "short": "unclear",
+  "note": "Unclear: the light curve varies within the flare (on 29.2% of the time) and the README does not say whether Flux (the integral of the flare-state extrapolation, 0.0173 in DC4) is the 3-month average or the average during the flare. If the latter, Flux should be 0.0259398 x 0.2923 = 7.58e-3. Not changed"
+ },
+ {
+  "source": "DC5/sources/GRBs/MGF051103",
+  "component": "MGF051103",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/MGF180128A",
+  "component": "MGF180128A",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/MGF200415A",
+  "component": "MGF200415A",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/MgtBurst_bright_complex",
+  "component": "MgtBurst_bright_complex",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/bn080802386",
+  "component": "bn080802386",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/bn081207680",
+  "component": "bn081207680",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/bn090424592",
+  "component": "bn090424592",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/bn100612726",
+  "component": "bn100612726",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/bn110605183",
+  "component": "bn110605183",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/bn131122490",
+  "component": "bn131122490",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/bn140329295",
+  "component": "bn140329295",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/bn161004964",
+  "component": "bn161004964",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/bn170405777",
+  "component": "bn170405777",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/bn180504136",
+  "component": "bn180504136",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ },
+ {
+  "source": "DC5/sources/GRBs/bn180703876",
+  "component": "bn180703876",
+  "verdict": "correct",
+  "short": "burst average",
+  "note": "average photon flux over the burst: stated in the GRB and magnetar-flare source files; the short-burst flux is the integral of its burst spectral fit (Li et al. 2021). Each burst is one run over its light curve"
+ }
+]
