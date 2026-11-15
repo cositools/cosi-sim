@@ -291,7 +291,8 @@ def grb_inputs(src, cfg):
     if t_ref is None:
         t_ref = cfg["grb_time_reference"]
     if t_ref is None:
-        raise SetupError("no t_ref in %s/sim_time_reference.txt and no grb_time_reference in the config" % lib_dir)
+        raise SetupError("no t_ref in %s/sim_time_reference.txt; make the burst inputs with "
+                         "python -m cosi_sim.pipeline.time_reference --ori <1 s orientation file> %s" % (lib_dir, lib_dir))
     return ori, float(t_ref)
 
 
