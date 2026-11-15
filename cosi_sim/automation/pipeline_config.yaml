@@ -44,9 +44,11 @@ grb_output_label: "{source}_unbinned_data_filtered"
 
 # GRBs / bursts: the normed orientation file and t_ref are read from the source
 # directory (*_normed.ori and sim_time_reference.txt, as in DC5/sources/GRBs).
-# These are fallbacks for bursts that do not have them.
+# Each burst has its own t_ref, just before the burst: at large times cosima cannot
+# advance the photon times of a bright burst. These are fallbacks for bursts that do not
+# have the files; leave grb_time_reference null unless it is just before the burst.
 grb_orientation_file: null
-grb_time_reference: 1835487300.0
+grb_time_reference: null
 
 # Optional: rename library categories to simulation class directories,
 # e.g. {"Al26": "Nucleosynthesis", "Fe60": "Nucleosynthesis"}.

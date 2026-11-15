@@ -128,7 +128,7 @@ All 11 DC4 `GRB_bn` bursts keep their light-curve shape and spectral model. Thei
 
 **Polarization.** The DC4 polarization fractions are spread uniformly between 0 and 0.9 ({', '.join(f'{x:.1f}' for x in pf4)}). The DC5 fractions are drawn from the same distribution, stratified uniform on [0, 0.9] ({', '.join(f'{x:.2f}' for x in pf5)}). Angles are uniform in [0, 180) deg.
 
-**MEGAlib simulation inputs (Request 7).** MEGAlib has trouble simulating short bursts at large absolute unix times, so every GRB and magnetar-burst directory holds inputs in times relative to **t_ref = 1835487300.0**, the first time of the orientation file:
+**MEGAlib simulation inputs (Request 7).** MEGAlib has trouble simulating short bursts at large times, so every GRB and magnetar-burst directory holds inputs in times relative to its own **t_ref**, the first orientation row kept for the burst (at or just before its start; given in `sim_time_reference.txt`). The bursts then start within the first second. cosima finds the next photon time in a sloped light-curve bin by solving a quadratic in absolute time (ns); at large times the solution falls on a coarse grid, and a bright burst then emits photon after photon at the same time without advancing (bn090424592 at t − 1835487300 s, for example):
 - `<light curve>_shifted.dat`: the light curve with time − t_ref; the source file points to it, and the original light curve is kept;
 - `DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth_cut_normed.ori`: the orientation file for the Cosima run, cut to the 1 s rows covering the burst (at least 3), with time − t_ref. `..._cut.ori` holds the same rows with absolute times;
 - `sim_time_reference.txt`: t_ref and the burst window, absolute and shifted.
