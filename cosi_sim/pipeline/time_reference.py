@@ -20,11 +20,19 @@ Burst light curves are shifted: every time becomes t - t_ref. Repeating light cu
 (Lightcurve File true) hold one cycle starting at 0 and are used as they are: with the
 orientation file in t - t_ref, the first cycle starts at t_ref.
 
+Each burst has its own t_ref: the first orientation row kept for it (at or just before the
+burst start), so the cut orientation file starts at 0 and the burst within one orientation
+step of it. Small times matter: cosima finds the next photon time in a sloped light-curve bin
+by solving a quadratic in absolute time (ns, MFunction::FindX), and at ~1e15 ns the solution
+can only fall on a grid of ~10 us. A bright burst then emits photon after photon at the same
+time and the simulation never advances. Repeating light curves keep t_ref = the first time of
+the orientation file, so their phase is the same for every source.
+
 Usage (writes the files above into library source directories):
 
     python -m cosi_sim.pipeline.time_reference --ori <orientation file> [--t-ref T] <source dir> ...
 
-t_ref defaults to the first time of the orientation file.
+--t-ref sets one t_ref for all the directories given.
 
 check_lightcurves() is used by Setup.setup_srcs() and the automation: a light curve that
 does not repeat must have the same start and stop times as the orientation file (or, for
@@ -257,11 +265,12 @@ def write_shifted_orientation(ori_in, ori_out, t_ref):
             fout.write("%s %.6f %s\n" % (tok[0], float(tok[1]) - t_ref, " ".join(tok[2:])))
 
 
-def cut_orientation(ori_in, t_first, t_last, out_cut, out_norm, t_ref):
+def cut_orientation(ori_in, t_first, t_last, out_cut, out_norm, t_ref=None):
     """Orientation rows covering [t_first, t_last] (cut_ori.py): the rows inside, plus one on each side.
 
     A burst shorter than the orientation step has no row inside; then the two rows around it are kept.
-    At least 3 rows are written. Returns (first time, last time, number of rows).
+    At least 3 rows are written. out_norm gets the same rows in t - t_ref; t_ref=None means the first
+    row kept. Returns (first time, last time, number of rows, t_ref).
     """
     with open_text(ori_in) as f:
         lines = f.readlines()
@@ -297,9 +306,11 @@ def cut_orientation(ori_in, t_first, t_last, out_cut, out_norm, t_ref):
             s = line.strip()
             if not s or s.startswith("#") or i in keep_lines:
                 f.write(line)
-    write_shifted_orientation(out_cut, out_norm, t_ref)
     kept = sorted(times[k] for k in keep)
-    return kept[0], kept[-1], len(kept)
+    if t_ref is None:
+        t_ref = kept[0]
+    write_shifted_orientation(out_cut, out_norm, t_ref)
+    return kept[0], kept[-1], len(kept), t_ref
 
 
 NOTE = re.compile(r"^# (Light-curve times are|Simulated in times) relative to t_ref.*\n# .*\n# .*\n", re.M)
@@ -309,39 +320,44 @@ def normalize_source(source_dir, ori_file, t_ref=None):
     """Mark a source directory for simulations in t - t_ref and write the files this needs.
 
     Bursts: shifted light curves and cut orientation files; the .source Lightcurve lines point to
-    the shifted light curves. Repeating light curves are used as they are. The .source file also
-    gets a 3-line note. Running it again gives the same files.
+    the shifted light curves. t_ref=None means the first orientation row kept for the burst.
+    Repeating light curves are used as they are; t_ref=None means the first time of the
+    orientation file. The .source file also gets a 3-line note. Running it again gives the same files.
     """
     name = os.path.basename(os.path.normpath(source_dir))
     source_file = os.path.join(source_dir, name + ".source")
-    if t_ref is None:
-        t_ref = orientation_time_range(ori_file)[0]
     ori_stem = os.path.splitext(os.path.basename(ori_file[:-3] if ori_file.endswith(".gz") else ori_file))[0]
     entries = lightcurves(source_file)
     if not entries:
         raise ValueError("%s has no light curve" % source_file)
 
-    done, burst_window = [], None
+    # Burst window from the light curves that do not repeat; the orientation cut sets t_ref:
+    burst_window = None
+    for component, repeats, lc in entries:
+        if not repeats:
+            t0, t1 = lightcurve_time_range(existing(os.path.join(source_dir, original_name(lc))))
+            burst_window = (min(t0, burst_window[0]), max(t1, burst_window[1])) if burst_window else (t0, t1)
+    ori_info = None
+    if burst_window:
+        o0, o1, n, t_ref = cut_orientation(ori_file, burst_window[0], burst_window[1],
+                                           os.path.join(source_dir, ori_stem + "_cut.ori"),
+                                           os.path.join(source_dir, ori_stem + "_cut_normed.ori"), t_ref)
+        ori_info = (o0, o1, n)
+    elif t_ref is None:
+        t_ref = orientation_time_range(ori_file)[0]
+
+    done = []
     for component, repeats, lc in entries:
         orig = original_name(lc)
         src_path = existing(os.path.join(source_dir, orig))
+        t0, t1 = lightcurve_time_range(src_path)
         if repeats:
-            t0, t1 = lightcurve_time_range(src_path)
             done.append((component, orig, orig, "repeating", t0, t1))
         else:
             out_name = shifted_name(orig)
             out_path = os.path.join(source_dir, out_name + (".gz" if src_path.endswith(".gz") else ""))
             shift_lightcurve(src_path, out_path, t_ref)
-            t0, t1 = lightcurve_time_range(src_path)
-            burst_window = (min(t0, burst_window[0]), max(t1, burst_window[1])) if burst_window else (t0, t1)
             done.append((component, orig, out_name, "shifted", t0, t1))
-
-    ori_info = None
-    if burst_window:
-        o0, o1, n = cut_orientation(ori_file, burst_window[0], burst_window[1],
-                                    os.path.join(source_dir, ori_stem + "_cut.ori"),
-                                    os.path.join(source_dir, ori_stem + "_cut_normed.ori"), t_ref)
-        ori_info = (o0, o1, n)
 
     # Source file: burst Lightcurve lines point to the shifted files; a note before the first one.
     text = NOTE.sub("", open(source_file).read())
@@ -365,10 +381,11 @@ def normalize_source(source_dir, ori_file, t_ref=None):
                 how = "Simulate with the orientation file in t - t_ref and add t_ref to the simulated times afterwards."
                 what = "The repeating light curve starts its first cycle at t_ref"
             head = "Light-curve times are relative to" if ori_info else "Simulated in times relative to"
-            new = ("# %s t_ref = %r (unix s, first time of the orientation file).\n"
+            which = "first orientation row of this burst" if ori_info else "first time of the orientation file"
+            new = ("# %s t_ref = %r (unix s, %s).\n"
                    "# %s\n"
                    "# %s; see %s.\n"
-                   % (head, t_ref, how, what, TIME_REFERENCE_FILE)) + new
+                   % (head, t_ref, which, how, what, TIME_REFERENCE_FILE)) + new
             first = False
         lines[k] = new
     with open(source_file, "w") as f:
@@ -402,12 +419,13 @@ def normalize_source(source_dir, ori_file, t_ref=None):
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--ori", required=True, help="orientation file used for the simulations")
-    p.add_argument("--t-ref", type=float, default=None, help="reference time (default: first time of --ori)")
+    p.add_argument("--t-ref", type=float, default=None,
+                   help="one reference time for all directories (default: bursts the first orientation row kept "
+                        "for them, repeating light curves the first time of --ori)")
     p.add_argument("source_dirs", nargs="+", help="library source directories")
     args = p.parse_args(argv)
-    t_ref = args.t_ref if args.t_ref is not None else orientation_time_range(args.ori)[0]
     for d in args.source_dirs:
-        done, ori_info = normalize_source(d, args.ori, t_ref)
+        done, ori_info = normalize_source(d, args.ori, args.t_ref)
         what = ", ".join("%s %s" % (kind, out) for _, _, out, kind, _, _ in done)  # e.g. "shifted X_shifted.dat"
         extra = ", orientation rows %d" % ori_info[2] if ori_info else ""
         print("%-45s %s%s" % (os.path.basename(os.path.normpath(d)), what, extra))
