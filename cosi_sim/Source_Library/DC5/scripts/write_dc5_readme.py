@@ -69,8 +69,6 @@ pe_enr_place = json.load(open(os.path.join(ROOT, "sources", "ParticleEvents_enri
 
 txt = f"""# DC5 mock dataset — source definitions
 
-> **Blind dataset.** This directory is the answer key for the DC5 mock dataset. It should not be shared with the COSI team or the community until the data challenge is unblinded.
-
 The DC5 mock dataset starts from the DC4 mock dataset (3 months, same orbit, orientation and backgrounds) and changes the source content:
 
 | | DC4 components | Fraction |

@@ -273,6 +273,17 @@ def array_spec(state, indices=None):
     return spec
 
 
+def clear_sim_outputs(state, indices=None):
+    """Remove the Output/ directories of the sims about to be (re)submitted.
+
+    Each job clears its Output/ when it starts (define_sim), but a job that fails or is
+    cancelled before that would leave the previous run's files, and the check would accept them.
+    """
+    for i, out in sim_output_dirs(state):
+        if (indices is None or i in indices) and os.path.isdir(out):
+            shutil.rmtree(out)
+
+
 def submit_sim_jobs(state, indices=None, depend_on=None, dry_run=False, note=None):
     """Submit the simulation job(s) and the dependent post-processing job.
 
@@ -282,6 +293,8 @@ def submit_sim_jobs(state, indices=None, depend_on=None, dry_run=False, note=Non
     """
     run_dir = state["run_dir"]
     dep = ["--dependency=afterany:%s" % depend_on] if depend_on else []
+    if not dry_run:
+        clear_sim_outputs(state, indices)
     if state["mode"] in SINGLE_JOB_MODES:
         sim_id = sbatch(dep + ["grb_job.sh"], run_dir, dry_run)
     else:
