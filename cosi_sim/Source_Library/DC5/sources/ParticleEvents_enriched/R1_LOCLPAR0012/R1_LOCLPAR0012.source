@@ -1,0 +1,23 @@
+# Same range cuts as the DC3/DC4 sources (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DetectorTimeConstant 0.000002
+
+# Local particle event: quasi-trapped electrons, exp(-E/30 keV),
+# peak I(>30 keV) = 3.5e+03 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.88 deg, yaw 63.7 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0012
+R1_LOCLPAR0012.ParticleType 3
+R1_LOCLPAR0012.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0012_beam.dat
+R1_LOCLPAR0012.Spectrum NormalizedEnergyBeamFluxFunction
+# Light-curve times are relative to t_ref = 1835600475.0 (unix s, first orientation row of this burst).
+# Simulate with DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
+# Original light curve (absolute unix times): R1_LOCLPAR0012_lightcurve.dat; see sim_time_reference.txt.
+R1_LOCLPAR0012.Lightcurve File false R1_LOCLPAR0012_lightcurve_shifted.dat

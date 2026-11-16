@@ -1,0 +1,33 @@
+# MEGAlib simulation time reference for R1_LOCLPAR0019
+t_ref                      1835678700.0
+lightcurve_original        R1_LOCLPAR0019_p1_lightcurve.dat
+lightcurve_shifted         R1_LOCLPAR0019_p1_lightcurve_shifted.dat
+burst_start_absolute       1835678706.351000
+burst_end_absolute         1835678721.868000
+burst_start_shifted        6.351000
+burst_end_shifted          21.868000
+lightcurve_original        R1_LOCLPAR0019_p2_lightcurve.dat
+lightcurve_shifted         R1_LOCLPAR0019_p2_lightcurve_shifted.dat
+burst_start_absolute       1835678721.868000
+burst_end_absolute         1835678736.592000
+burst_start_shifted        21.868000
+burst_end_shifted          36.592000
+lightcurve_original        R1_LOCLPAR0019_p3_lightcurve.dat
+lightcurve_shifted         R1_LOCLPAR0019_p3_lightcurve_shifted.dat
+burst_start_absolute       1835678736.592000
+burst_end_absolute         1835678751.215000
+burst_start_shifted        36.592000
+burst_end_shifted          51.215000
+lightcurve_original        R1_LOCLPAR0019_p4_lightcurve.dat
+lightcurve_shifted         R1_LOCLPAR0019_p4_lightcurve_shifted.dat
+burst_start_absolute       1835678751.215000
+burst_end_absolute         1835678766.351000
+burst_start_shifted        51.215000
+burst_end_shifted          66.351000
+orientation_file           DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori
+orientation_cut            DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut.ori
+orientation_cut_normed     DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori
+orientation_rows           6
+orientation_start_shifted  0.000000
+orientation_end_shifted    75.000000
+# After the Cosima run, add t_ref to the simulated event times to recover the absolute times.

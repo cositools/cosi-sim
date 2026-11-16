@@ -12,16 +12,17 @@ The DC5 mock dataset starts from the DC4 mock dataset (3 months, same orbit, ori
 | **New** (relative to the ~71 DC4 components) | 18 | 25% |
 | GRBs (`GRB_bn*`): new time, spectrum and polarization | 11 | all |
 | Magnetar bursts (`MGF*`, `MgtBurst*`): unchanged, half kept | 4 kept, 3 removed | |
+| Particle events for the ACS (`ParticleEvents/`): new | 6 | |
 
 Percentages refer to the non-GRB DC4 components. DC5 therefore has 66 non-GRB components, 11 GRBs and 4 magnetar bursts.
 
 **How the split was made.** Components that belong to one physical source (e.g. line + continuum maps, flare + quiescent states, the three nova components) were grouped, and the groups were shuffled with a random seed (3891814211, recorded in `DC5_draw.json`). Groups were assigned to *removed* (≈10% of files, only from sources that are not well-known detections: the Crab, Cyg X-1/X-3, Cen A, NGC 4151, the 511 keV bulge/disk, Galactic 26Al/60Fe, Cas A, etc. were protected), then *modified* (≈40%), with the rest *reused*. The modification applied to each drawn source was then chosen by hand from the literature (alternative library model where one exists, otherwise a simple flux/width/state change within the published range). Positions of the arbitrary new sources are drawn from the same seed. The GRB draw uses its own seed (3662968627, `DC5_grb_draw.json`). Running `scripts/draw_dc5.py` or `scripts/draw_dc5_grbs.py` without a seed gives a different realisation.
 
 Files:
-- `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (80 entries; checked with `Setup.setup_srcs()`).
+- `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (86 entries; checked with `Setup.setup_srcs()`).
 - `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do (simulate / re-simulate / reuse the existing DC3/DC4 event file).
 - `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json` — machine-readable record of the draws and of every change.
-- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `fix_lightcurve_fluxes.py` (light-curve Flux keywords; writes `lc_flux_check.json`), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → fix_lightcurve_fluxes → `python -m cosi_sim.pipeline.time_reference --ori <9-column ori> DC5/sources/Galactic/{1RXSJ170849,magnetar2,PSRB1509}` (repeating light curves in t − t_ref) → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → write_manifest → write_readmes → write_dc5_readme.
+- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `fix_lightcurve_fluxes.py` (light-curve Flux keywords; writes `lc_flux_check.json`), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate), `particle_events/` (particle events for the ACS: the GRB group's generator with the frame fix, `place_events.py`, the ACS pilot). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → fix_lightcurve_fluxes → `python -m cosi_sim.pipeline.time_reference --ori <9-column ori> DC5/sources/Galactic/{1RXSJ170849,magnetar2,PSRB1509}` (repeating light curves in t − t_ref) → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → particle_events/place_events.py (blind set, then enriched set; commands in `sources/ParticleEvents/README.md`) → write_manifest → write_readmes → write_dc5_readme.
 - `sources/` — one directory per modified, bug-fixed or new source, each with a `README_DC5.md` describing the model, the change, and references.
 
 ## Reused sources (same source files)
@@ -167,6 +168,27 @@ The models are unchanged from DC3/DC4. The kept bursts are copied to `DC5/source
 
 Not included in DC5 (random draw, seed 3662968627): GRB_MGF070201, GRB_MGF070222, GRB_MGF231115A. Four of the seven DC4 magnetar bursts are kept (half, rounded up).
 
+## Particle events for the ACS (Request 13)
+
+New in DC5, from the COSI GRB group: magnetospheric particle events, to test transient classification on the ACS (BGO shield) light curves. The blind dataset has the default population of **local electron events** (`LOCLPAR`, quasi-trapped electrons hitting the spacecraft): 0.1 per day over the 92.36-day orbit, i.e. 9.2 expected; the Poisson draw (seed 729919986) gave 6. Distant events (bremsstrahlung from precipitating electrons) are only in the enriched set. The ACS background covers the first week only, so the events are placed on days 4–8, as the GRBs are.
+
+| Event | Day | Start (unix s) | Duration (s) | E0 (keV) | Peak I(>30 keV) (e/cm²/s/sr) | Expected peak ACS gamma (cps) | Rocking (deg) | Yaw (deg) | Pieces |
+|---|---|---|---|---|---|---|---|---|---|
+| LOCLPAR0000 | 4.63 | 1835800797.124 | 60 | 50 | 7.8e+02 | 80 | +21.9 | -42 → -40 | 1 |
+| LOCLPAR0001 | 6.33 | 1835948215.345 | 600 | 50 | 3.9e+03 | 400 | -21.9 | -74 → -30 | 5 |
+| LOCLPAR0002 | 6.42 | 1835955908.845 | 300 | 30 | 3.5e+03 | 80 | -21.9 | 73 → 70 | 1 |
+| LOCLPAR0003 | 6.48 | 1835960710.474 | 600 | 50 | 7.8e+02 | 80 | -21.9 | -72 → 56 | 13 |
+| LOCLPAR0004 | 7.28 | 1836029789.703 | 60 | 100 | 1.3e+02 | 80 | -21.9 | 71 → 70 | 1 |
+| LOCLPAR0005 | 7.48 | 1836047580.952 | 600 | 200 | 1.4e+02 | 400 | -21.9 | 73 → 71 | 1 |
+
+**Placement.** Each event starts at a random time in the window and must end, with a 5 min margin, before 1836092100.0. Required: livetime > 0 (no SAA) from 5 min before to 5 min after the event, no slew (one rocking state), and at least 1 h from every GRB, magnetar burst and other event.
+
+**Attitude.** The sources are defined in the detector frame (no `Orientation` line), so each event is built for the rocking angle and yaw at its time, read from the orientation file. The yaw (angle of detector +x from north toward east, about the pointing axis) swings by ~150° every orbit, so events are split into consecutive pieces with a yaw change of at most 10° each. Each piece is one source component with its part of the light curve and its mean intensity, so together they make up the event. The GRB group's detector frame was left-handed (its +y pointed east at yaw 0); MEGAlib's is right-handed (+y west at yaw 0). This is fixed in the vendored generator. Its directions agree with the orientation file to 0.02°.
+
+**Simulation.** The events are in the src_list and are run in the automation's `acs` mode: one Cosima run per event with the BGO-readout geometry (`bgo_geometry_file` in the pipeline config), whose `.sim.gz` file is the input for the ACS light curves. With `particle_germanium: true` in the pipeline config, every event is also simulated with the standard geometry through the full Compton chain, so it is in the germanium data too. Each event directory holds the inputs in times relative to its own t_ref (`sim_time_reference.txt`), made from the 15 s orientation file.
+
+**Truth catalog and enriched set.** `sources/ParticleEvents/events.csv` lists every event with its parameters. `sources/ParticleEvents_enriched/` holds an enriched set that is not part of the blind dataset: 2 independent realizations of the first week at 10× the default rates (local and distant events), 100 events in all. See `sources/ParticleEvents/README.md` and `scripts/particle_events/`.
+
 ## Light-curve bugs — what needs to be re-simulated
 From the [bug report](https://github.com/cositools/cosi-data-challenges/blob/develop/README.md#bug-report):
 
@@ -216,5 +238,5 @@ With the fix alone, narrow + broad bulge + DC4 central source = 2.80e-4 + 7.40e-
 
 ## Notes
 - **LMC_511, M31_511, Virgo_511:** the DC4 definitions were simulated outside cosi-sim and differ from the DC3 `*_Gaussian_511` files. Virgo_511 (reused) reuses the DC4 event file directly. LMC_511 and M31_511 (modified) are replaced by the alternative DC3 Gaussian definitions plus a small additional change, documented in their READMEs.
-- Several DC4 maps and light curves are stored as `.dat.gz` in cosi-sim (thin-disk maps, magnetar light curves, including the copies in DC5/sources/Galactic/1RXSJ170849 and magnetar2). As for DC4, gunzip them in place before running the pipeline. All other DC5 files are used as-is.
+- Several DC4 maps and light curves are stored as `.dat.gz` in cosi-sim (thin-disk maps, magnetar light curves, including the copies in DC5/sources/Galactic/1RXSJ170849 and magnetar2), and so are the beam files of the local particle events. As for DC4, gunzip them in place before running the pipeline. All other DC5 files are used as-is.
 - Science-team inputs (due Nov 15) will be added as a follow-up to this directory.

@@ -4,7 +4,7 @@ the Flux-keyword verdict from lc_flux_check.json (written by fix_lightcurve_flux
 
 Usage: python3 write_manifest.py <Source_Library/DC5 dir> <Source_Library/DC5/DC5_draw.json>
 """
-import json, os, sys
+import csv, json, os, sys
 ROOT = sys.argv[1]                       # .../Source_Library/DC5
 draw = json.load(open(sys.argv[2]))
 W4, W3 = "COSI-SMEX/DC4/Data/Sources/", "COSI-SMEX/DC3/Data/Sources/"
@@ -157,7 +157,7 @@ for q in NEW: rows.append(("new", os.path.basename(q), q, "simulate DC5 source f
 for lab, d in GRB_BN:
     g = grbdraw["grbs"][d]["dc5"]
     rows.append(("GRB (modified)", lab, "DC5/sources/GRBs/" + d,
-                 f"simulate DC5 source file with the time-shifted inputs, t_ref = 1835487300.0 (day {g['day']:.2f}, off-axis {g['offaxis']:.1f} deg)" + lc_note("DC5/sources/GRBs/" + d)))
+                 f"simulate DC5 source file with the time-shifted inputs (own t_ref, sim_time_reference.txt; day {g['day']:.2f}, off-axis {g['offaxis']:.1f} deg)" + lc_note("DC5/sources/GRBs/" + d)))
 for lab, d, w in MAGNETAR:
     if d in grbdraw["magnetar_kept"]:
         ev = f"{w}{lab}{sfx}" if w == W3 else f"{W4}MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz"
@@ -165,6 +165,14 @@ for lab, d, w in MAGNETAR:
                      f"unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file {ev})" + lc_note("DC5/sources/GRBs/" + d)))
     else:
         rows.append(("removed", lab, "-", "magnetar burst not included in DC5 (half of the DC4 magnetar bursts kept)"))
+
+# Particle events (GRB group, Request 13): blind set only (the enriched set is not part of the dataset)
+T0 = grbdraw["orientation_start"]
+for r in csv.DictReader(open(os.path.join(ROOT, "sources", "ParticleEvents", "events.csv")), delimiter="\t"):
+    day = (float(r["Start time (s)"]) - T0) / 86400 + 1
+    rows.append(("particle event (new)", r["Event"], "DC5/sources/ParticleEvents/" + r["Event"],
+                 f"{r['Class']}, day {day:.2f}, {r['Lightcurve duration (s)']} s: simulate in acs mode (ACS, BGO-readout geometry) "
+                 "and, with particle_germanium: true, in the Compton data"))
 
 srcs = [r[2] for r in rows if r[0] not in ("removed",) and r[2].startswith("DC")]
 srcs = [x for r in srcs for x in r.split(", ")]

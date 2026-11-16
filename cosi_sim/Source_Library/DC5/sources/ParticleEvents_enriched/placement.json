@@ -1,0 +1,50 @@
+{
+ "seed": 1170917578,
+ "args": {
+  "ori": "DC4_final_530km_3_month_with_slew_15sbins_GalacticEarth_SAA_ori.gz",
+  "sim_ori": "DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori",
+  "window_days": [
+   0.0,
+   7.0
+  ],
+  "local_per_day": 1.0,
+  "distant_per_day": 0.1,
+  "rate_days": null,
+  "realizations": 2,
+  "avoid_bursts": [
+   "MGF051103",
+   "MGF180128A",
+   "MGF200415A",
+   "MgtBurst_bright_complex",
+   "bn080802386",
+   "bn081207680",
+   "bn090424592",
+   "bn100612726",
+   "bn110605183",
+   "bn131122490",
+   "bn140329295",
+   "bn161004964",
+   "bn170405777",
+   "bn180504136",
+   "bn180703876"
+  ],
+  "avoid_events": [
+   "../ParticleEvents/events.csv"
+  ],
+  "seed": 1170917578
+ },
+ "rate_days": 92.36059027777777,
+ "window": [
+  1835487600.0,
+  1836092100.0
+ ],
+ "rock_nominal_deg": 21.877169530685613,
+ "spacing_s": 3600.0,
+ "live_margin_s": 300.0,
+ "rock_tol_deg": 0.1,
+ "yaw_tol_deg": 10.0,
+ "counts": {
+  "LOCLPAR": 91,
+  "DISTPAR": 9
+ }
+}

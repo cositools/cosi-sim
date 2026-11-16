@@ -1,0 +1,137 @@
+# Same range cuts as the DC3/DC4 sources (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DetectorTimeConstant 0.000002
+
+# Particle event R1_LOCLPAR0002, 600 s, in 12 pieces (one component each) built at the attitude of their
+# time span (yaw change <= 10 deg per piece); together they make up the event.
+
+# Piece 1 of 12: 0-29.531 s after the event start.
+# Local particle event: quasi-trapped electrons, exp(-E/50 keV),
+# peak I(>30 keV) = 780 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.88 deg, yaw -39.08 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0002_p1
+R1_LOCLPAR0002_p1.ParticleType 3
+R1_LOCLPAR0002_p1.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0002_p1_beam.dat
+R1_LOCLPAR0002_p1.Spectrum NormalizedEnergyBeamFluxFunction
+# Light-curve times are relative to t_ref = 1835506725.0 (unix s, first orientation row of this burst).
+# Simulate with DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
+# Original light curves (absolute unix times): R1_LOCLPAR0002_p1_lightcurve.dat, R1_LOCLPAR0002_p2_lightcurve.dat, R1_LOCLPAR0002_p3_lightcurve.dat, R1_LOCLPAR0002_p4_lightcurve.dat, R1_LOCLPAR0002_p5_lightcurve.dat, R1_LOCLPAR0002_p6_lightcurve.dat, R1_LOCLPAR0002_p7_lightcurve.dat, R1_LOCLPAR0002_p8_lightcurve.dat, R1_LOCLPAR0002_p9_lightcurve.dat, R1_LOCLPAR0002_p10_lightcurve.dat, R1_LOCLPAR0002_p11_lightcurve.dat, R1_LOCLPAR0002_p12_lightcurve.dat; see sim_time_reference.txt.
+R1_LOCLPAR0002_p1.Lightcurve File false R1_LOCLPAR0002_p1_lightcurve_shifted.dat
+
+# Piece 2 of 12: 29.531-52.416 s after the event start.
+# Local particle event: quasi-trapped electrons, exp(-E/50 keV),
+# peak I(>30 keV) = 780 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.88 deg, yaw -29.33 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0002_p2
+R1_LOCLPAR0002_p2.ParticleType 3
+R1_LOCLPAR0002_p2.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0002_p2_beam.dat
+R1_LOCLPAR0002_p2.Spectrum NormalizedEnergyBeamFluxFunction
+R1_LOCLPAR0002_p2.Lightcurve File false R1_LOCLPAR0002_p2_lightcurve_shifted.dat
+
+# Piece 3 of 12: 52.416-71.903 s after the event start.
+# Local particle event: quasi-trapped electrons, exp(-E/50 keV),
+# peak I(>30 keV) = 780 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.87 deg, yaw -19.58 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0002_p3
+R1_LOCLPAR0002_p3.ParticleType 3
+R1_LOCLPAR0002_p3.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0002_p3_beam.dat
+R1_LOCLPAR0002_p3.Spectrum NormalizedEnergyBeamFluxFunction
+R1_LOCLPAR0002_p3.Lightcurve File false R1_LOCLPAR0002_p3_lightcurve_shifted.dat
+
+# Piece 4 of 12: 71.903-89.578 s after the event start.
+# Local particle event: quasi-trapped electrons, exp(-E/50 keV),
+# peak I(>30 keV) = 780 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.87 deg, yaw -9.78 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0002_p4
+R1_LOCLPAR0002_p4.ParticleType 3
+R1_LOCLPAR0002_p4.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0002_p4_beam.dat
+R1_LOCLPAR0002_p4.Spectrum NormalizedEnergyBeamFluxFunction
+R1_LOCLPAR0002_p4.Lightcurve File false R1_LOCLPAR0002_p4_lightcurve_shifted.dat
+
+# Piece 5 of 12: 89.578-106.794 s after the event start.
+# Local particle event: quasi-trapped electrons, exp(-E/50 keV),
+# peak I(>30 keV) = 780 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.87 deg, yaw 0 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0002_p5
+R1_LOCLPAR0002_p5.ParticleType 3
+R1_LOCLPAR0002_p5.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0002_p5_beam.dat
+R1_LOCLPAR0002_p5.Spectrum NormalizedEnergyBeamFluxFunction
+R1_LOCLPAR0002_p5.Lightcurve File false R1_LOCLPAR0002_p5_lightcurve_shifted.dat
+
+# Piece 6 of 12: 106.794-124.75 s after the event start.
+# Local particle event: quasi-trapped electrons, exp(-E/50 keV),
+# peak I(>30 keV) = 780 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.87 deg, yaw 9.78 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0002_p6
+R1_LOCLPAR0002_p6.ParticleType 3
+R1_LOCLPAR0002_p6.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0002_p6_beam.dat
+R1_LOCLPAR0002_p6.Spectrum NormalizedEnergyBeamFluxFunction
+R1_LOCLPAR0002_p6.Lightcurve File false R1_LOCLPAR0002_p6_lightcurve_shifted.dat
+
+# Piece 7 of 12: 124.75-144.506 s after the event start.
+# Local particle event: quasi-trapped electrons, exp(-E/50 keV),
+# peak I(>30 keV) = 780 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.87 deg, yaw 19.55 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0002_p7
+R1_LOCLPAR0002_p7.ParticleType 3
+R1_LOCLPAR0002_p7.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0002_p7_beam.dat
+R1_LOCLPAR0002_p7.Spectrum NormalizedEnergyBeamFluxFunction
+R1_LOCLPAR0002_p7.Lightcurve File false R1_LOCLPAR0002_p7_lightcurve_shifted.dat
+
+# Piece 8 of 12: 144.506-167.325 s after the event start.
+# Local particle event: quasi-trapped electrons, exp(-E/50 keV),
+# peak I(>30 keV) = 780 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.87 deg, yaw 29.32 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0002_p8
+R1_LOCLPAR0002_p8.ParticleType 3
+R1_LOCLPAR0002_p8.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0002_p8_beam.dat
+R1_LOCLPAR0002_p8.Spectrum NormalizedEnergyBeamFluxFunction
+R1_LOCLPAR0002_p8.Lightcurve File false R1_LOCLPAR0002_p8_lightcurve_shifted.dat
+
+# Piece 9 of 12: 167.325-196.502 s after the event start.
+# Local particle event: quasi-trapped electrons, exp(-E/50 keV),
+# peak I(>30 keV) = 780 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.88 deg, yaw 39.11 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0002_p9
+R1_LOCLPAR0002_p9.ParticleType 3
+R1_LOCLPAR0002_p9.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0002_p9_beam.dat
+R1_LOCLPAR0002_p9.Spectrum NormalizedEnergyBeamFluxFunction
+R1_LOCLPAR0002_p9.Lightcurve File false R1_LOCLPAR0002_p9_lightcurve_shifted.dat
+
+# Piece 10 of 12: 196.502-239.864 s after the event start.
+# Local particle event: quasi-trapped electrons, exp(-E/50 keV),
+# peak I(>30 keV) = 780 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.88 deg, yaw 48.95 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0002_p10
+R1_LOCLPAR0002_p10.ParticleType 3
+R1_LOCLPAR0002_p10.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0002_p10_beam.dat
+R1_LOCLPAR0002_p10.Spectrum NormalizedEnergyBeamFluxFunction
+R1_LOCLPAR0002_p10.Lightcurve File false R1_LOCLPAR0002_p10_lightcurve_shifted.dat
+
+# Piece 11 of 12: 239.864-317.429 s after the event start.
+# Local particle event: quasi-trapped electrons, exp(-E/50 keV),
+# peak I(>30 keV) = 780 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.88 deg, yaw 58.89 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0002_p11
+R1_LOCLPAR0002_p11.ParticleType 3
+R1_LOCLPAR0002_p11.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0002_p11_beam.dat
+R1_LOCLPAR0002_p11.Spectrum NormalizedEnergyBeamFluxFunction
+R1_LOCLPAR0002_p11.Lightcurve File false R1_LOCLPAR0002_p11_lightcurve_shifted.dat
+
+# Piece 12 of 12: 317.429-600 s after the event start.
+# Local particle event: quasi-trapped electrons, exp(-E/50 keV),
+# peak I(>30 keV) = 780 e/cm2/s/sr at 90 deg pitch, sin^4 pitch-angle distribution.
+# Rocking -21.88 deg, yaw 69.67 deg, field dip 0 deg. Directions in detector frame.
+DataChallenge.Source R1_LOCLPAR0002_p12
+R1_LOCLPAR0002_p12.ParticleType 3
+R1_LOCLPAR0002_p12.Beam FarFieldNormalizedEnergyBeamFluxFunction R1_LOCLPAR0002_p12_beam.dat
+R1_LOCLPAR0002_p12.Spectrum NormalizedEnergyBeamFluxFunction
+R1_LOCLPAR0002_p12.Lightcurve File false R1_LOCLPAR0002_p12_lightcurve_shifted.dat

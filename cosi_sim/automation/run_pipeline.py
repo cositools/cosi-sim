@@ -35,6 +35,10 @@ Rolling submission (optional): with slurm.max_jobs in the config, or
 post-processing job submits the next waiting sources once its own sims have
 left the queue, so a whole data challenge can be submitted with one command.
 
+Particle events for the ACS (acs mode) have two steps: check (cosima finished and the
+time-fixed .sim.gz file is complete) and copy (the .sim.gz file to
+<products_dir>/ACS/<class>/).
+
 Each step is recorded in <run_dir>/automation.json, so `finish` can be rerun
 by hand and continues from the first step that has not completed
 (or from --from check|mimrec|cosipy|copy).
@@ -46,6 +50,7 @@ import argparse
 import datetime
 import fcntl
 import glob
+import gzip
 import json
 import os
 import shutil
@@ -54,6 +59,8 @@ import sys
 
 STATE_FILE = "automation.json"
 STEPS = ["check", "mimrec", "plots", "cosipy", "copy"]
+ACS_STEPS = ["check", "copy"]
+SINGLE_JOB_MODES = ("grb", "acs")      # one simulation job in the run directory
 AUTOMATION_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -157,7 +164,7 @@ def compress_ranges(indices):
 def sim_output_dirs(state):
     """(index, Output directory) for every sim of this source."""
     run_dir = state["run_dir"]
-    if state["mode"] == "grb":
+    if state["mode"] in SINGLE_JOB_MODES:
         return [(0, os.path.join(run_dir, "Output"))]
     return [(i, os.path.join(run_dir, "Simulations", "sim_%d" % i, "Output"))
             for i in range(state["njobs"])]
@@ -189,19 +196,50 @@ def check_one_sim(output_dir, tra_name):
     return True, "", n_compton
 
 
+def check_sim_file(output_dir, sim_name):
+    """acs mode: the .sim.gz file is complete (ends with the TS line). Returns (ok, reason, n_events)."""
+    path = os.path.join(output_dir, sim_name)
+    if not os.path.isfile(path):
+        return False, "no sim file (%s)" % sim_name, None
+    n_events, last = 0, ""
+    try:
+        with gzip.open(path, "rt") as f:
+            for line in f:
+                if line.startswith("SE"):
+                    n_events += 1
+                if line.strip():
+                    last = line
+    except (OSError, EOFError) as err:
+        return False, "unreadable sim file (%s)" % err, None
+    if not last.startswith("TS"):
+        return False, "sim file is incomplete (no TS line at the end)", None
+    return True, "", n_events
+
+
+def steps_for(state):
+    return ACS_STEPS if state["mode"] == "acs" else STEPS
+
+
+def event_label(state):
+    return "events" if state["mode"] == "acs" else "Compton events"
+
+
 def check_sims(state):
-    """Check every sim of a source. Returns (failed indices, report lines, n_compton list)."""
-    tra_name = "%s.inc1.id1.tra.gz" % state["sim_name"]
+    """Check every sim of a source. Returns (failed indices, report lines, event counts)."""
+    if state["mode"] == "acs":
+        check = lambda out: check_sim_file(out, "%s.inc1.id1.sim.gz" % state["sim_name"])  # noqa: E731
+    else:
+        check = lambda out: check_one_sim(out, "%s.inc1.id1.tra.gz" % state["sim_name"])   # noqa: E731
     failed, report, counts = [], [], []
     for i, out in sim_output_dirs(state):
-        ok, reason, n = check_one_sim(out, tra_name)
+        ok, reason, n = check(out)
         if not ok:
             failed.append(i)
             report.append("sim %d: %s" % (i, reason))
         elif n is not None:
             counts.append(n)
             if n == 0:
-                report.append("sim %d: WARNING: 0 Compton events" % i)
+                report.append("sim %d: WARNING: 0 %s" % (i, event_label(state)))
     return failed, report, counts
 
 
@@ -244,7 +282,7 @@ def submit_sim_jobs(state, indices=None, depend_on=None, dry_run=False, note=Non
     """
     run_dir = state["run_dir"]
     dep = ["--dependency=afterany:%s" % depend_on] if depend_on else []
-    if state["mode"] == "grb":
+    if state["mode"] in SINGLE_JOB_MODES:
         sim_id = sbatch(dep + ["grb_job.sh"], run_dir, dry_run)
     else:
         sim_id = sbatch(dep + ["--array=%s" % array_spec(state, indices), "slurm_array_job.sh"],
@@ -490,8 +528,8 @@ def cmd_check(args):
         name = "%s/%s" % (state["class"], state["source_name"])
         print("%s: %d/%d sims ok" % (name, state["njobs"] - len(failed), state["njobs"]))
         if counts:
-            print("    Compton events per sim: mean %.1f, min %g, max %g"
-                  % (sum(counts) / len(counts), min(counts), max(counts)))
+            print("    %s per sim: mean %.1f, min %g, max %g"
+                  % (event_label(state), sum(counts) / len(counts), min(counts), max(counts)))
         for line in report[:args.max_lines]:
             print("    " + line)
         if len(report) > args.max_lines:
@@ -617,11 +655,14 @@ def _finish(args):
         state.update(fields)
         update_state(run_dir, message=message, **fields)
 
+    steps = steps_for(state)
     completed = list(state.get("completed", []))
     if args.from_step:
-        completed = STEPS[:STEPS.index(args.from_step)]
+        if args.from_step not in steps:
+            sys.exit("%s mode has the steps %s" % (state["mode"], ", ".join(steps)))
+        completed = steps[:steps.index(args.from_step)]
         commit(completed=list(completed))
-    todo = [s for s in STEPS if s not in completed]
+    todo = [s for s in steps if s not in completed]
     if not todo:
         print("All steps already completed; final file: %s" % state.get("final_file"))
         return 0
@@ -635,8 +676,8 @@ def _finish(args):
         with open(os.path.join(run_dir, "check_report.txt"), "w") as f:
             f.write("%s\n%d/%d sims ok\n" % (now(), state["njobs"] - len(failed), state["njobs"]))
             if counts:
-                f.write("Compton events per sim: mean %.1f, min %g, max %g\n"
-                        % (sum(counts) / len(counts), min(counts), max(counts)))
+                f.write("%s per sim: mean %.1f, min %g, max %g\n"
+                        % (event_label(state), sum(counts) / len(counts), min(counts), max(counts)))
             f.write("\n".join(report) + "\n")
         if failed:
             retries = state["slurm"].get("max_retries", 2)
@@ -644,7 +685,7 @@ def _finish(args):
             if not args.no_resubmit and attempt < retries:
                 # Record the attempt before submitting, so the new post job sees it:
                 commit(attempt=attempt + 1, stage="resubmitted")
-                indices = None if state["mode"] == "grb" else failed
+                indices = None if state["mode"] in SINGLE_JOB_MODES else failed
                 try:
                     sim_id, post_id = submit_sim_jobs(state, indices=indices, note=compress_ranges(failed))
                 except SubmitError as err:
@@ -663,6 +704,19 @@ def _finish(args):
         commit(message="all %d sims ok" % state["njobs"], completed=list(completed))
         # The sims have left the SLURM queue: let waiting sources use the slots.
         fill_for(state)
+
+    # acs mode: copy the .sim.gz file
+    if state["mode"] == "acs" and "copy" in todo:
+        sim = os.path.join(run_dir, "Output", "%s.inc1.id1.sim.gz" % state["sim_name"])
+        dest_dir = state["acs_products_dir"]
+        os.makedirs(dest_dir, exist_ok=True)
+        dest = os.path.join(dest_dir, "%s.inc1.id1.sim.gz" % state["source_name"])
+        if os.path.exists(dest):
+            print("NOTE: overwriting %s" % dest)
+        shutil.copy2(sim, dest)
+        completed.append("copy")
+        commit(message="done: %s" % dest, final_file=dest, completed=list(completed), stage="done")
+        return 0
 
     # 2. mimrec + overflow filter (MEGAlib environment).
     #    post_megalib.py removes old outputs first and checks that mimrec wrote a new file.
@@ -773,7 +827,7 @@ def cmd_resubmit(args):
     if not failed and not args.all:
         print("No failed sims. To continue the post-processing run: run_pipeline.py finish %s" % run_dir)
         return 0
-    indices = None if (args.all or state["mode"] == "grb") else failed
+    indices = None if (args.all or state["mode"] in SINGLE_JOB_MODES) else failed
     what = "all sims" if indices is None else compress_ranges(failed)
     if not args.dry_run:
         # Automatic retries start again:

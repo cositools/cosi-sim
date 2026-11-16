@@ -2,7 +2,7 @@
 import os,sys,shutil 
 import yaml
 import cosi_sim
-from cosi_sim.pipeline.time_reference import check_lightcurves, orientation_time_range
+from cosi_sim.pipeline.time_reference import check_lightcurves, is_burst_source, orientation_time_range
 
 class Setup:
         
@@ -185,7 +185,7 @@ class Setup:
             # Light curves that do not repeat must start and stop with the orientation file
             # (bursts: lie inside it); repeating ones must not overflow MEGAlib's repeat count:
             if self.orientation_file and os.path.exists(str(self.orientation_file)):
-                burst = "GRBs" in each.split("/")[:-1]
+                burst = is_burst_source(each)
                 problems = check_lightcurves(this_src, orientation_time_range(self.orientation_file), burst=burst)
                 if problems:
                     print()
