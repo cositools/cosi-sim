@@ -1,11 +1,11 @@
 # MEGAlib simulation time reference for LOCLPAR0000
-t_ref                      1835800785.0
+t_ref                      1835853120.0
 lightcurve_original        LOCLPAR0000_lightcurve.dat
 lightcurve_shifted         LOCLPAR0000_lightcurve_shifted.dat
-burst_start_absolute       1835800797.124000
-burst_end_absolute         1835800857.124000
-burst_start_shifted        12.124000
-burst_end_shifted          72.124000
+burst_start_absolute       1835853130.739000
+burst_end_absolute         1835853190.739000
+burst_start_shifted        10.739000
+burst_end_shifted          70.739000
 orientation_file           DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori
 orientation_cut            DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut.ori
 orientation_cut_normed     DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori

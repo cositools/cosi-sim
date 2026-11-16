@@ -10,12 +10,14 @@ Magnetospheric particle events from the COSI GRB group, for testing transient cl
 - **Times:** the ACS background covers only the first week, so the events are placed in days 4–8 (3–7 days after the orientation start), like the GRBs. Each event:
   - starts at a random time and ends, with a 5 min margin, before 1836092100.0;
   - has livetime > 0 (no SAA) from 5 min before to 5 min after it;
-  - has no slew (one rocking state);
+  - has no slew (one rocking state), and the yaw changes by at most 20° during it (see below);
   - is at least 1 h from every DC5 GRB, magnetar burst and other event.
 
 ## Attitude
 
-The sources are in the detector frame (no `Orientation` line), so each event is built for the spacecraft attitude at its time. The rocking angle (±21.9°) and the yaw (angle of detector +x from north toward east) come from the orientation file. The yaw swings by ~150° every orbit, at up to ~0.6°/s. An event is therefore split into consecutive pieces with a yaw change of at most 10° each. Each piece is one source component, with its part of the light curve and its mean intensity, so together they make up the event.
+The sources are in the detector frame (no `Orientation` line), and a source keeps one direction for the whole event. Each event is built for the mean rocking angle (±21.9°) and yaw (angle of detector +x from north toward east) over its time, read from the orientation file.
+
+The yaw swings by ~150° every orbit and passes yaw 0 at up to ~0.6°/s. Events are therefore only placed where the yaw changes by at most 20°, so their directions are within ~10° of the true ones. Every event is simulated in full; long events just do not start during the fast swing through yaw 0. Short events can start almost any time.
 
 The detector frame is MEGAlib's: right-handed, with +y = z × x, which points west at yaw 0. The axes built for an event agree with the orientation file to 0.02° outside slews.
 
@@ -26,8 +28,8 @@ The detector frame is MEGAlib's: right-handed, with +y = z × x, which points we
   - class, species, light-curve duration and shape, E0;
   - peak I(>30 keV) (local) or peak precipitating and photon flux (distant);
   - pitch-angle model; Earth-central angle and limb azimuth (distant);
-  - detector zenith and azimuth at the start and end (distant);
-  - rocking angle, yaw at the start and end, and number of pieces;
+  - detector zenith and azimuth (distant);
+  - rocking angle, yaw, and the yaw change during the event;
   - expected brightest-panel peak ACS gamma rate (from the GRB group's pilot at north rock, yaw 0);
   - the GRB-group template with the same parameters.
 - `placement.json`: the seed, arguments and constraints of the draw.

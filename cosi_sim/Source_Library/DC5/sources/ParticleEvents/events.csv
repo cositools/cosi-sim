@@ -1,7 +1,7 @@
-Event	Class	Species	Start time (s)	End time (s)	Lightcurve duration (s)	Lightcurve shape	E0 (keV)	Peak I(>30 keV) (e/cm^2/s/sr)	Peak precipitating flux (e/cm^2/s)	Peak photon flux (ph/cm^2/s)	Pitch-angle model	Earth-central angle (deg)	Limb azimuth (deg)	Zenith (deg)	Azimuth start (deg)	Azimuth end (deg)	Rocking (deg)	Yaw start (deg)	Yaw end (deg)	Pieces	Expected peak ACS gamma (cps)	Template
-LOCLPAR0000	LOCLPAR	electron	1835800797.124	1835800857.124	60	crossing	50	780.0			sin^4						21.88	-42.28	-39.72	1	80.0	LocalElectrons_E050_L0_T60_RN
-LOCLPAR0001	LOCLPAR	electron	1835948215.345	1835948815.345	600	crossing	50	3900.0			sin^4						-21.88	-73.54	-30.15	5	400.0	LocalElectrons_E050_L1_T600_RS
-LOCLPAR0002	LOCLPAR	electron	1835955908.845	1835956208.845	300	crossing	30	3500.0			sin^4						-21.88	72.6	69.66	1	80.0	LocalElectrons_E030_L0_T300_RS
-LOCLPAR0003	LOCLPAR	electron	1835960710.474	1835961310.474	600	crossing	50	780.0			sin^4						-21.87	-72.2	56.11	13	80.0	LocalElectrons_E050_L0_T600_RS
-LOCLPAR0004	LOCLPAR	electron	1836029789.703	1836029849.703	60	crossing	100	130.0			sin^4						-21.88	70.72	70.04	1	80.0	LocalElectrons_E0100_L0_T60_RS
-LOCLPAR0005	LOCLPAR	electron	1836047580.952	1836048180.952	600	crossing	200	140.0			sin^4						-21.88	72.65	71.02	1	400.0	LocalElectrons_E0200_L1_T600_RS
+Event	Class	Species	Start time (s)	End time (s)	Lightcurve duration (s)	Lightcurve shape	E0 (keV)	Peak I(>30 keV) (e/cm^2/s/sr)	Peak precipitating flux (e/cm^2/s)	Peak photon flux (ph/cm^2/s)	Pitch-angle model	Earth-central angle (deg)	Limb azimuth (deg)	Zenith (deg)	Azimuth (deg)	Rocking (deg)	Yaw (deg)	Yaw change (deg)	Expected peak ACS gamma (cps)	Template
+LOCLPAR0000	LOCLPAR	electron	1835853130.739	1835853190.739	60	crossing	100	130.0			sin^4					-21.88	34.14	2.99	80.0	LocalElectrons_E0100_L0_T60_RS
+LOCLPAR0001	LOCLPAR	electron	1835944184.028	1835944784.028	600	crossing	200	140.0			sin^4					-21.88	59.97	13.49	400.0	LocalElectrons_E0200_L1_T600_RS
+LOCLPAR0002	LOCLPAR	electron	1835956054.520	1835956114.520	60	crossing	50	780.0			sin^4					-21.88	71.06	0.62	80.0	LocalElectrons_E050_L0_T60_RS
+LOCLPAR0003	LOCLPAR	electron	1836029592.769	1836029892.769	300	crossing	30	3500.0			sin^4					-21.88	71.15	3.0	80.0	LocalElectrons_E030_L0_T300_RS
+LOCLPAR0004	LOCLPAR	electron	1836047580.952	1836048180.952	600	crossing	50	3900.0			sin^4					-21.88	72.82	2.52	400.0	LocalElectrons_E050_L1_T600_RS
+LOCLPAR0005	LOCLPAR	electron	1836055159.517	1836055759.517	600	crossing	50	780.0			sin^4					21.88	72.5	3.42	80.0	LocalElectrons_E050_L0_T600_RN

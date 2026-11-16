@@ -20,11 +20,10 @@ Cosima sources for magnetospheric particle events, from the COSI GRB group, for 
   - Yaw is the angle of detector +x from the north/up plane toward east.
   - Detector +y = z × x (right-handed, as in MEGAlib's `MCOrientation`), so +y points west at yaw 0.
   - `place_events.py` reads the rocking angle and yaw from the orientation file (Earth-zenith columns and the celestial pole). The axes it builds agree with the orientation file to 0.02° outside slews.
-  - DC5 rocks ±21.9°, and the yaw swings between about −74° and +74° every orbit, at up to ~0.6°/s, so events are split into pieces with a yaw change ≤ 10° each.
+  - DC5 rocks ±21.9°, and the yaw swings between about −74° and +74° every orbit, passing yaw 0 at up to ~0.6°/s. A detector-frame source keeps one direction for the whole event, so events are only placed where the yaw changes by ≤ 20°, and built at the mean yaw.
 - **Magnetic field.** Horizontal and northward (dip 0), which is right at the magnetic equator. COSI's 0° geographic orbit crosses magnetic latitudes of about ±11°.
 - **Light curves.**
   - Cosima rescales a light curve to unit mean, so each `Flux` (or beam-file intensity) is the mean over its light curve; the peak values are in the comments and the catalog.
-  - A piece of an event has the part of the light curve in its time span and the mean over that part.
   - Placed events have absolute times (the clock of the orientation file); the `*_shifted.dat` copies are in t − t_ref.
 - **Range cuts and detector time constant** are copied from the DC3/DC4 sources.
 - **ACS readout.** Run the sims with `COSISMEX.sim_BGOreading.geo.setup`, which turns the BGO vetoes into triggers so shield-only events are kept (automation: `acs` mode, `bgo_geometry_file`).

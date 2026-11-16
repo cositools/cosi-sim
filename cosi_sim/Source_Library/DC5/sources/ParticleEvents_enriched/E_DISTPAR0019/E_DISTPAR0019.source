@@ -1,0 +1,27 @@
+# Same range cuts as the DC3/DC4 sources (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+DetectorTimeConstant 0.000002
+
+# Distant particle event: bremsstrahlung from electrons (exp(-E/100 keV)) precipitating
+# over 90000 km2 at 18 deg Earth-central angle (2141 km away, zenith 113.2 deg,
+# azimuth 0 deg from north). Peak precipitating flux 1.1e+06 e/cm2/s above 50 keV.
+# Peak photon flux at COSI 0.375 ph/cm2/s; Flux below is the lightcurve-averaged value.
+# Rocking -21.87 deg, yaw -5.29 deg. Direction in detector frame.
+DataChallenge.Source E_DISTPAR0019
+E_DISTPAR0019.ParticleType 1
+E_DISTPAR0019.Beam FarFieldGaussian 135.021 354.710 4.014
+E_DISTPAR0019.Spectrum File E_DISTPAR0019_spectrum.dat
+E_DISTPAR0019.Flux 0.103773
+# Light-curve times are relative to t_ref = 1835605035.0 (unix s, first orientation row of this burst).
+# Simulate with DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
+# Original light curve (absolute unix times): E_DISTPAR0019_lightcurve.dat; see sim_time_reference.txt.
+E_DISTPAR0019.Lightcurve File false E_DISTPAR0019_lightcurve_shifted.dat
+E_DISTPAR0019.EarthOccultation false

@@ -123,9 +123,7 @@ def electron_intensity(E, e0_kev, i30):
 
 
 def build_local(out, name, e0_kev, i30_peak, pitch_n, rock_deg, yaw_deg, dip_deg,
-                shape, duration_s, lc=None):
-    """lc: optional (t, y) part of the unit-peak light curve (one piece of an event); the beam
-    intensity is then the mean over that part, so the peak intensity stays i30_peak."""
+                shape, duration_s):
     d = out / name
     d.mkdir(parents=True, exist_ok=True)
     basis = detector_basis(rock_deg, yaw_deg)
@@ -134,8 +132,8 @@ def build_local(out, name, e0_kev, i30_peak, pitch_n, rock_deg, yaw_deg, dip_deg
     x, y, z = basis
     b_det = np.array([b_neu @ x, b_neu @ y, b_neu @ z])
 
-    t, lc = lc if lc is not None else lightcurve(shape, duration_s)
-    mean_over_peak = np.trapezoid(lc, t) / (t[-1] - t[0])   # cosima scales the light curve to mean 1
+    t, lc = lightcurve(shape, duration_s)
+    mean_over_peak = np.trapezoid(lc, t) / duration_s
 
     phi_ax = np.linspace(0, 360, 37)
     th_ax = np.linspace(0, 180, 19)
@@ -205,11 +203,8 @@ def brems_photons_per_electron(e0_kev, k_cut_kev=50.0):
 
 
 def build_distant(out, name, e0_kev, q_peak, area_km2, central_deg, az_deg, rock_deg,
-                  yaw_deg, shape, duration_s, lc=None):
-    """q_peak: precipitating electron number flux above E_MIN_KEV [e/cm2/s] over area_km2.
-
-    lc: optional (t, y) part of the unit-peak light curve (one piece of an event); Flux is then
-    the mean over that part, so the peak flux stays the same."""
+                  yaw_deg, shape, duration_s):
+    """q_peak: precipitating electron number flux above E_MIN_KEV [e/cm2/s] over area_km2."""
     d = out / name
     d.mkdir(parents=True, exist_ok=True)
     basis = detector_basis(rock_deg, yaw_deg)
@@ -233,8 +228,8 @@ def build_distant(out, name, e0_kev, q_peak, area_km2, central_deg, az_deg, rock
     # Lambertian escape: dN/dOmega = Phi_e * A * n_ph * cos(emission) / pi.
     flux_peak = q_peak * area_km2 * 1e10 * n_ph * emission_cos / (np.pi * (dist_km * 1e5) ** 2)
 
-    t, lc = lc if lc is not None else lightcurve(shape, duration_s)
-    flux_mean = flux_peak * np.trapezoid(lc, t) / (t[-1] - t[0])
+    t, lc = lightcurve(shape, duration_s)
+    flux_mean = flux_peak * np.trapezoid(lc, t) / duration_s
 
     spf, lcf = f"{name}_spectrum.dat", f"{name}_lightcurve.dat"
     write_dp_file(d / spf, k, dndk / dndk.max(), "Photon energy [keV] vs relative dN/dE")

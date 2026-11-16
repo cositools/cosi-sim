@@ -64,7 +64,8 @@ pe_enr = list(csv.DictReader(open(os.path.join(ROOT, "sources", "ParticleEvents_
 pe_rows = [f"| {r['Event']} | {(float(r['Start time (s)']) - gd['orientation_start']) / 86400 + 1:.2f} | {r['Start time (s)']} | "
            f"{r['Lightcurve duration (s)']} | {r['E0 (keV)']} | {float(r['Peak I(>30 keV) (e/cm^2/s/sr)']):.2g} | "
            f"{float(r['Expected peak ACS gamma (cps)']):.0f} | {float(r['Rocking (deg)']):+.1f} | "
-           f"{float(r['Yaw start (deg)']):.0f} → {float(r['Yaw end (deg)']):.0f} | {r['Pieces']} |" for r in pe]
+           f"{float(r['Yaw (deg)']):.0f} ({float(r['Yaw change (deg)']):.0f}) |" for r in pe]
+pe_enr_place = json.load(open(os.path.join(ROOT, "sources", "ParticleEvents_enriched", "placement.json")))
 
 txt = f"""# DC5 mock dataset — source definitions
 
@@ -161,17 +162,17 @@ Not included in DC5 (random draw, seed {gd['seed']}): {', '.join(r[1] for r in g
 
 New in DC5, from the COSI GRB group: magnetospheric particle events, to test transient classification on the ACS (BGO shield) light curves. The blind dataset has the default population of **local electron events** (`LOCLPAR`, quasi-trapped electrons hitting the spacecraft): {pe_place['args']['local_per_day']:g} per day over the {pe_place['rate_days']:.2f}-day orbit, i.e. {pe_place['args']['local_per_day'] * pe_place['rate_days']:.1f} expected; the Poisson draw (seed {pe_place['seed']}) gave {len(pe)}. Distant events (bremsstrahlung from precipitating electrons) are only in the enriched set. The ACS background covers the first week only, so the events are placed on days {pe_place['args']['window_days'][0] + 1:g}–{pe_place['args']['window_days'][1] + 1:g}, as the GRBs are.
 
-| Event | Day | Start (unix s) | Duration (s) | E0 (keV) | Peak I(>30 keV) (e/cm²/s/sr) | Expected peak ACS gamma (cps) | Rocking (deg) | Yaw (deg) | Pieces |
-|---|---|---|---|---|---|---|---|---|---|
+| Event | Day | Start (unix s) | Duration (s) | E0 (keV) | Peak I(>30 keV) (e/cm²/s/sr) | Expected peak ACS gamma (cps) | Rocking (deg) | Yaw (deg; change during the event) |
+|---|---|---|---|---|---|---|---|---|
 {chr(10).join(pe_rows)}
 
-**Placement.** Each event starts at a random time in the window and must end, with a 5 min margin, before {gd['t_end_max']:.1f}. Required: livetime > 0 (no SAA) from 5 min before to 5 min after the event, no slew (one rocking state), and at least 1 h from every GRB, magnetar burst and other event.
+**Placement.** Each event starts at a random time in the window and must end, with a 5 min margin, before {gd['t_end_max']:.1f}. Required: livetime > 0 (no SAA) from 5 min before to 5 min after the event, no slew (one rocking state), a yaw change of at most 20° during the event, and at least 1 h from every GRB, magnetar burst and other event.
 
-**Attitude.** The sources are defined in the detector frame (no `Orientation` line), so each event is built for the rocking angle and yaw at its time, read from the orientation file. The yaw (angle of detector +x from north toward east, about the pointing axis) swings by ~150° every orbit, so events are split into consecutive pieces with a yaw change of at most 10° each. Each piece is one source component with its part of the light curve and its mean intensity, so together they make up the event. The GRB group's detector frame was left-handed (its +y pointed east at yaw 0); MEGAlib's is right-handed (+y west at yaw 0). This is fixed in the vendored generator. Its directions agree with the orientation file to 0.02°.
+**Attitude.** The sources are defined in the detector frame (no `Orientation` line), so each event is built for the mean rocking angle and yaw over its time, read from the orientation file. The yaw (angle of detector +x from north toward east, about the pointing axis) swings by ~150° every orbit and passes yaw 0 at up to ~0.6°/s, so long events are only placed where the yaw changes by ≤ 20° (directions within ~10° of the true ones); they do not start during the fast swing. The GRB group's detector frame was left-handed (its +y pointed east at yaw 0); MEGAlib's is right-handed (+y west at yaw 0). This is fixed in the vendored generator. Its directions agree with the orientation file to 0.02°.
 
 **Simulation.** The events are in the src_list and are run in the automation's `acs` mode: one Cosima run per event with the BGO-readout geometry (`bgo_geometry_file` in the pipeline config), whose `.sim.gz` file is the input for the ACS light curves. With `particle_germanium: true` in the pipeline config, every event is also simulated with the standard geometry through the full Compton chain, so it is in the germanium data too. Each event directory holds the inputs in times relative to its own t_ref (`sim_time_reference.txt`), made from the 15 s orientation file.
 
-**Truth catalog and enriched set.** `sources/ParticleEvents/events.csv` lists every event with its parameters. `sources/ParticleEvents_enriched/` holds an enriched set that is not part of the blind dataset: {len(set(r['Realization'] for r in pe_enr))} independent realizations of the first week at 10× the default rates (local and distant events), {len(pe_enr)} events in all. See `sources/ParticleEvents/README.md` and `scripts/particle_events/`.
+**Truth catalog and enriched set.** `sources/ParticleEvents/events.csv` lists every event with its parameters. `sources/ParticleEvents_enriched/` holds an enriched set that is not part of the blind dataset: the first week at 10× the default rates (local and distant events), with as many events as fit ({len(pe_enr)} of the {pe_enr_place['drawn']} drawn; names start with `E_`). See `sources/ParticleEvents/README.md` and `scripts/particle_events/`.
 
 ## Light-curve bugs — what needs to be re-simulated
 From the [bug report](https://github.com/cositools/cosi-data-challenges/blob/develop/README.md#bug-report):

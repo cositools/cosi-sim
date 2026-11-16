@@ -10,7 +10,7 @@
   "local_per_day": 0.1,
   "distant_per_day": 0.0,
   "rate_days": null,
-  "realizations": 1,
+  "enriched": false,
   "avoid_bursts": [
    "MGF051103",
    "MGF180128A",
@@ -40,9 +40,11 @@
  "spacing_s": 3600.0,
  "live_margin_s": 300.0,
  "rock_tol_deg": 0.1,
- "yaw_tol_deg": 10.0,
+ "yaw_tol_deg": 20.0,
+ "drawn": 6,
  "counts": {
   "LOCLPAR": 6,
   "DISTPAR": 0
- }
+ },
+ "left_out": []
 }
