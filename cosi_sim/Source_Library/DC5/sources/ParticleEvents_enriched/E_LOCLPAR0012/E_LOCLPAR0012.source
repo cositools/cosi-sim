@@ -18,6 +18,6 @@ E_LOCLPAR0012.ParticleType 3
 E_LOCLPAR0012.Beam FarFieldNormalizedEnergyBeamFluxFunction E_LOCLPAR0012_beam.dat
 E_LOCLPAR0012.Spectrum NormalizedEnergyBeamFluxFunction
 # Light-curve times are relative to t_ref = 1835569320.0 (unix s, first orientation row of this burst).
-# Simulate with DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
+# Simulate with DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
 # Original light curve (absolute unix times): E_LOCLPAR0012_lightcurve.dat; see sim_time_reference.txt.
 E_LOCLPAR0012.Lightcurve File false E_LOCLPAR0012_lightcurve_shifted.dat

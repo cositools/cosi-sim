@@ -20,8 +20,8 @@ E_DISTPAR0044.ParticleType 1
 E_DISTPAR0044.Beam FarFieldGaussian 117.222 62.612 6.759
 E_DISTPAR0044.Spectrum File E_DISTPAR0044_spectrum.dat
 E_DISTPAR0044.Flux 0.0703995
-# Light-curve times are relative to t_ref = 1835752305.0 (unix s, first orientation row of this burst).
-# Simulate with DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
+# Light-curve times are relative to t_ref = 1835752315.0 (unix s, first orientation row of this burst).
+# Simulate with DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth_cut_normed.ori and add t_ref to the simulated times afterwards.
 # Original light curve (absolute unix times): E_DISTPAR0044_lightcurve.dat; see sim_time_reference.txt.
 E_DISTPAR0044.Lightcurve File false E_DISTPAR0044_lightcurve_shifted.dat
 E_DISTPAR0044.EarthOccultation false

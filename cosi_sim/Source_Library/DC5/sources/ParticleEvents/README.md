@@ -36,7 +36,7 @@ The detector frame is MEGAlib's: right-handed, with +y = z × x, which points we
 - `<event>/`: one cosi-sim source per event.
   - `<event>.source` and the beam files (`*_beam.dat.gz`) or spectrum files.
   - Light curves: the originals in absolute time, plus `*_shifted.dat` in t − t_ref.
-  - `*_cut.ori` and `*_cut_normed.ori`, and `sim_time_reference.txt` (each event has its own t_ref, from the 15 s orientation file).
+  - `*_cut.ori` and `*_cut_normed.ori`, and `sim_time_reference.txt` (each event has its own t_ref, from the 1 s orientation file, as for the GRBs).
   - `README_DC5.md`.
 
 ## Simulation
@@ -54,11 +54,11 @@ From `cosi_sim/Source_Library/DC5`:
 ```bash
 python scripts/particle_events/place_events.py \
     --ori DC4_final_530km_3_month_with_slew_15sbins_GalacticEarth_SAA.ori \
-    --sim-ori DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori \
+    --sim-ori DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth.ori \
     --out sources/ParticleEvents --window-days 3 7 --local-per-day 0.1 --distant-per-day 0 \
     --avoid-bursts sources/GRBs/* --seed <seed from placement.json>
 ```
 
 - `--ori` is the 10-column orientation file with livetime. It gives the attitude and the SAA.
-- `--sim-ori` is the 9-column file used for the MEGAlib runs (the same rows).
+- `--sim-ori` is the 9-column 1 s file used for the MEGAlib runs of the GRBs and particle events (no livetime column). An excerpt of its rows around the events, under the same file name, gives the same files.
 - Without `--seed` the draw is new. Afterwards, regenerate the enriched set (see its README), then run `write_manifest.py` and `write_dc5_readme.py`, and update `master_source_list.txt`.

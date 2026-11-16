@@ -20,7 +20,7 @@ From `cosi_sim/Source_Library/DC5`, after the blind set:
 ```bash
 python scripts/particle_events/place_events.py --enriched \
     --ori DC4_final_530km_3_month_with_slew_15sbins_GalacticEarth_SAA.ori \
-    --sim-ori DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori \
+    --sim-ori DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth.ori \
     --out sources/ParticleEvents_enriched --window-days 0 7 --local-per-day 1 --distant-per-day 0.1 \
     --avoid-bursts sources/GRBs/* --avoid-events sources/ParticleEvents/events.csv \
     --seed <seed from placement.json>

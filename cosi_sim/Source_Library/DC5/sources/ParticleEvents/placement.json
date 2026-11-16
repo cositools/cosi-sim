@@ -2,7 +2,7 @@
  "seed": 729919986,
  "args": {
   "ori": "DC4_final_530km_3_month_with_slew_15sbins_GalacticEarth_SAA_ori.gz",
-  "sim_ori": "DC3_final_530km_3_month_with_slew_15sbins_GalacticEarth.ori",
+  "sim_ori": "DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth.ori",
   "window_days": [
    3.0,
    7.0

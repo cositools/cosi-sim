@@ -22,7 +22,7 @@ where the attitude is steady. An event is accepted only if
 Usage (DC5, see DC5/sources/ParticleEvents/README.md):
 
     python place_events.py --ori <15 s orientation file with livetime> \\
-        --sim-ori <orientation file for the Cosima runs> --out <dir> --window-days 3 7 \\
+        --sim-ori <1 s orientation file for the Cosima runs> --out <dir> --window-days 3 7 \\
         --local-per-day 0.1 --distant-per-day 0 [--enriched] \\
         [--avoid-bursts <burst dirs>] [--avoid-events <events.csv>] [--seed S]
 
