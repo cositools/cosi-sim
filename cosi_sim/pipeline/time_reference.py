@@ -180,6 +180,12 @@ def read_time_reference(source_dir):
 # Check: light-curve times against the orientation file
 # ---------------------------------------------------------------------------
 
+def is_burst_source(library_path):
+    """Sources under a GRBs/ or ParticleEvents*/ library category are bursts: they are simulated
+    with their own cut orientation file, which their light curves only need to lie inside."""
+    return any(p == "GRBs" or p.startswith("ParticleEvents") for p in library_path.strip("/").split("/")[:-1])
+
+
 def check_lightcurves(source_file, ori_range, burst=False, lc_dir=None):
     """Problems (list of strings) with the light curves of one source file.
 
@@ -233,14 +239,14 @@ def original_name(name):
 
 
 def shift_lightcurve(lc_in, lc_out, t_ref):
-    """Light curve with every time t -> t - t_ref (shift_times.py), other lines unchanged."""
+    """Light curve with every time t -> t - t_ref (shift_times.py), other lines (IP, EN) unchanged."""
     with open_text(lc_in) as f:
         header, data, footer = lightcurve_layout(f.readlines())
     with open_text(lc_out, "wt") as f:
         f.writelines(header)
         for line in data:
             s = line.strip()
-            if not s or s.startswith("#"):
+            if not s or s.startswith("#") or s.split()[0] in ("IP", "EN"):
                 f.write(line)
                 continue
             split = s.split()

@@ -8,7 +8,7 @@ Set up cosi-sim simulation directories for a list of library sources.
 
 Run it in the environment where cosi_sim is installed (the MEGAlib environment).
 A source list file has one library path per line, optionally followed by a mode
-(time, flux or grb) to override the automatic choice; '#' starts a comment.
+(time, flux, grb or acs) to override the automatic choice; '#' starts a comment.
 
 For each source this writes <sim_root>/<class>/<name>/ with:
     inputs.yaml, cosipy_inputs.yaml   from your templates, with the per-source keys set
@@ -25,6 +25,12 @@ For each source this writes <sim_root>/<class>/<name>/ with:
 Modes (chosen automatically):
     grb   source under a GRBs/ category: one run with the time-shifted (normed)
           orientation file in the source directory.
+    acs   source under a ParticleEvents* category (particle events for the ACS): one run
+          as for grb, with the BGO-readout geometry (config bgo_geometry_file) and without
+          revan; the .sim.gz file is the product (copied to <products_dir>/ACS/<class>/).
+          With particle_germanium: true in the config, each such source is also set up
+          in grb mode with the standard geometry in <sim_root>/<class>_Ge/<name>, so the
+          event is in the Compton (germanium) data as well.
     flux  source with a repeating light curve: num_sims parallel runs over the full
           exposure, every .Flux in the copied source file divided by num_sims (flux chunks).
           Choose "time" in the source list to simulate a repeating light curve in time
@@ -100,6 +106,8 @@ def load_config(path):
     cfg.setdefault("grb_output_label", "{source}_unbinned_data_filtered")
     cfg.setdefault("grb_orientation_file", None)
     cfg.setdefault("grb_time_reference", None)
+    cfg.setdefault("bgo_geometry_file", None)
+    cfg.setdefault("particle_germanium", False)
     cfg.setdefault("class_map", {})
     cfg["class_map"] = cfg["class_map"] or {}
     cfg.setdefault("orchestrator_python", "python3")
@@ -107,7 +115,8 @@ def load_config(path):
     slurm.update(cfg.get("slurm") or {})
     cfg["slurm"] = slurm
     for key in ["sim_root", "products_dir", "inputs_template", "cosipy_template", "megalib_env",
-                "cosipy_env", "revan_geometry", "overflow_filter", "grb_orientation_file"]:
+                "cosipy_env", "revan_geometry", "overflow_filter", "grb_orientation_file",
+                "bgo_geometry_file"]:
         if cfg.get(key):
             cfg[key] = os.path.abspath(os.path.expanduser(cfg[key]))
     return cfg
@@ -150,8 +159,8 @@ def read_source_list(args):
                 mode = parts[1] if len(parts) > 1 else None
                 entries.append((parts[0], mode))
     for src, mode in entries:
-        if mode not in (None, "time", "flux", "grb"):
-            sys.exit("Unknown mode '%s' for %s (use time, flux or grb)." % (mode, src))
+        if mode not in (None, "time", "flux", "grb", "acs"):
+            sys.exit("Unknown mode '%s' for %s (use time, flux, grb or acs)." % (mode, src))
     return [(src.strip("/"), mode) for src, mode in entries]
 
 
@@ -224,6 +233,8 @@ def check_repeating_for_time_chunks(source_file, ori_range):
 
 def detect_mode(src):
     parts = src.split("/")
+    if any(p.startswith("ParticleEvents") for p in parts[:-1]):
+        return "acs"
     if "GRBs" in parts[:-1]:
         return "grb"
     if any(lightcurve_flags(library_source_file(src))):
@@ -358,9 +369,9 @@ def source_env(env_script):
     return "cd %s\nsource %s\n" % (env_dir, env_file)
 
 
-def run_sims_py(cfg, t_ref, file_name, chunk_sources=False):
-    text = ("# Simulation job (cosima + revan), written by setup_sims.py.\n"
-            "import os, random\n"
+def run_sims_py(cfg, t_ref, file_name, chunk_sources=False, revan=True):
+    text = ("# Simulation job (cosima%s), written by setup_sims.py.\n" % (" + revan" if revan else "")
+            + "import os, random\n"
             "from cosi_sim.pipeline.simulate import Simulate\n\n"
             "instance = Simulate(\"inputs.yaml\")\n")
     if chunk_sources:
@@ -375,8 +386,9 @@ def run_sims_py(cfg, t_ref, file_name, chunk_sources=False):
         text += ("\n# Shift the sim times back to absolute times (the run used t - t_ref):\n"
                  "instance.modify_sim_times(\"%s.inc1.id1.sim.gz\", %r)\n"
                  "instance.name = \"fixed_times\"\n\n" % (file_name, t_ref))
-    text += ("revan_geo = %s\n"
-             "instance.run_revan(geo_file=revan_geo)\n" % json.dumps(cfg["revan_geometry"]))
+    if revan:
+        text += ("revan_geo = %s\n"
+                 "instance.run_revan(geo_file=revan_geo)\n" % json.dumps(cfg["revan_geometry"]))
     return text
 
 
@@ -417,7 +429,7 @@ def write_job_scripts(run_dir, cfg, state):
     slurm = cfg["slurm"]
     name = state["source_name"]
     files = {}
-    if state["mode"] == "grb":
+    if state["mode"] in ("grb", "acs"):
         files["grb_job.sh"] = (
             sbatch_header(cfg, name, slurm["grb_time"], slurm["grb_mem"], "sim_KIND.%j")
             + "\n#The MEGAlib environment first needs to be sourced:\n" + source_env(cfg["megalib_env"])
@@ -439,14 +451,18 @@ def write_job_scripts(run_dir, cfg, state):
             + "export MPLBACKEND=Agg\npython run_sims.py\n")
     files["postprocess.sh"] = (
         sbatch_header(cfg, name + "_post", slurm["post_time"], slurm["post_mem"], "post_KIND.%j")
-        + "\n# Check the sims (resubmitting failures), then mimrec, overflow filter,\n"
-        + "# cosipy and copy of the final file. Safe to rerun by hand.\n"
+        + ("\n# Check the sim (resubmitting a failure), then copy the .sim.gz file. Safe to rerun by hand.\n"
+           if state["mode"] == "acs" else
+           "\n# Check the sims (resubmitting failures), then mimrec, overflow filter,\n"
+           "# cosipy and copy of the final file. Safe to rerun by hand.\n")
         + "cd %s\n" % run_dir
         + "%s %s finish %s\n" % (cfg["orchestrator_python"], os.path.join(AUTOMATION_DIR, "run_pipeline.py"), run_dir))
-    files["run_sims.py"] = run_sims_py(cfg, state.get("t_ref"), state["file_name"], bool(state.get("lightcurve_chunks")))
-    files["post_megalib.py"] = post_megalib_py(cfg, state["sim_name"])
-    files["post_cosipy.py"] = post_cosipy_py(state["output_label"])
-    files["post_plots.py"] = POST_PLOTS_PY
+    files["run_sims.py"] = run_sims_py(cfg, state.get("t_ref"), state["file_name"], bool(state.get("lightcurve_chunks")),
+                                       revan=state["mode"] != "acs")
+    if state["mode"] != "acs":
+        files["post_megalib.py"] = post_megalib_py(cfg, state["sim_name"])
+        files["post_cosipy.py"] = post_cosipy_py(state["output_label"])
+        files["post_plots.py"] = POST_PLOTS_PY
     for fname, text in files.items():
         path = os.path.join(run_dir, fname)
         with open(path, "w") as f:
@@ -491,7 +507,12 @@ def write_combined_tra(run_dir, state):
         f.write("EN")
 
 
-def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=False):
+def run_dir_for(src, cfg, class_suffix=""):
+    return os.path.join(cfg["sim_root"], class_name(src, cfg) + class_suffix, os.path.basename(src))
+
+
+def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=False, class_suffix=""):
+    """Set up one source. class_suffix: appended to the class directory (germanium runs of particle events)."""
     lib_file = library_source_file(src)
     if not os.path.isfile(lib_file):
         raise SetupError("not in the source library (%s not found)" % lib_file)
@@ -501,8 +522,11 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
 
     mode = mode or detect_mode(src)
     name = os.path.basename(src)
-    cls = class_name(src, cfg)
+    cls = class_name(src, cfg) + class_suffix
     run_dir = os.path.join(cfg["sim_root"], cls, name)
+    if mode == "acs" and not (cfg["bgo_geometry_file"] and os.path.exists(cfg["bgo_geometry_file"])):
+        raise SetupError("acs mode needs bgo_geometry_file (the BGO-readout geometry) in the config; got %s"
+                         % cfg["bgo_geometry_file"])
     num_sims = int(cfg["num_sims"])
 
     if os.path.isfile(os.path.join(run_dir, STATE_FILE)):
@@ -517,7 +541,8 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
 
     # Times relative to t_ref (normalized light curves) and the orientation file of the sims:
     t_ref, grb_ori = None, None
-    if mode == "grb":
+    single = mode in ("grb", "acs")
+    if single:
         grb_ori, t_ref = grb_inputs(src, cfg)
         ori_range = orientation_time_range(grb_ori)
     else:
@@ -539,7 +564,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
             raise SetupError("time chunks for a repeating light curve: " + "; ".join(problems))
 
     # Light curves that do not repeat must match the orientation file (bursts: lie inside it):
-    problems = check_lightcurves(lib_file, ori_range, burst=(mode == "grb"))
+    problems = check_lightcurves(lib_file, ori_range, burst=single)
     if problems:
         raise SetupError("light curve check failed: " + "; ".join(problems))
 
@@ -563,12 +588,14 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     keys = {"run_dir": run_dir, "src_list": [src], "num_sims": num_sims,
             "parallel_time_sims": mode == "time", "lightcurve": False,
             "mcosima": False, "clear_sims": True}
-    if mode == "grb":
+    if single:
         local_ori = os.path.join(run_dir, os.path.basename(grb_ori))
         shutil.copy2(grb_ori, local_ori)
         keys["orientation_file"] = local_ori
     elif t_ref is not None:
         keys["orientation_file"] = normed_orientation(template["orientation_file"], t_ref, cfg["sim_root"])
+    if mode == "acs":
+        keys["geometry_file"] = cfg["bgo_geometry_file"]
     with open(os.path.join(run_dir, "inputs.yaml"), "w") as f:
         f.write(set_yaml_keys(template_text, keys))
     file_name = template["name"]
@@ -578,8 +605,9 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     with open(cfg["cosipy_template"]) as f:
         cosipy_text = f.read()
     filtered = "Output/%s.inc1.id1.extracted.filtered.tra.gz" % sim_name
-    with open(os.path.join(run_dir, "cosipy_inputs.yaml"), "w") as f:
-        f.write(set_yaml_keys(cosipy_text, {"data_file": filtered}))
+    if mode != "acs":
+        with open(os.path.join(run_dir, "cosipy_inputs.yaml"), "w") as f:
+            f.write(set_yaml_keys(cosipy_text, {"data_file": filtered}))
 
     # Sources/ (same as run_sim_setup.py):
     home = os.getcwd()
@@ -629,6 +657,8 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         njobs = 1
 
     label = (cfg["grb_output_label"] if mode == "grb" else cfg["output_label"]).format(source=name)
+    if mode == "acs":
+        filtered, label = None, None
     state = {
         "source": src, "source_name": name, "class": cls, "mode": mode, "run_dir": run_dir,
         "njobs": njobs, "num_sims": num_sims, "file_name": file_name, "sim_name": sim_name,
@@ -638,11 +668,12 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         "orientation_file": keys.get("orientation_file", template["orientation_file"]),
         "flux_scaling": flux_scaling, "lightcurve_chunks": lc_chunks, "repeating_lightcurve_time_chunks": repeating_time,
         "slurm": cfg["slurm"],
+        "acs_products_dir": os.path.join(cfg["products_dir"], "ACS", cls) if mode == "acs" else None,
         "stage": "setup", "attempt": 0, "completed": [], "jobs": [],
         "history": ["%s  set up (%s mode, %d job%s)" % (now(), mode, njobs, "s" if njobs > 1 else "")],
     }
     write_job_scripts(run_dir, cfg, state)
-    if mode != "grb":
+    if not single:
         make_sim_dirs(run_dir, state, extra_files)
         write_combined_tra(run_dir, state)
         if mode == "time" and not lc_chunks:
@@ -658,6 +689,8 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
                 "flux of each chunk from the light curve" % (lc_chunks["chunks"], lc_chunks["start"], lc_chunks["stop"]))
     if repeating_time:
         msg += "\n    repeating light curve: time chunks with the full light curve and the unchanged Flux in every chunk"
+    if mode == "acs":
+        msg += "\n    BGO-readout geometry %s; no revan; product: the .sim.gz file" % os.path.basename(cfg["bgo_geometry_file"])
     if t_ref is not None:
         ori_note = "chunk orientation files" if lc_chunks else "orientation %s" % os.path.basename(keys["orientation_file"])
         msg += "\n    times relative to t_ref %r: %s; sim times fixed after cosima" % (t_ref, ori_note)
@@ -682,24 +715,36 @@ def main(argv=None):
     template = yaml.load(template_text, Loader=yaml.FullLoader)
     check_paths(cfg, template)
 
+    # Runs: each source, plus a germanium run (grb mode, standard geometry) for particle events
+    # if particle_germanium is set:
+    runs = []
+    for src, mode in entries:
+        runs.append((src, mode, ""))
+        try:
+            acs = (mode or detect_mode(src)) == "acs"
+        except OSError:
+            acs = False                      # not in the library: reported by setup_source
+        if acs and cfg["particle_germanium"]:
+            runs.append((src, "grb", "_Ge"))
     failed = []
     targets = {}
-    for src, mode in entries:
-        run_dir = os.path.join(cfg["sim_root"], class_name(src, cfg), os.path.basename(src))
+    for src, mode, suffix in runs:
+        run_dir = run_dir_for(src, cfg, suffix)
         if run_dir in targets and targets[run_dir] != src:
             sys.exit("%s and %s would both use %s; simulate them in separate sim_roots (or use class_map)."
                      % (targets[run_dir], src, run_dir))
         targets[run_dir] = src
-    for src, mode in entries:
+    for src, mode, suffix in runs:
         try:
-            setup_source(src, mode, cfg, template_text, template, force=args.force, dry_run=args.dry_run)
+            setup_source(src, mode, cfg, template_text, template, force=args.force, dry_run=args.dry_run,
+                         class_suffix=suffix)
         except SetupError as err:
-            print("%-50s SKIPPED: %s" % (src, err))
+            print("%-50s SKIPPED: %s" % (src + (" (germanium run)" if suffix else ""), err))
             failed.append(src)
     print()
-    print("%d of %d sources %s." % (len(entries) - len(failed), len(entries),
-                                    "checked" if args.dry_run else "set up"))
-    if not args.dry_run and len(failed) < len(entries):
+    print("%d of %d runs %s." % (len(runs) - len(failed), len(runs),
+                                 "checked" if args.dry_run else "set up"))
+    if not args.dry_run and len(failed) < len(runs):
         print("Submit with:  python %s submit %s"
               % (os.path.join(AUTOMATION_DIR, "run_pipeline.py"), cfg["sim_root"]))
     return 1 if failed else 0
