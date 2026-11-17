@@ -18,8 +18,7 @@ products_dir: "/full/path/DC5/data_products/New_Source_Sims"
 # that is the same for all sources (geometry, orientation file, revan/mimrec
 # configs, exposure time, SAA orientation file, binning...). The scripts only
 # change: run_dir, src_list, num_sims, parallel_time_sims, lightcurve,
-# mcosima, clear_sims (and orientation_file for GRBs and particle events,
-# geometry_file for the ACS runs of particle events) in inputs.yaml, and
+# mcosima, clear_sims (and orientation_file for GRBs and particle events) in inputs.yaml, and
 # data_file in cosipy_inputs.yaml.
 inputs_template: "/full/path/templates/inputs.yaml"
 cosipy_template: "/full/path/templates/cosipy_inputs.yaml"
@@ -52,12 +51,11 @@ grb_orientation_file: null
 grb_time_reference: null
 
 # Particle events for the ACS (sources under a ParticleEvents* category, e.g.
-# DC5/sources/ParticleEvents) are simulated with the BGO-readout geometry, which keeps
-# shield-only events, and the .sim.gz file is the product (<products_dir>/ACS/<class>/).
-# With particle_germanium: true, each event is also simulated with the geometry of the
-# inputs template (full Compton chain, in <sim_root>/<class>_Ge/), so it is in the
-# germanium data too.
-bgo_geometry_file: "/full/path/massmodel-cosi-dc3/COSISMEX.sim_BGOreading.geo.setup"
+# DC5/sources/ParticleEvents) are simulated with PreTriggerMode EveryEventWithHits, which
+# keeps events with hits only in the BGO shields, and the .sim.gz file is the product
+# (<products_dir>/ACS/<class>/). With particle_germanium: true, each event is also
+# simulated with the standard trigger criteria (full Compton chain, in
+# <sim_root>/<class>_Ge/), so it is in the germanium data too.
 particle_germanium: false
 
 # Optional: rename library categories to simulation class directories,

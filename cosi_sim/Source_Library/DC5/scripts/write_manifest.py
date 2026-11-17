@@ -171,7 +171,7 @@ T0 = grbdraw["orientation_start"]
 for r in csv.DictReader(open(os.path.join(ROOT, "sources", "ParticleEvents", "events.csv")), delimiter="\t"):
     day = (float(r["Start time (s)"]) - T0) / 86400 + 1
     rows.append(("particle event (new)", r["Event"], "DC5/sources/ParticleEvents/" + r["Event"],
-                 f"{r['Class']}, day {day:.2f}, {r['Lightcurve duration (s)']} s: simulate in acs mode (ACS, BGO-readout geometry) "
+                 f"{r['Class']}, day {day:.2f}, {r['Lightcurve duration (s)']} s: simulate in acs mode (ACS, BGO-only events kept) "
                  "and, with particle_germanium: true, in the Compton data"))
 
 srcs = [r[2] for r in rows if r[0] not in ("removed",) and r[2].startswith("DC")]

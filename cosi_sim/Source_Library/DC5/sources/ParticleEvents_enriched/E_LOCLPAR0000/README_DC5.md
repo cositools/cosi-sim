@@ -24,7 +24,7 @@ All directions are in the detector frame (no `Orientation` line), built for the 
 
 ## Simulation
 
-The automation runs it in `acs` mode: one Cosima run with the BGO-readout geometry (`bgo_geometry_file`), whose `.sim.gz` file is the input for the ACS light curves. With `particle_germanium: true` it is also simulated with the standard geometry through the full Compton chain.
+The automation runs it in `acs` mode: one Cosima run with `PreTriggerMode EveryEventWithHits`, which keeps events with hits only in the BGO shields; its `.sim.gz` file is the input for the ACS light curves. With `particle_germanium: true` it is also simulated with the standard trigger criteria through the full Compton chain.
 
 The light curve is stored in times relative to **t_ref = 1835494784.0** (`*_lightcurve_shifted.dat`; the original with absolute times is kept), with `*_cut_normed.ori`, the orientation rows covering the event in t − t_ref; see `sim_time_reference.txt`. The automation adds t_ref back to the simulated times.
 

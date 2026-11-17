@@ -26,8 +26,9 @@ Modes (chosen automatically):
     grb   source under a GRBs/ category: one run with the time-shifted (normed)
           orientation file in the source directory.
     acs   source under a ParticleEvents* category (particle events for the ACS): one run
-          as for grb, with the BGO-readout geometry (config bgo_geometry_file) and without
-          revan; the .sim.gz file is the product (copied to <products_dir>/ACS/<class>/).
+          as for grb, with PreTriggerMode EveryEventWithHits in the Cosima source file (keeps
+          events with hits only in the BGO shields) and without revan; the .sim.gz file is
+          the product (copied to <products_dir>/ACS/<class>/).
           With particle_germanium: true in the config, each such source is also set up
           in grb mode with the standard geometry in <sim_root>/<class>_Ge/<name>, so the
           event is in the Compton (germanium) data as well.
@@ -106,8 +107,10 @@ def load_config(path):
     cfg.setdefault("grb_output_label", "{source}_unbinned_data_filtered")
     cfg.setdefault("grb_orientation_file", None)
     cfg.setdefault("grb_time_reference", None)
-    cfg.setdefault("bgo_geometry_file", None)
     cfg.setdefault("particle_germanium", False)
+    if cfg.get("bgo_geometry_file"):
+        print("NOTE: bgo_geometry_file is no longer used: acs runs use the geometry of the inputs template "
+              "and keep BGO-only events with PreTriggerMode %s." % ACS_PRE_TRIGGER_MODE)
     cfg.setdefault("class_map", {})
     cfg["class_map"] = cfg["class_map"] or {}
     cfg.setdefault("orchestrator_python", "python3")
@@ -115,8 +118,7 @@ def load_config(path):
     slurm.update(cfg.get("slurm") or {})
     cfg["slurm"] = slurm
     for key in ["sim_root", "products_dir", "inputs_template", "cosipy_template", "megalib_env",
-                "cosipy_env", "revan_geometry", "overflow_filter", "grb_orientation_file",
-                "bgo_geometry_file"]:
+                "cosipy_env", "revan_geometry", "overflow_filter", "grb_orientation_file"]:
         if cfg.get(key):
             cfg[key] = os.path.abspath(os.path.expanduser(cfg[key]))
     return cfg
@@ -369,7 +371,10 @@ def source_env(env_script):
     return "cd %s\nsource %s\n" % (env_dir, env_file)
 
 
-def run_sims_py(cfg, t_ref, file_name, chunk_sources=False, revan=True):
+ACS_PRE_TRIGGER_MODE = "EveryEventWithHits"     # acs mode: keep events with hits only in the BGO shields
+
+
+def run_sims_py(cfg, t_ref, file_name, chunk_sources=False, revan=True, pre_trigger_mode=None):
     text = ("# Simulation job (cosima%s), written by setup_sims.py.\n" % (" + revan" if revan else "")
             + "import os, random\n"
             "from cosi_sim.pipeline.simulate import Simulate\n\n"
@@ -380,8 +385,9 @@ def run_sims_py(cfg, t_ref, file_name, chunk_sources=False, revan=True):
     text += ("seed = random.randint(0, 2**31 - 1)\n"
             "with open(\"cosima_seed.txt\", \"w\") as f:\n"
             "    f.write(\"%d\\n\" % seed)\n"
-            "instance.define_sim()\n"
-            "instance.run_cosima(seed=seed)\n")
+            + ("instance.define_sim(pre_trigger_mode=%r)\n" % pre_trigger_mode if pre_trigger_mode
+               else "instance.define_sim()\n")
+            + "instance.run_cosima(seed=seed)\n")
     if t_ref is not None:
         text += ("\n# Shift the sim times back to absolute times (the run used t - t_ref):\n"
                  "instance.modify_sim_times(\"%s.inc1.id1.sim.gz\", %r)\n"
@@ -458,7 +464,8 @@ def write_job_scripts(run_dir, cfg, state):
         + "cd %s\n" % run_dir
         + "%s %s finish %s\n" % (cfg["orchestrator_python"], os.path.join(AUTOMATION_DIR, "run_pipeline.py"), run_dir))
     files["run_sims.py"] = run_sims_py(cfg, state.get("t_ref"), state["file_name"], bool(state.get("lightcurve_chunks")),
-                                       revan=state["mode"] != "acs")
+                                       revan=state["mode"] != "acs",
+                                       pre_trigger_mode=ACS_PRE_TRIGGER_MODE if state["mode"] == "acs" else None)
     if state["mode"] != "acs":
         files["post_megalib.py"] = post_megalib_py(cfg, state["sim_name"])
         files["post_cosipy.py"] = post_cosipy_py(state["output_label"])
@@ -524,9 +531,6 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     name = os.path.basename(src)
     cls = class_name(src, cfg) + class_suffix
     run_dir = os.path.join(cfg["sim_root"], cls, name)
-    if mode == "acs" and not (cfg["bgo_geometry_file"] and os.path.exists(cfg["bgo_geometry_file"])):
-        raise SetupError("acs mode needs bgo_geometry_file (the BGO-readout geometry) in the config; got %s"
-                         % cfg["bgo_geometry_file"])
     num_sims = int(cfg["num_sims"])
 
     if os.path.isfile(os.path.join(run_dir, STATE_FILE)):
@@ -594,8 +598,6 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         keys["orientation_file"] = local_ori
     elif t_ref is not None:
         keys["orientation_file"] = normed_orientation(template["orientation_file"], t_ref, cfg["sim_root"])
-    if mode == "acs":
-        keys["geometry_file"] = cfg["bgo_geometry_file"]
     with open(os.path.join(run_dir, "inputs.yaml"), "w") as f:
         f.write(set_yaml_keys(template_text, keys))
     file_name = template["name"]
@@ -690,7 +692,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     if repeating_time:
         msg += "\n    repeating light curve: time chunks with the full light curve and the unchanged Flux in every chunk"
     if mode == "acs":
-        msg += "\n    BGO-readout geometry %s; no revan; product: the .sim.gz file" % os.path.basename(cfg["bgo_geometry_file"])
+        msg += "\n    PreTriggerMode %s (BGO-only events kept); no revan; product: the .sim.gz file" % ACS_PRE_TRIGGER_MODE
     if t_ref is not None:
         ori_note = "chunk orientation files" if lc_chunks else "orientation %s" % os.path.basename(keys["orientation_file"])
         msg += "\n    times relative to t_ref %r: %s; sim times fixed after cosima" % (t_ref, ori_note)

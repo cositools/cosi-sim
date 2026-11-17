@@ -45,15 +45,15 @@ The mode is chosen from the library source file:
 | `time` | no light curve, or light curves that do not repeat | `num_sims` time chunks, one array task each | no light curve: orientation bins from `cosi_sim.pipeline.make_orientation_bins`, as `run_parallel_sims.py` (+1 chunk if the orientation file does not divide evenly). Light curve: see [Light curves](#light-curves) |
 | `flux` | a repeating light curve (`Lightcurve File true`) | `num_sims` runs of the full exposure | every `.Flux` in the copied source file is divided by `num_sims` (the library file is not changed); choose `time` in the source list for time chunks instead, see [Light curves](#light-curves) |
 | `grb` | source under a `GRBs/` category | one job | uses the `*_normed.ori` in the source directory |
-| `acs` | source under a `ParticleEvents*` category | one job | as `grb`, with the BGO-readout geometry and no revan; see [Particle events](#particle-events-acs) |
+| `acs` | source under a `ParticleEvents*` category | one job | as `grb`, with `PreTriggerMode EveryEventWithHits` and no revan; see [Particle events](#particle-events-acs) |
 
 Each sim runs exactly the steps of `run_sims.py`: `define_sim()`, `run_cosima(seed=random)` (the seed is saved in `cosima_seed.txt`), `run_revan(geo_file=revan_geometry)`.
 
 ## Particle events (ACS)
 
-Particle events (e.g. `DC5/sources/ParticleEvents/`) are for the ACS (BGO shield) light curves. In `acs` mode the event is simulated like a burst, with the geometry `bgo_geometry_file` from the config (`COSISMEX.sim_BGOreading.geo.setup`, which turns the BGO vetoes into triggers so shield-only events are kept). There is no revan, mimrec or cosipy: `finish` checks that the time-fixed `fixed_times.inc1.id1.sim.gz` is complete and copies it to `<products_dir>/ACS/<class>/<event>.inc1.id1.sim.gz`.
+Particle events (e.g. `DC5/sources/ParticleEvents/`) are for the ACS (BGO shield) light curves. In `acs` mode the event is simulated like a burst, with the geometry of the inputs template and `PreTriggerMode EveryEventWithHits` in the Cosima source file, so events with hits only in the BGO shields are kept. There is no revan, mimrec or cosipy: `finish` checks that the time-fixed `fixed_times.inc1.id1.sim.gz` is complete and copies it to `<products_dir>/ACS/<class>/<event>.inc1.id1.sim.gz`.
 
-With `particle_germanium: true` in the config, `setup_sims.py` also sets up every particle event in `grb` mode with the geometry of the inputs template, in `<sim_root>/<class>_Ge/<event>`. That run goes through the full chain (revan, mimrec, cosipy), so the event is in the Compton data as well. The default is `false` (ACS only).
+With `particle_germanium: true` in the config, `setup_sims.py` also sets up every particle event in `grb` mode (standard trigger criteria), in `<sim_root>/<class>_Ge/<event>`. That run goes through the full chain (revan, mimrec, cosipy), so the event is in the Compton data as well. The default is `false` (ACS only).
 
 ## Light curves
 
