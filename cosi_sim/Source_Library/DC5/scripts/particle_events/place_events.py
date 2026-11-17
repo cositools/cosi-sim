@@ -269,9 +269,9 @@ def write_readme(d, r, blind):
             f"event time from the DC5 orientation file: the mean rocking angle and yaw over the event (the yaw changes by "
             f"at most {YAW_TOL_DEG:g}° during it).\n\n"
             f"## Simulation\n\n"
-            f"The automation runs it in `acs` mode: one Cosima run with the BGO-readout geometry (`bgo_geometry_file`), "
-            f"whose `.sim.gz` file is the input for the ACS light curves. With `particle_germanium: true` it is also "
-            f"simulated with the standard geometry through the full Compton chain.\n{sim}\n"
+            f"The automation runs it in `acs` mode: one Cosima run with `PreTriggerMode EveryEventWithHits`, which keeps "
+            f"events with hits only in the BGO shields; its `.sim.gz` file is the input for the ACS light curves. With "
+            f"`particle_germanium: true` it is also simulated with the standard trigger criteria through the full Compton chain.\n{sim}\n"
             f"Population, placement and generation: `DC5/sources/{category}/README.md` and `DC5/scripts/particle_events/`.\n")
     (d / "README_DC5.md").write_text(text)
 
