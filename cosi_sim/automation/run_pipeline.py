@@ -14,6 +14,10 @@ Run the cosi-sim pipeline for sources prepared with setup_sims.py.
 (e.g. the simulation root or a class directory); every directory below it
 that contains an automation.json is used.
 
+<sim_root>/pipeline_status.txt lists every source with its stage and last message,
+problems first. It is rewritten whenever a source changes (submission, each
+post-processing step, errors) and by `status`.
+
 How it works
 ------------
 `submit` sends the simulation job (a SLURM array of cosima + revan runs, or a
@@ -85,6 +89,69 @@ def save_state(run_dir, state):
     os.replace(tmp, path)
 
 
+# Sim roots whose sources changed in this run of the script; their pipeline_status.txt
+# is rewritten when the command ends (main).
+TOUCHED_SIM_ROOTS = set()
+STATUS_FILE = "pipeline_status.txt"
+PROBLEM_STAGES = ("error", "post_not_submitted", "cancelled")       # and every failed_* stage
+ACTIVE_STAGES = ("waiting", "submitted", "resubmitted", "checking", "mimrec", "plots", "cosipy")
+
+
+def sim_root_of(run_dir):
+    return os.path.dirname(os.path.dirname(os.path.abspath(run_dir)))
+
+
+def write_status_file(sim_root):
+    """<sim_root>/pipeline_status.txt: one line per source (stage, last message), problems first.
+
+    Made from the automation.json files only (no sim checks), so it is cheap; rewritten at the
+    end of every run_pipeline.py command that changes a source, including each post-processing job.
+    """
+    rows = []
+    for run_dir in find_run_dirs([sim_root]):
+        try:
+            state = load_state(run_dir)
+        except (OSError, ValueError):
+            continue
+        stage = state.get("stage", "?")
+        group = (0 if stage.startswith("failed") or stage in PROBLEM_STAGES else
+                 1 if stage in ACTIVE_STAGES else 2 if stage == "setup" else 3)
+        name = "%s/%s" % (state.get("class", "?"), state.get("source_name", os.path.basename(run_dir)))
+        history = state.get("history") or ["-  -"]
+        errors = [h for h in history if "ERROR" in h]
+        last = errors[-1] if group == 0 and errors else history[-1]     # for a problem: its error message
+        when, _, message = last.partition("  ")
+        message = message.strip()
+        if message.startswith(name):                                     # submission messages start with the name
+            message = message[len(name):].strip()
+        rows.append((group, name, state.get("mode", "?"), stage, state.get("attempt", 0),
+                     state.get("updated", when), message))
+    rows.sort()
+    counts = {}
+    for r in rows:
+        counts[r[3]] = counts.get(r[3], 0) + 1
+    width = max([len(r[1]) for r in rows] + [6])
+    lines = ["# Simulation status in %s, written %s" % (sim_root, now()),
+             "# %d sources: %s" % (len(rows), ", ".join("%s %d" % kv for kv in sorted(counts.items()))),
+             "# Problems first. Details for a source: run_pipeline.py check <run_dir>; <run_dir>/check_report.txt,",
+             "# logs/ and the history in automation.json. Live sim checks: run_pipeline.py status <sim_root>.",
+             "",
+             "%-*s  %-5s  %-18s  %-7s  %-19s  %s" % (width, "source", "mode", "stage", "resubm.", "updated", "last message")]
+    for group, name, mode, stage, attempt, when, message in rows:
+        lines.append("%-*s  %-5s  %-18s  %-7s  %-19s  %s" % (width, name, mode, stage, attempt, when, message))
+    path = os.path.join(sim_root, STATUS_FILE)
+    with open(path + ".lock", "w") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+        except OSError:
+            pass
+        tmp = "%s.%d.tmp" % (path, os.getpid())
+        with open(tmp, "w") as f:
+            f.write("\n".join(lines) + "\n")
+        os.replace(tmp, path)
+    return path
+
+
 def update_state(run_dir, fn=None, message=None, **fields):
     """Read-modify-write automation.json under a lock.
 
@@ -98,11 +165,13 @@ def update_state(run_dir, fn=None, message=None, **fields):
             pass                      # file system without locking: still read-modify-write
         state = load_state(run_dir)
         state.update(fields)
+        state["updated"] = now()
         if fn:
             fn(state)
         if message:
             log_event(state, message)
         save_state(run_dir, state)
+    TOUCHED_SIM_ROOTS.add(sim_root_of(run_dir))
     return state
 
 
@@ -553,6 +622,7 @@ def cmd_check(args):
 
 def cmd_status(args):
     run_dirs = find_run_dirs(args.targets)
+    TOUCHED_SIM_ROOTS.update(sim_root_of(d) for d in run_dirs)          # refresh pipeline_status.txt
     print("%-42s %-5s %-6s %-11s %-18s %s" % ("source", "mode", "jobs", "sims ok", "stage", "final file"))
     for run_dir in run_dirs:
         state = load_state(run_dir)
@@ -806,6 +876,11 @@ def _finish(args):
 def cmd_finish(args):
     try:
         return _finish(args)
+    except Exception as err:
+        # Record the crash, so the source does not look like it is still running.
+        update_state(os.path.abspath(args.run_dir), stage="error",
+                     message="ERROR: post-processing stopped: %s: %s (see logs/)" % (type(err).__name__, err))
+        raise
     finally:
         # Waiting sources (rolling submission) get any slots freed meanwhile.
         fill_for(load_state(os.path.abspath(args.run_dir)))
@@ -918,7 +993,14 @@ def main(argv=None):
     s.set_defaults(func=cmd_cancel)
 
     args = p.parse_args(argv)
-    return args.func(args) or 0
+    try:
+        return args.func(args) or 0
+    finally:
+        for sim_root in sorted(TOUCHED_SIM_ROOTS):
+            try:
+                write_status_file(sim_root)
+            except OSError as err:
+                print("NOTE: could not write %s: %s" % (os.path.join(sim_root, STATUS_FILE), err))
 
 
 if __name__ == "__main__":
