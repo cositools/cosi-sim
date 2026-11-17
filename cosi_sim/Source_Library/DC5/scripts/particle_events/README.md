@@ -26,7 +26,7 @@ Cosima sources for magnetospheric particle events, from the COSI GRB group, for 
   - Cosima rescales a light curve to unit mean, so each `Flux` (or beam-file intensity) is the mean over its light curve; the peak values are in the comments and the catalog.
   - Placed events have absolute times (the clock of the orientation file); the `*_shifted.dat` copies are in t − t_ref.
 - **Range cuts and detector time constant** are copied from the DC3/DC4 sources.
-- **ACS readout.** Run the sims with `COSISMEX.sim_BGOreading.geo.setup`, which turns the BGO vetoes into triggers so shield-only events are kept (automation: `acs` mode, `bgo_geometry_file`).
+- **ACS readout.** Run the sims with `PreTriggerMode EveryEventWithHits` in the Cosima source file, which keeps events with hits only in the BGO shields (automation: `acs` mode). The pilot (`run_pilot.py`) used `COSISMEX.sim_BGOreading.geo.setup` instead, which turns the BGO vetoes into triggers.
 
 ## Physics
 

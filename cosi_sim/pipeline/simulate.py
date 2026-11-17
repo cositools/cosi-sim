@@ -62,7 +62,7 @@ class Simulate:
         self.include_transmission_prob = inputs["include_transmission_prob"]
         self.transmission_prob_file = inputs["transmission_prob_file"]
 
-    def define_sim(self, external_src=False):
+    def define_sim(self, external_src=False, pre_trigger_mode=None):
 
         """
         This function makes the main source file for the simulation. 
@@ -74,6 +74,9 @@ class Simulate:
         Optional input: 
         external_src: Option to use source outside of source library. 
             - True or False; default is False.
+        pre_trigger_mode: Cosima PreTriggerMode written to the source file, e.g.
+            EveryEventWithHits to also keep events that do not pass the trigger criteria
+            (hits only in the BGO shields, for the ACS); default None (Cosima default).
         """
 
         # Make print statement:
@@ -125,6 +128,8 @@ class Simulate:
             f.write("PhysicsListEM                        LivermorePol\n\n")
             f.write("#Output formats\n")
             f.write("StoreSimulationInfo                  init-only\n\n")
+            if pre_trigger_mode:
+                f.write("PreTriggerMode                       %s\n\n" % pre_trigger_mode)
             f.write("#Define run:\n")
             f.write("Run DataChallenge\n")
             f.write("DataChallenge.FileName               %s\n" %self.name)

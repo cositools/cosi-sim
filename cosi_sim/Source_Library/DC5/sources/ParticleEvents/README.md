@@ -43,9 +43,9 @@ The detector frame is MEGAlib's: right-handed, with +y = z × x, which points we
 
 The events are in `DC5_mock_dataset_src_list.txt`. The automation (`cosi_sim/automation`) runs sources under `ParticleEvents*` in `acs` mode:
 
-- One Cosima run per event with the BGO-readout geometry (`bgo_geometry_file` in the pipeline config, `COSISMEX.sim_BGOreading.geo.setup`).
+- One Cosima run per event with `PreTriggerMode EveryEventWithHits`, so events with hits only in the BGO shields are kept (standard geometry).
 - Its `.sim.gz` file, with absolute times, goes to `<products_dir>/ACS/ParticleEvents/`. It is the input for the ACS light curves.
-- With `particle_germanium: true` in the pipeline config, each event is also simulated with the standard geometry through the full Compton chain, so it is in the germanium data too. For DC5 this is on.
+- With `particle_germanium: true` in the pipeline config, each event is also simulated with the standard trigger criteria through the full Compton chain, so it is in the germanium data too. For DC5 this is on.
 
 ## Regenerating
 
