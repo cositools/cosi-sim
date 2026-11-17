@@ -747,6 +747,9 @@ def main(argv=None):
     print("%d of %d runs %s." % (len(runs) - len(failed), len(runs),
                                  "checked" if args.dry_run else "set up"))
     if not args.dry_run and len(failed) < len(runs):
+        sys.path.insert(0, AUTOMATION_DIR)
+        from run_pipeline import write_status_file
+        print("Status of all sources: %s" % write_status_file(cfg["sim_root"]))
         print("Submit with:  python %s submit %s"
               % (os.path.join(AUTOMATION_DIR, "run_pipeline.py"), cfg["sim_root"]))
     return 1 if failed else 0

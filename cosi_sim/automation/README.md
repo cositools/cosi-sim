@@ -21,8 +21,11 @@ python setup_sims.py -c my_config.yaml --list sources.txt
 
 # 2. Submit and follow:
 python run_pipeline.py submit /path/to/simulations
-python run_pipeline.py status /path/to/simulations
+cat /path/to/simulations/pipeline_status.txt         # every source: stage, last message
+python run_pipeline.py status /path/to/simulations   # with live checks of the sim outputs
 ```
+
+`<sim_root>/pipeline_status.txt` has one line per source with its mode, stage, number of resubmissions, the time of the last change and the last message. Sources with a problem come first (`failed_*` stages, `error` when a post-processing job stopped, `post_not_submitted`, `cancelled`), then the ones that are running or waiting, then the ones only set up, then `done`. The file is rewritten by `setup_sims.py`, by every `run_pipeline.py` command that changes a source and by each post-processing job, so it is always current (a job that SLURM kills, e.g. at its time limit, cannot record that; its source stays at the last stage it reached). For a source with a problem, see `<run_dir>/check_report.txt`, `logs/` and the history in `automation.json`.
 
 `sources.txt` has one library path per line; `#` starts a comment, and an optional second word forces the mode:
 
