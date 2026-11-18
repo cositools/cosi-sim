@@ -1,0 +1,20 @@
+# Pick random spatial file. Read all positions and fluxes. If 7 SNRs are present, read 7 random spectrum files and assign randomly. Add Cas A separately from DC4 simulations. 
+
+# Spatial: Position given in galactic coordinates (l=longitude, b=latitude). Flux given in ph cm^-2 s^-1 keV^-1. Fluxes range from 1e-6 to 3.1e-4
+# Popsyn generates 8 to 9 SNRs (5 known SNRs + 3 to 4 randomly distributed SNRs) 
+# Spectra: Iterate over spectrum{i}.dat where i=1 to 48
+
+DataChallenge.Source		    	SNR1
+SNR1.ParticleType               	1
+SNR1.Beam	                        FarFieldPointSource 0 0
+SNR1.Orientation 	                Galactic Fixed {b} {l}
+SNR1.Spectrum            	        File {spectrum.dat}
+SNR1.Flux                      		{flux}
+
+#...
+# DataChallenge.Source			SNR2
+#					Use random spectrum.dat
+
+#...
+#					SNRn
+#					Use random spectrum.dat

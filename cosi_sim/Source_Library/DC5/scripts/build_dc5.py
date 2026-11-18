@@ -291,11 +291,7 @@ f1 = map_flux(dst)
 rec("60Fe_NE2001", status="modified", origin="DC3/sources/Fe60/60Fe_NE2001",
     change=f"map intensity x0.65 (60Fe mass 3.5 -> 2.3 Msun); total flux (both lines) {f0:.3e} -> {f1:.3e} ph/cm2/s")
 
-# Tycho 44Ti: flux -> 1.0x NuSTAR upper limit
-copy_dir("DC4/sources/Nucleosynthesis/Tycho", "Nucleosynthesis", "Tycho")
-fl = scale_flux(srcfile("Nucleosynthesis", "Tycho"), 1.0 / 1.6)
-rec("Tycho", status="modified", origin="DC4/sources/Nucleosynthesis/Tycho",
-    change=f"flux {fl[0][1]:.3g} -> {fl[0][2]:.3g} ph/cm2/s (1.0x instead of 1.6x the Lopez et al. 2015 upper limit)")
+# Tycho (drawn as modified) is in the 44Ti SNR population instead (ti44/build_ti44_population.py).
 
 # Upper Sco: 60Fe lines x0.5
 copy_dir("DC4/sources/Nucleosynthesis/USco", "Nucleosynthesis", "USco")
@@ -374,11 +370,8 @@ def rand_highlat(bmin):
     l = rng.uniform(0, 360); b = rng.choice([-1, 1]) * np.degrees(np.arcsin(rng.uniform(np.sin(np.radians(bmin)), 1)))
     return round(l, 3), round(b, 3)
 
+# (Ti44_hidden_SNR, replaced by the 44Ti SNR population; its position draw is kept so the later positions are unchanged)
 l, b = rand_disk(60, 1.0)
-d = newdir("Nucleosynthesis", "Ti44_hidden_SNR")
-write(srcfile("Nucleosynthesis", "Ti44_hidden_SNR"), HEADER + point_source("Ti44_hidden_SNR", l, b, "Gaussian 1157.02 15.4 3", 1.2e-5))
-rec("Ti44_hidden_SNR", status="new (arbitrary)", l=l, b=b, flux=1.2e-5,
-    change="unknown young, dust-obscured SNR: point-like 44Ti line, 4000 km/s broadening, 1.2e-5 ph/cm2/s (comparable to Tycho/Kepler models)")
 
 l, b = rand_disk(90, 5.0)
 d = newdir("Nucleosynthesis", "nova_one_22Na")

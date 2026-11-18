@@ -142,11 +142,6 @@
   "origin": "DC3/sources/Fe60/60Fe_NE2001",
   "change": "map intensity x0.65 (60Fe mass 3.5 -> 2.3 Msun); total flux (both lines) 2.997e-04 -> 1.948e-04 ph/cm2/s"
  },
- "Tycho": {
-  "status": "modified",
-  "origin": "DC4/sources/Nucleosynthesis/Tycho",
-  "change": "flux 1.6e-05 -> 1e-05 ph/cm2/s (1.0x instead of 1.6x the Lopez et al. 2015 upper limit)"
- },
  "USco": {
   "status": "modified",
   "origin": "DC4/sources/Nucleosynthesis/USco",
@@ -201,13 +196,6 @@
   "b": -0.6,
   "flux": 1.5e-05,
   "change": "1809 keV line, 2 deg Gaussian at Trumpler 16, flux 1.5e-5 ph/cm2/s (Voss et al. 2012), width as DC3 Cygnus model"
- },
- "Ti44_hidden_SNR": {
-  "status": "new (arbitrary)",
-  "l": 300.398,
-  "b": -0.163,
-  "flux": 1.2e-05,
-  "change": "unknown young, dust-obscured SNR: point-like 44Ti line, 4000 km/s broadening, 1.2e-5 ph/cm2/s (comparable to Tycho/Kepler models)"
  },
  "nova_one_22Na": {
   "status": "new (arbitrary)",
@@ -309,5 +297,11 @@
     "state": "on-state"
    }
   }
+ },
+ "Ti44_SNR_population": {
+  "status": "new (population synthesis)",
+  "skip_readme": true,
+  "flux": 0.0005764525207881488,
+  "change": "44Ti SNR population (A. Anaya): map2.csv, 9 SNRs (the 5 known young SNRs with population-synthesis fluxes and 4 at random positions), each with a random 1157 keV line profile; total 0.000576 ph/cm2/s. Replaces the DC4 SN 1987A, Tycho, Kepler, Vela Jr and G1.9+0.3 models"
  }
 }

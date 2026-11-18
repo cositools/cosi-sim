@@ -35,8 +35,8 @@ grb_removed = [r for r in rows if r[0] == "removed" and r[1].startswith(("GRB_MG
 src_removed = [r for r in rows if r[0] == "removed" and r not in grb_removed]
 
 n_reused = count("reused") + count("reused (bug-fixed)")
-n_mod, n_rem = count("modified"), len(src_removed)
-n_non = n_reused + n_mod + n_rem
+n_mod, n_rem, n_repl = count("modified"), len(src_removed), count("replaced")
+n_non = n_reused + n_mod + n_rem + n_repl
 n_new = len(new)
 
 g_rows = []
@@ -57,6 +57,11 @@ pf4 = np.sort([g["dc4"]["pol"][0] for g in gd["grbs"].values()])
 pf5 = np.sort([g["dc5"]["pol"][0] for g in gd["grbs"].values()])
 days5 = [g["dc5"]["day"] for g in gd["grbs"].values()]
 
+ti = json.load(open(os.path.join(ROOT, "DC5_ti44_draw.json")))
+ti_rows = "\n".join(f"| {r['snr']} | {r['l']:.2f} | {r['b']:.2f} | {r['flux']:.3g} | `{r['spectrum']}` | {r['centroid_keV']:.1f} |"
+                    for r in ti["snrs"])
+ti_replaced = ", ".join(r[1] for r in rows if r[0] == "replaced")
+
 pe_dir = os.path.join(ROOT, "sources", "ParticleEvents")
 pe = list(csv.DictReader(open(os.path.join(pe_dir, "events.csv")), delimiter="\t"))
 pe_place = json.load(open(os.path.join(pe_dir, "placement.json")))
@@ -76,20 +81,21 @@ The DC5 mock dataset starts from the DC4 mock dataset (3 months, same orbit, ori
 | Reused (same source files; {count('reused (bug-fixed)')} of these carry only a bug fix: {count('reused (bug-fixed)') - n_lc_fix} for the 511 keV map, {n_lc_fix} for the light-curve Flux keyword) | {n_reused} | {n_reused/n_non:.0%} |
 | Modified | {n_mod} | {n_mod/n_non:.0%} |
 | Removed | {n_rem} | {n_rem/n_non:.0%} |
+| Replaced by the 44Ti SNR population (Request 14) | {n_repl} | {n_repl/n_non:.0%} |
 | **New** (relative to the ~71 DC4 components) | {n_new} | {n_new/71:.0%} |
 | GRBs (`GRB_bn*`): new time, spectrum and polarization | {count('GRB (modified)')} | all |
 | Magnetar bursts (`MGF*`, `MgtBurst*`): unchanged, half kept | {count('magnetar burst (unchanged)')} kept, {len(grb_removed)} removed | |
 | Particle events for the ACS (`ParticleEvents/`): new | {len(pe)} | |
 
-Percentages refer to the non-GRB DC4 components. DC5 therefore has {n_non - n_rem + n_new} non-GRB components, {count('GRB (modified)')} GRBs and {count('magnetar burst (unchanged)')} magnetar bursts.
+Percentages refer to the non-GRB DC4 components. DC5 therefore has {n_non - n_rem - n_repl + n_new} non-GRB components, {count('GRB (modified)')} GRBs and {count('magnetar burst (unchanged)')} magnetar bursts.
 
 **How the split was made.** Components that belong to one physical source (e.g. line + continuum maps, flare + quiescent states, the three nova components) were grouped, and the groups were shuffled with a random seed ({draw['seed']}, recorded in `DC5_draw.json`). Groups were assigned to *removed* (≈10% of files, only from sources that are not well-known detections: the Crab, Cyg X-1/X-3, Cen A, NGC 4151, the 511 keV bulge/disk, Galactic 26Al/60Fe, Cas A, etc. were protected), then *modified* (≈40%), with the rest *reused*. The modification applied to each drawn source was then chosen by hand from the literature (alternative library model where one exists, otherwise a simple flux/width/state change within the published range). Positions of the arbitrary new sources are drawn from the same seed. The GRB draw uses its own seed ({gd['seed']}, `DC5_grb_draw.json`). Running `scripts/draw_dc5.py` or `scripts/draw_dc5_grbs.py` without a seed gives a different realisation.
 
 Files:
-- `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim ({sum(1 for r in rows if r[0] != 'removed' and r[2].startswith('DC')) + sum(r[2].count(',') for r in rows if r[0] != 'removed' and r[2].startswith('DC'))} entries; checked with `Setup.setup_srcs()`).
+- `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim ({sum(1 for r in rows if r[0] not in ('removed', 'replaced') and r[2].startswith('DC')) + sum(r[2].count(',') for r in rows if r[0] not in ('removed', 'replaced') and r[2].startswith('DC'))} entries; checked with `Setup.setup_srcs()`).
 - `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do (simulate / re-simulate / reuse the existing DC3/DC4 event file).
-- `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json` — machine-readable record of the draws and of every change.
-- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `fix_lightcurve_fluxes.py` (light-curve Flux keywords; writes `lc_flux_check.json`), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate), `particle_events/` (particle events for the ACS: the GRB group's generator with the frame fix, `place_events.py`, the ACS pilot). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → fix_lightcurve_fluxes → `python -m cosi_sim.pipeline.time_reference --ori <9-column ori> DC5/sources/Galactic/{{1RXSJ170849,magnetar2,PSRB1509}}` (repeating light curves in t − t_ref) → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → particle_events/place_events.py (blind set, then enriched set; commands in `sources/ParticleEvents/README.md`) → write_manifest → write_readmes → write_dc5_readme.
+- `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json`, `DC5_ti44_draw.json` — machine-readable record of the draws and of every change.
+- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `fix_lightcurve_fluxes.py` (light-curve Flux keywords; writes `lc_flux_check.json`), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate), `particle_events/` (particle events for the ACS: the GRB group's generator with the frame fix, `place_events.py`, the ACS pilot), `ti44/` (44Ti SNR population: A. Anaya's population-synthesis maps and spectra, `build_ti44_population.py`). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → fix_lightcurve_fluxes → `python -m cosi_sim.pipeline.time_reference --ori <9-column ori> DC5/sources/Galactic/{{1RXSJ170849,magnetar2,PSRB1509}}` (repeating light curves in t − t_ref) → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → ti44/build_ti44_population → particle_events/place_events.py (blind set, then enriched set; commands in `sources/ParticleEvents/README.md`) → write_manifest → write_readmes → write_dc5_readme.
 - `sources/` — one directory per modified, bug-fixed or new source, each with a `README_DC5.md` describing the model, the change, and references.
 
 ## Reused sources (same source files)
@@ -112,6 +118,16 @@ Files:
 | Name | Origin | Position | Model |
 |---|---|---|---|
 {chr(10).join(new)}
+
+## 44Ti SNR population (Request 14)
+
+The 44Ti supernova remnants come from a population synthesis by A. Anaya (`DC5/sources/Nucleosynthesis/Ti44_SNR_population`, one point-source component per SNR). One of the 19 population-synthesis maps was drawn at random (**`{ti['map']}`**, seed {ti['seed']}; `DC5_ti44_draw.json`). Its {ti['n_snr']} SNRs are the 5 known young SNRs at their real positions with population-synthesis fluxes and {ti['n_snr'] - 5} SNRs at random positions; some may be below the detection threshold. Each SNR has a different 1157 keV line profile, drawn from the 48 population-synthesis spectra; Flux is the line flux over the spectrum range (1110–1205 keV). Total: {ti['total_flux']:.3g} ph/cm²/s.
+
+| SNR | l (deg) | b (deg) | Flux (ph/cm²/s) | Spectrum | Centroid (keV) |
+|---|---|---|---|---|---|
+{ti_rows}
+
+The DC4 models of {ti_replaced} are not used (the known SNRs other than Cas A were below the detection threshold in the DC4 analysis). Cas A is the DC4 model, reused (`CasAG16distribution`). The template files and the script are in `scripts/ti44/`.
 
 ## Dark matter (Request 6)
 
