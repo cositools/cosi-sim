@@ -4,23 +4,24 @@ The DC5 mock dataset starts from the DC4 mock dataset (3 months, same orbit, ori
 
 | | DC4 components | Fraction |
 |---|---|---|
-| Reused (same source files; 8 of these carry only a bug fix: 2 for the 511 keV map, 6 for the light-curve Flux keyword) | 30 | 57% |
-| Modified | 18 | 34% |
-| Removed | 5 | 9% |
+| Reused (same source files; 8 of these carry only a bug fix: 2 for the 511 keV map, 6 for the light-curve Flux keyword) | 28 | 53% |
+| Modified | 17 | 32% |
+| Removed | 3 | 6% |
+| Replaced by the 44Ti SNR population (Request 14) | 5 | 9% |
 | **New** (relative to the ~71 DC4 components) | 18 | 25% |
 | GRBs (`GRB_bn*`): new time, spectrum and polarization | 11 | all |
 | Magnetar bursts (`MGF*`, `MgtBurst*`): unchanged, half kept | 4 kept, 3 removed | |
 | Particle events for the ACS (`ParticleEvents/`): new | 6 | |
 
-Percentages refer to the non-GRB DC4 components. DC5 therefore has 66 non-GRB components, 11 GRBs and 4 magnetar bursts.
+Percentages refer to the non-GRB DC4 components. DC5 therefore has 63 non-GRB components, 11 GRBs and 4 magnetar bursts.
 
 **How the split was made.** Components that belong to one physical source (e.g. line + continuum maps, flare + quiescent states, the three nova components) were grouped, and the groups were shuffled with a random seed (3891814211, recorded in `DC5_draw.json`). Groups were assigned to *removed* (≈10% of files, only from sources that are not well-known detections: the Crab, Cyg X-1/X-3, Cen A, NGC 4151, the 511 keV bulge/disk, Galactic 26Al/60Fe, Cas A, etc. were protected), then *modified* (≈40%), with the rest *reused*. The modification applied to each drawn source was then chosen by hand from the literature (alternative library model where one exists, otherwise a simple flux/width/state change within the published range). Positions of the arbitrary new sources are drawn from the same seed. The GRB draw uses its own seed (3662968627, `DC5_grb_draw.json`). Running `scripts/draw_dc5.py` or `scripts/draw_dc5_grbs.py` without a seed gives a different realisation.
 
 Files:
-- `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (86 entries; checked with `Setup.setup_srcs()`).
+- `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (83 entries; checked with `Setup.setup_srcs()`).
 - `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do (simulate / re-simulate / reuse the existing DC3/DC4 event file).
-- `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json` — machine-readable record of the draws and of every change.
-- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `fix_lightcurve_fluxes.py` (light-curve Flux keywords; writes `lc_flux_check.json`), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate), `particle_events/` (particle events for the ACS: the GRB group's generator with the frame fix, `place_events.py`, the ACS pilot). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → fix_lightcurve_fluxes → `python -m cosi_sim.pipeline.time_reference --ori <9-column ori> DC5/sources/Galactic/{1RXSJ170849,magnetar2,PSRB1509}` (repeating light curves in t − t_ref) → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → particle_events/place_events.py (blind set, then enriched set; commands in `sources/ParticleEvents/README.md`) → write_manifest → write_readmes → write_dc5_readme.
+- `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json`, `DC5_ti44_draw.json` — machine-readable record of the draws and of every change.
+- `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `fix_lightcurve_fluxes.py` (light-curve Flux keywords; writes `lc_flux_check.json`), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate), `particle_events/` (particle events for the ACS: the GRB group's generator with the frame fix, `place_events.py`, the ACS pilot), `ti44/` (44Ti SNR population: A. Anaya's population-synthesis maps and spectra, `build_ti44_population.py`). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → fix_lightcurve_fluxes → `python -m cosi_sim.pipeline.time_reference --ori <9-column ori> DC5/sources/Galactic/{1RXSJ170849,magnetar2,PSRB1509}` (repeating light curves in t − t_ref) → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → ti44/build_ti44_population → particle_events/place_events.py (blind set, then enriched set; commands in `sources/ParticleEvents/README.md`) → write_manifest → write_readmes → write_dc5_readme.
 - `sources/` — one directory per modified, bug-fixed or new source, each with a `README_DC5.md` describing the model, the change, and references.
 
 ## Reused sources (same source files)
@@ -30,8 +31,6 @@ Files:
 | Positrons_Central_Source | `DC4/sources/511/Positrons_Central_Source` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/Positrons_Central_Source_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | positrons_thin_disk_cont | `DC4/sources/511/Positrons_Thin_Disk_cont` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/positrons_thin_disk_cont_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | positrons_thin_disk_line | `DC4/sources/511/Positrons_Thin_Disk_line` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/positrons_thin_disk_line_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| SN1987A | `DC4/sources/Nucleosynthesis/SN1987A` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/SN1987A_unbinned_data_filtered_with_SAAcut.fits.gz |
-| VelaJr_44Ti | `DC4/sources/Nucleosynthesis/VelaJr_44Ti` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/VelaJr_44Ti_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | Virgo_511 | `(no library file)` | reuse DC4 event file COSI-SMEX/DC4/Data/Sources/Virgo_511_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | NGC_1068 | `DC4/sources/Extragalactic/NGC_1068` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/NGC_1068_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | 4C71p07 | `DC4/sources/Extragalactic/4C71p07` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/4C71p07_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
@@ -62,7 +61,6 @@ Files:
 |---|---|---|
 | cygX3 | `DC5/sources/Galactic/cygX3` | transition state replaced by the hypersoft state (DC3 Cangemi et al. 2021 models) for the full 3 months at nominal flux 0.001233 ph/cm2/s |
 | positron_annihilation_in_flight | `DC5/sources/511/Positrons_In_Flight_Annihilation` | Orientation 'Galactic Fixed -1.4 -0.2' -> 'Galactic Fixed -0.2 -1.4' (bug fix: MEGAlib order is b, l); flux 0.00031 -> 0.000372 ph/cm2/s (x1.2) |
-| Tycho | `DC5/sources/Nucleosynthesis/Tycho` | flux 1.6e-05 -> 1e-05 ph/cm2/s (1.0x instead of 1.6x the Lopez et al. 2015 upper limit) |
 | USco | `DC5/sources/Nucleosynthesis/USco` | 60Fe line fluxes 4.5e-05 -> 2.25e-05 ph/cm2/s each (x0.5; 60Fe/26Al per line 0.75 -> 0.375); 26Al unchanged |
 | LMC_511 | `DC5/sources/511/LMC_511` | DC4 LMC_511 model replaced by the alternative DC3 LMC_Gaussian_511 definition, with flux x2 relative to DC3 (4.27e-06 -> 8.54e-06 ph/cm2/s; still below the SPI 2-sigma limit 3.6e-5, Siegert et al. 2016) |
 | M31_511 | `DC5/sources/511/M31_511` | DC4 M31_511 model replaced by the alternative DC3 M31_Gaussian_511 definition, with the Gaussian width reduced 1.0 -> 0.5 deg (emission concentrated in the M31 bulge); DC3 flux 2.13e-7 ph/cm2/s |
@@ -82,8 +80,6 @@ Files:
 ## Removed sources
 | DC4 mock component |
 |---|
-| GS1903 |
-| Kepler |
 | OrEr |
 | PSRJ1846 |
 | MAXIJ1348 |
@@ -99,7 +95,7 @@ Files:
 | GX339m4_hard | (literature) | l=338.9391, b=-4.3265 | black-hole LMXB in a moderately bright hard state for the full 3 months: Gamma=1.6, Ecut=200 keV, F(20-200 keV)=1.5e-9 erg/cm2/s; 5% polarisation |
 | 4U0142p61 | (literature) | l=129.384, b=-0.4307 | log-parabola, local index 0.93 at 50 keV with the nuFnu peak at 228 keV (beta=0.353); F(20-229 keV)=1.5e-10 erg/cm2/s (den Hartog et al. 2008); steady (no pulsation light curve) |
 | 26Al_Carina_Region | (literature) | l=287.6, b=-0.6 | 1809 keV line, 2 deg Gaussian at Trumpler 16, flux 1.5e-5 ph/cm2/s (Voss et al. 2012), width as DC3 Cygnus model |
-| Ti44_hidden_SNR | (arbitrary) | l=300.398, b=-0.163 | unknown young, dust-obscured SNR: point-like 44Ti line, 4000 km/s broadening, 1.2e-5 ph/cm2/s (comparable to Tycho/Kepler models) |
+| Ti44_SNR_population | (population synthesis) |  | 44Ti SNR population (A. Anaya): map2.csv, 9 SNRs (the 5 known young SNRs with population-synthesis fluxes and 4 at random positions), each with a random 1157 keV line profile; total 0.000576 ph/cm2/s. Replaces the DC4 SN 1987A, Tycho, Kepler, Vela Jr and G1.9+0.3 models |
 | nova_one_22Na | (arbitrary) | l=71.159, b=4.096 | ONe nova at 1.5 kpc: 22Na 1275 keV line (~20 keV FWHM), ~1e-5 ph/cm2/s at 1 kpc (Hernanz 2014) scaled to 1.5 kpc; constant (22Na lifetime 3.75 yr) |
 | Positrons_Point_Source | (arbitrary) | l=55.505, b=1.707 | steady point-like 511 keV line (e.g. a microquasar or pulsar positron source), 2.5e-5 ph/cm2/s, same line width as the DC4 central source |
 | BHXB_hard_transient | (arbitrary) | l=15.756, b=0.966 | new black-hole X-ray binary in a long hard-state outburst: Gamma=1.6, Ecut=150 keV, 1.5e-3 ph/cm2/s (about 1/20 of the Crab in 100 keV-10 MeV) |
@@ -109,6 +105,24 @@ Files:
 | Seyfert_new | (arbitrary) | l=31.746, b=-21.833 | Seyfert galaxy with Gamma=1.8, Ecut=300 keV, 3e-4 ph/cm2/s (a few times fainter than NGC 4151) |
 | 26Al_new_region | (arbitrary) | l=316.177, b=-0.02 | additional massive-star region: 4 deg Gaussian 1809 keV source, 1.5e-5 ph/cm2/s (similar to Carina / ~40% of Cygnus) |
 | Annihilation_eeg_NFW | (dark matter) |  | annihilating DM, chi chi -> e+ e- gamma (FSR), NFW: m = 17.3 MeV, <sigma v> = 3.9e-28 cm3/s (DC4: 30 MeV, 1e-25); 5.9e-4 ph/cm2/s in 0.1-10 MeV, ~5 sigma expected in 3 months |
+
+## 44Ti SNR population (Request 14)
+
+The 44Ti supernova remnants come from a population synthesis by A. Anaya (`DC5/sources/Nucleosynthesis/Ti44_SNR_population`, one point-source component per SNR). One of the 19 population-synthesis maps was drawn at random (**`map2.csv`**, seed 3891814211; `DC5_ti44_draw.json`). Its 9 SNRs are the 5 known young SNRs at their real positions with population-synthesis fluxes and 4 SNRs at random positions; some may be below the detection threshold. Each SNR has a different 1157 keV line profile, drawn from the 48 population-synthesis spectra; Flux is the line flux over the spectrum range (1110–1205 keV). Total: 0.000576 ph/cm²/s.
+
+| SNR | l (deg) | b (deg) | Flux (ph/cm²/s) | Spectrum | Centroid (keV) |
+|---|---|---|---|---|---|
+| SN 1987A | 279.70 | -31.90 | 0.000246 | `Ti44_spectrum32.dat` | 1152.5 |
+| Tycho | 120.10 | 1.40 | 5.78e-06 | `Ti44_spectrum17.dat` | 1155.9 |
+| Kepler | 4.50 | 6.80 | 4.23e-06 | `Ti44_spectrum31.dat` | 1150.1 |
+| Vela Jr | 266.30 | -1.20 | 2.37e-06 | `Ti44_spectrum43.dat` | 1163.9 |
+| G1.9+0.3 | 1.90 | 0.30 | 5e-06 | `Ti44_spectrum15.dat` | 1157.2 |
+| population-synthesis SNR 1 | 42.37 | -2.71 | 2.66e-06 | `Ti44_spectrum46.dat` | 1152.4 |
+| population-synthesis SNR 2 | 358.26 | 3.89 | 5.37e-05 | `Ti44_spectrum39.dat` | 1157.2 |
+| population-synthesis SNR 3 | 20.24 | -5.32 | 8.76e-05 | `Ti44_spectrum47.dat` | 1155.6 |
+| population-synthesis SNR 4 | 331.69 | 6.70 | 0.00017 | `Ti44_spectrum21.dat` | 1157.2 |
+
+The DC4 models of GS1903, Kepler, SN1987A, Tycho, VelaJr_44Ti are not used (the known SNRs other than Cas A were below the detection threshold in the DC4 analysis). Cas A is the DC4 model, reused (`CasAG16distribution`). The template files and the script are in `scripts/ti44/`.
 
 ## Dark matter (Request 6)
 

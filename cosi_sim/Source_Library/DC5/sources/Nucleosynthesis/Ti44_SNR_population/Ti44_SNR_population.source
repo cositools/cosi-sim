@@ -1,0 +1,91 @@
+# Define DC5 sim settings (optimizes sim time):
+DefaultRangeCut 0.005
+Region Spacecraft
+Spacecraft.Volume SCbody
+Spacecraft.RangeCut 1.
+
+Region Pipebody
+Pipebody.Volume PIPbody
+Pipebody.RangeCut 1.
+
+# SN 1987A
+DataChallenge.Source          Ti44_SN1987A
+Ti44_SN1987A.ParticleType               1
+Ti44_SN1987A.Beam                       FarFieldPointSource 0 0
+Ti44_SN1987A.Orientation                Galactic Fixed -31.900000 279.700000
+Ti44_SN1987A.Spectrum                   File Ti44_spectrum32.dat
+Ti44_SN1987A.Flux                       0.000245522
+Ti44_SN1987A.EarthOccultation false
+
+# Tycho
+DataChallenge.Source          Ti44_Tycho
+Ti44_Tycho.ParticleType               1
+Ti44_Tycho.Beam                       FarFieldPointSource 0 0
+Ti44_Tycho.Orientation                Galactic Fixed 1.400000 120.100000
+Ti44_Tycho.Spectrum                   File Ti44_spectrum17.dat
+Ti44_Tycho.Flux                       5.77992e-06
+Ti44_Tycho.EarthOccultation false
+
+# Kepler
+DataChallenge.Source          Ti44_Kepler
+Ti44_Kepler.ParticleType               1
+Ti44_Kepler.Beam                       FarFieldPointSource 0 0
+Ti44_Kepler.Orientation                Galactic Fixed 6.800000 4.500000
+Ti44_Kepler.Spectrum                   File Ti44_spectrum31.dat
+Ti44_Kepler.Flux                       4.22637e-06
+Ti44_Kepler.EarthOccultation false
+
+# Vela Jr
+DataChallenge.Source          Ti44_VelaJr
+Ti44_VelaJr.ParticleType               1
+Ti44_VelaJr.Beam                       FarFieldPointSource 0 0
+Ti44_VelaJr.Orientation                Galactic Fixed -1.200000 266.300000
+Ti44_VelaJr.Spectrum                   File Ti44_spectrum43.dat
+Ti44_VelaJr.Flux                       2.36905e-06
+Ti44_VelaJr.EarthOccultation false
+
+# G1.9+0.3
+DataChallenge.Source          Ti44_G1p9p0p3
+Ti44_G1p9p0p3.ParticleType               1
+Ti44_G1p9p0p3.Beam                       FarFieldPointSource 0 0
+Ti44_G1p9p0p3.Orientation                Galactic Fixed 0.300000 1.900000
+Ti44_G1p9p0p3.Spectrum                   File Ti44_spectrum15.dat
+Ti44_G1p9p0p3.Flux                       5.00327e-06
+Ti44_G1p9p0p3.EarthOccultation false
+
+# population-synthesis SNR 1
+DataChallenge.Source          Ti44_popSNR1
+Ti44_popSNR1.ParticleType               1
+Ti44_popSNR1.Beam                       FarFieldPointSource 0 0
+Ti44_popSNR1.Orientation                Galactic Fixed -2.714290 42.364964
+Ti44_popSNR1.Spectrum                   File Ti44_spectrum46.dat
+Ti44_popSNR1.Flux                       2.65767e-06
+Ti44_popSNR1.EarthOccultation false
+
+# population-synthesis SNR 2
+DataChallenge.Source          Ti44_popSNR2
+Ti44_popSNR2.ParticleType               1
+Ti44_popSNR2.Beam                       FarFieldPointSource 0 0
+Ti44_popSNR2.Orientation                Galactic Fixed 3.893124 358.261187
+Ti44_popSNR2.Spectrum                   File Ti44_spectrum39.dat
+Ti44_popSNR2.Flux                       5.36981e-05
+Ti44_popSNR2.EarthOccultation false
+
+# population-synthesis SNR 3
+DataChallenge.Source          Ti44_popSNR3
+Ti44_popSNR3.ParticleType               1
+Ti44_popSNR3.Beam                       FarFieldPointSource 0 0
+Ti44_popSNR3.Orientation                Galactic Fixed -5.319255 20.243298
+Ti44_popSNR3.Spectrum                   File Ti44_spectrum47.dat
+Ti44_popSNR3.Flux                       8.76008e-05
+Ti44_popSNR3.EarthOccultation false
+
+# population-synthesis SNR 4
+DataChallenge.Source          Ti44_popSNR4
+Ti44_popSNR4.ParticleType               1
+Ti44_popSNR4.Beam                       FarFieldPointSource 0 0
+Ti44_popSNR4.Orientation                Galactic Fixed 6.698921 331.686347
+Ti44_popSNR4.Spectrum                   File Ti44_spectrum21.dat
+Ti44_popSNR4.Flux                       0.000169596
+Ti44_popSNR4.EarthOccultation false
+

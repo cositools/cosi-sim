@@ -83,12 +83,12 @@ D5 = {
  "4C21p35": ["DC5/sources/Extragalactic/4C21p35_noflare", "DC5/sources/Extragalactic/4C21p35_flare"],
  "NGC_4151": ["DC5/sources/Extragalactic/NGC_4151"],
  "26Al_Cyg_Region": ["DC5/sources/Nucleosynthesis/26Al_Cyg_Region"], "60Fe_NE2001": ["DC5/sources/Nucleosynthesis/60Fe_NE2001"],
- "Tycho": ["DC5/sources/Nucleosynthesis/Tycho"], "USco": ["DC5/sources/Nucleosynthesis/USco"],
+ "USco": ["DC5/sources/Nucleosynthesis/USco"],
 }
 NEW = ["DC5/sources/Extragalactic/3C273", "DC5/sources/Extragalactic/3C279_high", "DC5/sources/Galactic/PSRB1509",
        "DC5/sources/Extragalactic/NGC_4945", "DC5/sources/Extragalactic/IC_4329A", "DC5/sources/Galactic/GX339m4_hard",
        "DC5/sources/Galactic/4U0142p61", "DC5/sources/Nucleosynthesis/26Al_Carina_Region",
-       "DC5/sources/Nucleosynthesis/Ti44_hidden_SNR", "DC5/sources/Nucleosynthesis/nova_one_22Na", "DC5/sources/511/Positrons_Point_Source",
+       "DC5/sources/Nucleosynthesis/Ti44_SNR_population", "DC5/sources/Nucleosynthesis/nova_one_22Na", "DC5/sources/511/Positrons_Point_Source",
        "DC5/sources/Galactic/BHXB_hard_transient", "DC5/sources/Galactic/PWN_hard_source", "DC5/sources/Galactic/magnetar3",
        "DC5/sources/Extragalactic/MeV_blazar", "DC5/sources/Extragalactic/Seyfert_new", "DC5/sources/Nucleosynthesis/26Al_new_region",
        "DC5/sources/DarkMatter/Annihilation_eeg_NFW"]
@@ -116,6 +116,11 @@ def lc_note(path):
     return " — LC flux: fixed, " + "; ".join("%s %.4g -> %.4g ph/cm2/s (%s)" % (
         r["component"], r["flux_old"], r["flux_new"], r["short"]) for r in rs if r["verdict"] == "fixed")
 
+# 44Ti SNRs (Request 14): the DC4 models of the known young SNRs are replaced by the 44Ti SNR population
+# (A. Anaya's population synthesis), which has these SNRs with new fluxes. Cas A (CasAG16distribution) is kept.
+TI44 = "DC5/sources/Nucleosynthesis/Ti44_SNR_population"
+REPLACED = {"SN1987A", "Tycho", "VelaJr_44Ti", "Kepler", "G1903"}
+
 # Light-curve bugs (cosi-data-challenges bug report):
 #  - time-chunk normalisation bug: nova_co (x3), 3C454p3 (low/high), 4C21p35 (flare/noflare), PSRB1259, MAXIJ1820, MAXIJ1348
 #  - period bug (light curve not a whole number of rotations): 1RXSJ170849, magnetar2
@@ -128,7 +133,11 @@ for u, comps in U.items():
     note = ""
     if u in LC_TIMECHUNK: note = " — light curve: use the fixed time-chunk flux normalisation"
     if u in LC_PERIOD: note = " — light curve trimmed to whole pulse periods (period bug fixed in the DC5 file)"
-    if u in draw["removed"]:
+    if u in REPLACED:
+        for lab, p, w, lc in comps:
+            rows.append(("replaced", lab, "-", f"DC4 model not used: this SNR is in the 44Ti SNR population (`{TI44}`) "
+                         "with a population-synthesis flux"))
+    elif u in draw["removed"]:
         for lab, p, w, lc in comps: rows.append(("removed", lab, "-", "not included in DC5"))
     elif u in draw["modified"] and u not in BACK_TO_DC4:
         paths = D5[u]
@@ -174,7 +183,7 @@ for r in csv.DictReader(open(os.path.join(ROOT, "sources", "ParticleEvents", "ev
                  f"{r['Class']}, day {day:.2f}, {r['Lightcurve duration (s)']} s: simulate in acs mode (ACS, BGO-only events kept) "
                  "and, with particle_germanium: true, in the Compton data"))
 
-srcs = [r[2] for r in rows if r[0] not in ("removed",) and r[2].startswith("DC")]
+srcs = [r[2] for r in rows if r[0] not in ("removed", "replaced") and r[2].startswith("DC")]
 srcs = [x for r in srcs for x in r.split(", ")]
 with open(os.path.join(ROOT, "DC5_mock_dataset_src_list.txt"), "w") as f:
     f.write("# DC5 mock dataset: cosi-sim src_list entries (one simulation per entry, as for DC3/DC4).\n")

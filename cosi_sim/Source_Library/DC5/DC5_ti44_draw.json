@@ -1,0 +1,108 @@
+{
+ "seed": 3891814211,
+ "rng": "random.Random(seed + 44)",
+ "map": "map2.csv",
+ "n_snr": 9,
+ "total_flux": 0.0005764525207881488,
+ "snrs": [
+  {
+   "component": "Ti44_SN1987A",
+   "snr": "SN 1987A",
+   "l": 279.7,
+   "b": -31.9,
+   "flux": 0.00024552170742370524,
+   "spectrum": "Ti44_spectrum32.dat",
+   "centroid_keV": 1152.46,
+   "v_min_kms": -6294,
+   "v_max_kms": 6380
+  },
+  {
+   "component": "Ti44_Tycho",
+   "snr": "Tycho",
+   "l": 120.1,
+   "b": 1.4,
+   "flux": 5.779916406515641e-06,
+   "spectrum": "Ti44_spectrum17.dat",
+   "centroid_keV": 1155.9,
+   "v_min_kms": -7725,
+   "v_max_kms": 7904
+  },
+  {
+   "component": "Ti44_Kepler",
+   "snr": "Kepler",
+   "l": 4.5,
+   "b": 6.8,
+   "flux": 4.226365673337469e-06,
+   "spectrum": "Ti44_spectrum31.dat",
+   "centroid_keV": 1150.09,
+   "v_min_kms": -6317,
+   "v_max_kms": 6380
+  },
+  {
+   "component": "Ti44_VelaJr",
+   "snr": "Vela Jr",
+   "l": 266.3,
+   "b": -1.2,
+   "flux": 2.369048204431108e-06,
+   "spectrum": "Ti44_spectrum43.dat",
+   "centroid_keV": 1163.9,
+   "v_min_kms": -7654,
+   "v_max_kms": 7953
+  },
+  {
+   "component": "Ti44_G1p9p0p3",
+   "snr": "G1.9+0.3",
+   "l": 1.9,
+   "b": 0.3,
+   "flux": 5.0032671554645895e-06,
+   "spectrum": "Ti44_spectrum15.dat",
+   "centroid_keV": 1157.2,
+   "v_min_kms": -5281,
+   "v_max_kms": 5376
+  },
+  {
+   "component": "Ti44_popSNR1",
+   "snr": "population-synthesis SNR 1",
+   "l": 42.365,
+   "b": -2.7143,
+   "flux": 2.657670006924601e-06,
+   "spectrum": "Ti44_spectrum46.dat",
+   "centroid_keV": 1152.42,
+   "v_min_kms": -7748,
+   "v_max_kms": 7904
+  },
+  {
+   "component": "Ti44_popSNR2",
+   "snr": "population-synthesis SNR 2",
+   "l": 358.2612,
+   "b": 3.8931,
+   "flux": 5.369806189289415e-05,
+   "spectrum": "Ti44_spectrum39.dat",
+   "centroid_keV": 1157.25,
+   "v_min_kms": -6270,
+   "v_max_kms": 6404
+  },
+  {
+   "component": "Ti44_popSNR3",
+   "snr": "population-synthesis SNR 3",
+   "l": 20.2433,
+   "b": -5.3193,
+   "flux": 8.760078548444196e-05,
+   "spectrum": "Ti44_spectrum47.dat",
+   "centroid_keV": 1155.61,
+   "v_min_kms": -5281,
+   "v_max_kms": 5327
+  },
+  {
+   "component": "Ti44_popSNR4",
+   "snr": "population-synthesis SNR 4",
+   "l": 331.6863,
+   "b": 6.6989,
+   "flux": 0.000169595698540434,
+   "spectrum": "Ti44_spectrum21.dat",
+   "centroid_keV": 1157.18,
+   "v_min_kms": -5281,
+   "v_max_kms": 5376
+  }
+ ]
+}

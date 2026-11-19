@@ -6,17 +6,17 @@ Every component of the DC5 mock dataset, its origin in the DC4 mock dataset, the
 |---|---|---|---|
 | reused | CasAG16distribution | `DC4/sources/Nucleosynthesis/CasAG16distribution` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/CasAG16distribution_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | modified | cygX3 | `DC5/sources/Galactic/cygX3` | simulate DC5 source file |
-| removed | GS1903 | `-` | not included in DC5 |
-| removed | Kepler | `-` | not included in DC5 |
+| replaced | GS1903 | `-` | DC4 model not used: this SNR is in the 44Ti SNR population (`DC5/sources/Nucleosynthesis/Ti44_SNR_population`) with a population-synthesis flux |
+| replaced | Kepler | `-` | DC4 model not used: this SNR is in the 44Ti SNR population (`DC5/sources/Nucleosynthesis/Ti44_SNR_population`) with a population-synthesis flux |
 | removed | OrEr | `-` | not included in DC5 |
 | modified | positron_annihilation_in_flight | `DC5/sources/511/Positrons_In_Flight_Annihilation` | simulate DC5 source file |
 | reused | Positrons_Central_Source | `DC4/sources/511/Positrons_Central_Source` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/Positrons_Central_Source_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | reused | positrons_thin_disk_cont | `DC4/sources/511/Positrons_Thin_Disk_cont` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/positrons_thin_disk_cont_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
 | reused | positrons_thin_disk_line | `DC4/sources/511/Positrons_Thin_Disk_line` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/positrons_thin_disk_line_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| reused | SN1987A | `DC4/sources/Nucleosynthesis/SN1987A` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/SN1987A_unbinned_data_filtered_with_SAAcut.fits.gz |
-| modified | Tycho | `DC5/sources/Nucleosynthesis/Tycho` | simulate DC5 source file |
+| replaced | SN1987A | `-` | DC4 model not used: this SNR is in the 44Ti SNR population (`DC5/sources/Nucleosynthesis/Ti44_SNR_population`) with a population-synthesis flux |
+| replaced | Tycho | `-` | DC4 model not used: this SNR is in the 44Ti SNR population (`DC5/sources/Nucleosynthesis/Ti44_SNR_population`) with a population-synthesis flux |
 | modified | USco | `DC5/sources/Nucleosynthesis/USco` | simulate DC5 source file |
-| reused | VelaJr_44Ti | `DC4/sources/Nucleosynthesis/VelaJr_44Ti` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/VelaJr_44Ti_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
+| replaced | VelaJr_44Ti | `-` | DC4 model not used: this SNR is in the 44Ti SNR population (`DC5/sources/Nucleosynthesis/Ti44_SNR_population`) with a population-synthesis flux |
 | modified | LMC_511 | `DC5/sources/511/LMC_511` | simulate DC5 source file |
 | modified | M31_511 | `DC5/sources/511/M31_511` | simulate DC5 source file |
 | reused | Virgo_511 | `(no library file)` | reuse DC4 event file COSI-SMEX/DC4/Data/Sources/Virgo_511_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
@@ -65,7 +65,7 @@ Every component of the DC5 mock dataset, its origin in the DC4 mock dataset, the
 | new | GX339m4_hard | `DC5/sources/Galactic/GX339m4_hard` | simulate DC5 source file |
 | new | 4U0142p61 | `DC5/sources/Galactic/4U0142p61` | simulate DC5 source file |
 | new | 26Al_Carina_Region | `DC5/sources/Nucleosynthesis/26Al_Carina_Region` | simulate DC5 source file |
-| new | Ti44_hidden_SNR | `DC5/sources/Nucleosynthesis/Ti44_hidden_SNR` | simulate DC5 source file |
+| new | Ti44_SNR_population | `DC5/sources/Nucleosynthesis/Ti44_SNR_population` | simulate DC5 source file |
 | new | nova_one_22Na | `DC5/sources/Nucleosynthesis/nova_one_22Na` | simulate DC5 source file |
 | new | Positrons_Point_Source | `DC5/sources/511/Positrons_Point_Source` | simulate DC5 source file |
 | new | BHXB_hard_transient | `DC5/sources/Galactic/BHXB_hard_transient` | simulate DC5 source file |
