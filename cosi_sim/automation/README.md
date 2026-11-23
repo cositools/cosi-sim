@@ -109,6 +109,18 @@ python run_pipeline.py cancel   <dirs>
 - `finish` can be run by hand (e.g. on an interactive node). It continues from the first step that has not completed; for a source finished before the plots step existed, it makes only the plots.
 - `resubmit` resubmits only the failed sims, plus a new post-processing job, and resets the automatic retry count.
 
+## Scratch space
+
+The per-job `Simulations/` directories hold most of the data (`.sim` and `.tra` files of every job). To keep them off your project space, set `scratch_root` in the config:
+
+```yaml
+scratch_root: "/scratch/<user>/DC5"
+```
+
+`setup_sims.py` then writes `Simulations/` and `logs/` of each source to `<scratch_root>/<class>/<source>/`, and the run directory holds links to them. Everything else (inputs, `Sources/`, `Output/` with the mimrec and cosipy files, `automation.json`) stays in `sim_root`, and all commands work as before. GRB and particle-event runs have no `Simulations/`; only their `logs/` go to scratch. Without `scratch_root` nothing changes.
+
+Scratch is usually purged after some time without access (check your cluster's policy): let a source finish (including resubmissions) before then. Once its final file is in `products_dir`, its scratch directory can be deleted. If a source's scratch files were purged before it finished, set it up again with `--force`.
+
 ## Rolling submission (job limits)
 
 SLURM clusters usually cap how many jobs one user can have pending + running, and every array task counts. On Palmetto 2 the `normal` QOS of the `work1` partition has `MaxSubmitPU = 3000`, so with `num_sims: 1000` (about 1002 jobs per source) only two sources fit at once; a third `sbatch` is rejected. Check your cluster with:
