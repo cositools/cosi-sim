@@ -14,6 +14,8 @@ For each source this writes <sim_root>/<class>/<name>/ with:
     inputs.yaml, cosipy_inputs.yaml   from your templates, with the per-source keys set
     Sources/                          from Setup.setup_srcs() (= run_sim_setup.py)
     Simulations/sim_<i>/              one directory per job, as run_parallel_sims.py
+                                      (with scratch_root: Simulations/ and logs/ are links
+                                      to <scratch_root>/<class>/<name>/)
     Output/<name>.inc1.id1.tra.gz     list of the per-job tra files, as run_parallel_sims.py
     run_sims.py                       cosima + revan for one job
     slurm_array_job.sh | grb_job.sh   the simulation job
@@ -108,6 +110,7 @@ def load_config(path):
     cfg.setdefault("grb_orientation_file", None)
     cfg.setdefault("grb_time_reference", None)
     cfg.setdefault("particle_germanium", False)
+    cfg.setdefault("scratch_root", None)
     if cfg.get("bgo_geometry_file"):
         print("NOTE: bgo_geometry_file is no longer used: acs runs use the geometry of the inputs template "
               "and keep BGO-only events with PreTriggerMode %s." % ACS_PRE_TRIGGER_MODE)
@@ -117,10 +120,12 @@ def load_config(path):
     slurm = dict(SLURM_DEFAULTS)
     slurm.update(cfg.get("slurm") or {})
     cfg["slurm"] = slurm
-    for key in ["sim_root", "products_dir", "inputs_template", "cosipy_template", "megalib_env",
+    for key in ["sim_root", "scratch_root", "products_dir", "inputs_template", "cosipy_template", "megalib_env",
                 "cosipy_env", "revan_geometry", "overflow_filter", "grb_orientation_file"]:
         if cfg.get(key):
             cfg[key] = os.path.abspath(os.path.expanduser(cfg[key]))
+    if cfg["scratch_root"] and os.path.realpath(cfg["scratch_root"]) == os.path.realpath(cfg["sim_root"]):
+        cfg["scratch_root"] = None                      # same place: nothing to link
     return cfg
 
 
@@ -482,6 +487,42 @@ def write_job_scripts(run_dir, cfg, state):
 # Main per-source setup
 # ---------------------------------------------------------------------------
 
+def scratch_dir_for(run_dir, cfg):
+    """<scratch_root>/<class>/<name> for a run directory, or None without scratch_root."""
+    if not cfg.get("scratch_root"):
+        return None
+    return os.path.join(cfg["scratch_root"], os.path.relpath(run_dir, cfg["sim_root"]))
+
+
+def work_dir(run_dir, sub, scratch, clean=False):
+    """Make <run_dir>/<sub>. With a scratch directory it is a link to <scratch>/<sub>, so every
+    path through the run directory stays the same. clean: start empty (removes the old files,
+    also in scratch); otherwise existing files are kept (moved to scratch if needed)."""
+    path = os.path.join(run_dir, sub)
+    target = os.path.join(scratch, sub) if scratch else None
+    if os.path.islink(path):                            # set up earlier with scratch_root
+        old = os.path.realpath(path)
+        if clean and os.path.isdir(old):
+            shutil.rmtree(old)
+        if target is None or old != os.path.realpath(target):
+            os.unlink(path)
+    elif os.path.isdir(path):
+        if clean:
+            shutil.rmtree(path)
+        elif target:                                    # keep earlier files (e.g. logs)
+            os.makedirs(target, exist_ok=True)
+            for entry in os.listdir(path):
+                shutil.move(os.path.join(path, entry), os.path.join(target, entry))
+            os.rmdir(path)
+    if target:
+        os.makedirs(target, exist_ok=True)
+        if not os.path.islink(path):
+            os.symlink(target, path)
+    else:
+        os.makedirs(path, exist_ok=True)
+    return path
+
+
 def make_sim_dirs(run_dir, state, extra_files):
     """Simulations/sim_<i> with inputs.yaml, run_sims.py and (time chunks) GalacticScan.ori.
 
@@ -489,16 +530,14 @@ def make_sim_dirs(run_dir, state, extra_files):
     """
     sims = os.path.join(run_dir, "Simulations")
     if not state.get("lightcurve_chunks"):
-        if os.path.isdir(sims):
-            shutil.rmtree(sims)
-        os.makedirs(sims)
+        work_dir(run_dir, "Simulations", state.get("scratch_dir"), clean=True)
     for i in range(state["njobs"]):
         d = os.path.join(sims, "sim_%d" % i)
         os.makedirs(d, exist_ok=True)
         for fname in ("inputs.yaml", "run_sims.py"):
             shutil.copy2(os.path.join(run_dir, fname), d)
         if extra_files:
-            os.replace(extra_files(i), os.path.join(d, "GalacticScan.ori"))
+            shutil.move(extra_files(i), os.path.join(d, "GalacticScan.ori"))   # may be on scratch
 
 
 def write_combined_tra(run_dir, state):
@@ -531,6 +570,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     name = os.path.basename(src)
     cls = class_name(src, cfg) + class_suffix
     run_dir = os.path.join(cfg["sim_root"], cls, name)
+    scratch = scratch_dir_for(run_dir, cfg)
     num_sims = int(cfg["num_sims"])
 
     if os.path.isfile(os.path.join(run_dir, STATE_FILE)):
@@ -575,15 +615,17 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     if dry_run:
         gz = gunzip_library_files(src, dry_run=True)
         note = "  (times - t_ref %r)" % t_ref if t_ref is not None else ""
-        print("%-50s %-5s -> %s%s%s" % (src, mode, run_dir, note,
-                                      "  (gunzip %s)" % ", ".join(gz) if gz else ""))
+        print("%-50s %-5s -> %s%s%s%s" % (src, mode, run_dir, note,
+                                        "  (gunzip %s)" % ", ".join(gz) if gz else "",
+                                        "  (%s in %s)" % ("logs/" if single else "Simulations/, logs/", scratch) if scratch else ""))
         return
 
     unzipped = gunzip_library_files(src)
     for name_gz in unzipped:
         print("    gunzipped %s in the source library" % name_gz)
 
-    os.makedirs(os.path.join(run_dir, "logs"), exist_ok=True)
+    os.makedirs(run_dir, exist_ok=True)
+    work_dir(run_dir, "logs", scratch)
     for old in ("Output", "Orientation_Bins"):
         if os.path.isdir(os.path.join(run_dir, old)):
             shutil.rmtree(os.path.join(run_dir, old))
@@ -626,9 +668,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     # Number of jobs (time chunks get one more if the orientation file does not divide evenly):
     extra_files, lc_chunks = None, None
     if mode == "time" and lc_flags and not repeating_time:
-        sims = os.path.join(run_dir, "Simulations")
-        if os.path.isdir(sims):
-            shutil.rmtree(sims)
+        sims = work_dir(run_dir, "Simulations", scratch, clean=True)
         # The chunks run in times t - t_ref (t_ref: first orientation time), as GRBs do:
         lc_ori = keys.get("orientation_file", template["orientation_file"])
         shift = 0.0
@@ -669,7 +709,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         "revan_geometry": cfg["revan_geometry"], "t_ref": t_ref,
         "orientation_file": keys.get("orientation_file", template["orientation_file"]),
         "flux_scaling": flux_scaling, "lightcurve_chunks": lc_chunks, "repeating_lightcurve_time_chunks": repeating_time,
-        "slurm": cfg["slurm"],
+        "slurm": cfg["slurm"], "scratch_dir": scratch,
         "acs_products_dir": os.path.join(cfg["products_dir"], "ACS", cls) if mode == "acs" else None,
         "stage": "setup", "attempt": 0, "completed": [], "jobs": [],
         "history": ["%s  set up (%s mode, %d job%s)" % (now(), mode, njobs, "s" if njobs > 1 else "")],
@@ -696,6 +736,8 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     if t_ref is not None:
         ori_note = "chunk orientation files" if lc_chunks else "orientation %s" % os.path.basename(keys["orientation_file"])
         msg += "\n    times relative to t_ref %r: %s; sim times fixed after cosima" % (t_ref, ori_note)
+    if scratch:
+        msg += "\n    %s to %s" % ("logs/ is a link" if single else "Simulations/ and logs/ are links", scratch)
     print(msg)
 
 

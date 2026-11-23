@@ -11,6 +11,14 @@
 # <sim_root>/<class>/<source name>, e.g. <sim_root>/Galactic/cygX3.
 sim_root: "/full/path/DC5/simulations"
 
+# Optional: a scratch directory for the bulky parts of each run, the per-job
+# Simulations/ directories and logs/. They are written to
+# <scratch_root>/<class>/<source name>/ and linked from the run directory, so
+# everything else stays in sim_root and works as before. null = all in sim_root.
+# Scratch files may be purged by the cluster: finish (and resubmit) a source
+# before that happens.
+scratch_root: null
+
 # Where the final *_with_SAAcut files are copied.
 products_dir: "/full/path/DC5/data_products/New_Source_Sims"
 
