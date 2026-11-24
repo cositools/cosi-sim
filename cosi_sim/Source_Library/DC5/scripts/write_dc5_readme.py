@@ -93,12 +93,14 @@ Percentages refer to the non-GRB DC4 components. DC5 therefore has {n_non - n_re
 
 Files:
 - `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim ({sum(1 for r in rows if r[0] not in ('removed', 'replaced') and r[2].startswith('DC')) + sum(r[2].count(',') for r in rows if r[0] not in ('removed', 'replaced') and r[2].startswith('DC'))} entries; checked with `Setup.setup_srcs()`).
-- `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do (simulate / re-simulate / reuse the existing DC3/DC4 event file).
+- `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do.
 - `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json`, `DC5_ti44_draw.json` — machine-readable record of the draws and of every change.
 - `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `fix_lightcurve_fluxes.py` (light-curve Flux keywords; writes `lc_flux_check.json`), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate), `particle_events/` (particle events for the ACS: the GRB group's generator with the frame fix, `place_events.py`, the ACS pilot), `ti44/` (44Ti SNR population: A. Anaya's population-synthesis maps and spectra, `build_ti44_population.py`). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → fix_lightcurve_fluxes → `python -m cosi_sim.pipeline.time_reference --ori <9-column ori> DC5/sources/Galactic/{{1RXSJ170849,magnetar2,PSRB1509}}` (repeating light curves in t − t_ref) → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → ti44/build_ti44_population → particle_events/place_events.py (blind set, then enriched set; commands in `sources/ParticleEvents/README.md`) → write_manifest → write_readmes → write_dc5_readme.
 - `sources/` — one directory per modified, bug-fixed or new source, each with a `README_DC5.md` describing the model, the change, and references.
 
 ## Reused sources (same source files)
+All components are simulated for DC5, the reused ones included: DC5 needs the L2 data (the mimrec `.tra` outputs), which are not available for the DC3/DC4 simulations. The DC3/DC4 event files are listed for comparison.
+
 | DC4 mock component | cosi-sim source path | Action |
 |---|---|---|
 {tab('reused')}
@@ -217,7 +219,7 @@ MEGAlib scales a light curve so that its mean over the light curve's time range 
 With the fix alone, narrow + broad bulge + DC4 central source = 2.80e-4 + 7.40e-4 + 0.80e-4 = 1.10e-3 ph cm⁻² s⁻¹, i.e. the intended ≈1.09e-3. In DC5 (BB × 0.85) the bulge total is 9.9e-4, within 1σ of the SPI bulge value. The DC3 originals were left untouched as the record of what was simulated for DC3/DC4.
 
 ## Notes
-- **LMC_511, M31_511, Virgo_511:** the DC4 definitions were simulated outside cosi-sim and differ from the DC3 `*_Gaussian_511` files. Virgo_511 (reused) reuses the DC4 event file directly. LMC_511 and M31_511 (modified) are replaced by the alternative DC3 Gaussian definitions plus a small additional change, documented in their READMEs.
+- **LMC_511, M31_511, Virgo_511:** the DC4 definitions were simulated outside cosi-sim and differ from the DC3 `*_Gaussian_511` files. Virgo_511 (reused) is simulated from the DC3 library model `DC3/sources/511/Virgo_Gaussian_511` (2.7° Gaussian at (l, b) = (284°, 74°), 511 keV line, 4.63e-7 ph/cm²/s). LMC_511 and M31_511 (modified) are replaced by the alternative DC3 Gaussian definitions plus a small additional change, documented in their READMEs.
 - Several DC4 maps and light curves are stored as `.dat.gz` in cosi-sim (thin-disk maps, magnetar light curves, including the copies in DC5/sources/Galactic/1RXSJ170849 and magnetar2), and so are the beam files of the local particle events. As for DC4, gunzip them in place before running the pipeline. All other DC5 files are used as-is.
 - Science-team inputs (due Nov 15) will be added as a follow-up to this directory.
 """
