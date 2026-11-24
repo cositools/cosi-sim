@@ -18,35 +18,37 @@ Percentages refer to the non-GRB DC4 components. DC5 therefore has 63 non-GRB co
 **How the split was made.** Components that belong to one physical source (e.g. line + continuum maps, flare + quiescent states, the three nova components) were grouped, and the groups were shuffled with a random seed (3891814211, recorded in `DC5_draw.json`). Groups were assigned to *removed* (≈10% of files, only from sources that are not well-known detections: the Crab, Cyg X-1/X-3, Cen A, NGC 4151, the 511 keV bulge/disk, Galactic 26Al/60Fe, Cas A, etc. were protected), then *modified* (≈40%), with the rest *reused*. The modification applied to each drawn source was then chosen by hand from the literature (alternative library model where one exists, otherwise a simple flux/width/state change within the published range). Positions of the arbitrary new sources are drawn from the same seed. The GRB draw uses its own seed (3662968627, `DC5_grb_draw.json`). Running `scripts/draw_dc5.py` or `scripts/draw_dc5_grbs.py` without a seed gives a different realisation.
 
 Files:
-- `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (83 entries; checked with `Setup.setup_srcs()`).
-- `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do (simulate / re-simulate / reuse the existing DC3/DC4 event file).
+- `DC5_mock_dataset_src_list.txt` — the `src_list` for cosi-sim (84 entries; checked with `Setup.setup_srcs()`).
+- `DC5_mock_dataset_manifest.md` — every component with its status, source path and what to do.
 - `DC5_build_log.json`, `DC5_draw.json`, `DC5_grb_draw.json`, `DC5_ti44_draw.json` — machine-readable record of the draws and of every change.
 - `scripts/` — `draw_dc5.py` (random split), `build_dc5.py` (writes the non-GRB `sources/` for this draw), `fix_magnetar_lightcurves.py` (period bug fix), `fix_lightcurve_fluxes.py` (light-curve Flux keywords; writes `lc_flux_check.json`), `draw_dc5_grbs.py` + `build_dc5_grbs.py` (GRBs), `make_sim_time_inputs.py` (time-shifted MEGAlib inputs for GRBs and magnetar bursts), `ori_tools.py` (orientation-file geometry), `mapflux.py` (integrates cosima 3D maps), `eq2gal.py` (RA/Dec → l, b), `write_manifest.py` (src_list, manifest and `manifest_rows.json`), `write_readmes.py` (per-source `README_DC5.md` for non-GRB sources), `write_dc5_readme.py` (this file), `dm/` (dark matter map and significance estimate), `particle_events/` (particle events for the ACS: the GRB group's generator with the frame fix, `place_events.py`, the ACS pilot), `ti44/` (44Ti SNR population: A. Anaya's population-synthesis maps and spectra, `build_ti44_population.py`). Order: draw_dc5 → build_dc5 → fix_magnetar_lightcurves → fix_lightcurve_fluxes → `python -m cosi_sim.pipeline.time_reference --ori <9-column ori> DC5/sources/Galactic/{1RXSJ170849,magnetar2,PSRB1509}` (repeating light curves in t − t_ref) → draw_dc5_grbs → build_dc5_grbs → make_sim_time_inputs → dm/run_dm_choice → dm/build_dc5_dm → ti44/build_ti44_population → particle_events/place_events.py (blind set, then enriched set; commands in `sources/ParticleEvents/README.md`) → write_manifest → write_readmes → write_dc5_readme.
 - `sources/` — one directory per modified, bug-fixed or new source, each with a `README_DC5.md` describing the model, the change, and references.
 
 ## Reused sources (same source files)
+All components are simulated for DC5, the reused ones included: DC5 needs the L2 data (the mimrec `.tra` outputs), which are not available for the DC3/DC4 simulations. The DC3/DC4 event files are listed for comparison.
+
 | DC4 mock component | cosi-sim source path | Action |
 |---|---|---|
-| CasAG16distribution | `DC4/sources/Nucleosynthesis/CasAG16distribution` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/CasAG16distribution_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| Positrons_Central_Source | `DC4/sources/511/Positrons_Central_Source` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/Positrons_Central_Source_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| positrons_thin_disk_cont | `DC4/sources/511/Positrons_Thin_Disk_cont` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/positrons_thin_disk_cont_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| positrons_thin_disk_line | `DC4/sources/511/Positrons_Thin_Disk_line` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/positrons_thin_disk_line_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| Virgo_511 | `(no library file)` | reuse DC4 event file COSI-SMEX/DC4/Data/Sources/Virgo_511_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| NGC_1068 | `DC4/sources/Extragalactic/NGC_1068` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/NGC_1068_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| 4C71p07 | `DC4/sources/Extragalactic/4C71p07` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/4C71p07_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| CenA | `DC4/sources/Extragalactic/CenA` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/CenA_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| Crab_DC4 | `DC4/sources/Galactic/Crab` | reuse DC4/DC3 event file COSI-SMEX/DC4/Data/Sources/Crab_DC4_3months_unbinned_data_filtered_with_SAAcut.fits.gz — LC flux: correct (phase average) |
-| Globular_Cluster_Tuc_47 | `DC3/sources/511/Globular_Cluster_Tuc_47` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_Tuc_47_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| Globular_Cluster_Omega_Cen | `DC3/sources/511/Globular_Cluster_Omega_Cen` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_Omega_Cen_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| Globular_Cluster_NGC_6397 | `DC3/sources/511/Globular_Cluster_NGC_6397` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_NGC_6397_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| Globular_Cluster_NGC_6121 | `DC3/sources/511/Globular_Cluster_NGC_6121` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Globular_Cluster_NGC_6121_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| Positrons_from_26Al_line | `DC3/sources/511/Positrons_from_26Al_line` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Positrons_from_26Al_line_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| Positrons_from_26Al_cont | `DC3/sources/511/Positrons_from_26Al_cont` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Positrons_from_26Al_cont_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| Positrons_from_44Ti_line | `DC3/sources/511/Positrons_from_44Ti_line` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Positrons_from_44Ti_line_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| Positrons_from_44Ti_cont | `DC3/sources/511/Positrons_from_44Ti_cont` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/Positrons_from_44Ti_cont_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| LS5039 | `DC3/sources/Galactic/LS5039` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/LS5039_3months_unbinned_data_filtered_with_SAAcut.fits.gz — LC flux: correct (orbit average) |
-| 26Al_NE2001 | `DC3/sources/Al26/26Al_NE2001` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/26Al_NE2001_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
-| 60Fe_Cyg_Region | `DC3/sources/Fe60/60Fe_Cyg_Region` | reuse DC4/DC3 event file COSI-SMEX/DC3/Data/Sources/60Fe_Cyg_Region_3months_unbinned_data_filtered_with_SAAcut.fits.gz |
+| CasAG16distribution | `DC4/sources/Nucleosynthesis/CasAG16distribution` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC4/Data/Sources/CasAG16distribution_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| Positrons_Central_Source | `DC4/sources/511/Positrons_Central_Source` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC4/Data/Sources/Positrons_Central_Source_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| positrons_thin_disk_cont | `DC4/sources/511/Positrons_Thin_Disk_cont` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC4/Data/Sources/positrons_thin_disk_cont_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| positrons_thin_disk_line | `DC4/sources/511/Positrons_Thin_Disk_line` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC4/Data/Sources/positrons_thin_disk_line_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| Virgo_511 | `DC3/sources/511/Virgo_Gaussian_511` | simulate the DC3 library model (the DC4 definition was simulated outside cosi-sim) |
+| NGC_1068 | `DC4/sources/Extragalactic/NGC_1068` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC4/Data/Sources/NGC_1068_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| 4C71p07 | `DC4/sources/Extragalactic/4C71p07` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC4/Data/Sources/4C71p07_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| CenA | `DC4/sources/Extragalactic/CenA` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC4/Data/Sources/CenA_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| Crab_DC4 | `DC4/sources/Galactic/Crab` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC4/Data/Sources/Crab_DC4_3months_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (phase average) |
+| Globular_Cluster_Tuc_47 | `DC3/sources/511/Globular_Cluster_Tuc_47` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/Globular_Cluster_Tuc_47_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| Globular_Cluster_Omega_Cen | `DC3/sources/511/Globular_Cluster_Omega_Cen` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/Globular_Cluster_Omega_Cen_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| Globular_Cluster_NGC_6397 | `DC3/sources/511/Globular_Cluster_NGC_6397` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/Globular_Cluster_NGC_6397_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| Globular_Cluster_NGC_6121 | `DC3/sources/511/Globular_Cluster_NGC_6121` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/Globular_Cluster_NGC_6121_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| Positrons_from_26Al_line | `DC3/sources/511/Positrons_from_26Al_line` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/Positrons_from_26Al_line_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| Positrons_from_26Al_cont | `DC3/sources/511/Positrons_from_26Al_cont` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/Positrons_from_26Al_cont_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| Positrons_from_44Ti_line | `DC3/sources/511/Positrons_from_44Ti_line` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/Positrons_from_44Ti_line_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| Positrons_from_44Ti_cont | `DC3/sources/511/Positrons_from_44Ti_cont` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/Positrons_from_44Ti_cont_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| LS5039 | `DC3/sources/Galactic/LS5039` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/LS5039_3months_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (orbit average) |
+| 26Al_NE2001 | `DC3/sources/Al26/26Al_NE2001` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/26Al_NE2001_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
+| 60Fe_Cyg_Region | `DC3/sources/Fe60/60Fe_Cyg_Region` | simulate the same source file (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/60Fe_Cyg_Region_3months_unbinned_data_filtered_with_SAAcut.fits.gz) |
 | 3C454p3_low | `DC5/sources/Extragalactic/3C454p3_low` | re-simulate: same model, Flux keyword corrected to the time average over the light curve — LC flux: fixed, 3C454p3_low 0.00029 -> 0.0001884 ph/cm2/s (on-state flux x light-curve mean 0.6496) |
 | 3C454p3_high | `DC5/sources/Extragalactic/3C454p3_high` | re-simulate: same model, Flux keyword corrected to the time average over the light curve — LC flux: fixed, 3C454p3_high 0.00624 -> 0.002186 ph/cm2/s (on-state flux x light-curve mean 0.3504) |
 | Narrow_Bulge_511 | `DC5/sources/511/NB_511` | re-simulate (511 keV map bug fixed) |
@@ -173,10 +175,10 @@ The models are unchanged from DC3/DC4. The kept bursts are copied to `DC5/source
 
 | Component | Source path | Action |
 |---|---|---|
-| GRB_MGF051103 | `DC5/sources/GRBs/MGF051103` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF051103_3months_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (burst average) |
-| GRB_MGF180128A | `DC5/sources/GRBs/MGF180128A` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF180128A_3months_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (burst average) |
-| GRB_MGF200415A | `DC5/sources/GRBs/MGF200415A` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC3/Data/Sources/GRB_MGF200415A_3months_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (burst average) |
-| MgtBurst_bright_complex | `DC5/sources/GRBs/MgtBurst_bright_complex` | unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file COSI-SMEX/DC4/Data/Sources/MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (burst average) |
+| GRB_MGF051103 | `DC5/sources/GRBs/MGF051103` | unchanged model; simulate with the time-shifted DC5 inputs (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/GRB_MGF051103_3months_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (burst average) |
+| GRB_MGF180128A | `DC5/sources/GRBs/MGF180128A` | unchanged model; simulate with the time-shifted DC5 inputs (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/GRB_MGF180128A_3months_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (burst average) |
+| GRB_MGF200415A | `DC5/sources/GRBs/MGF200415A` | unchanged model; simulate with the time-shifted DC5 inputs (DC3/DC4 event file: COSI-SMEX/DC3/Data/Sources/GRB_MGF200415A_3months_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (burst average) |
+| MgtBurst_bright_complex | `DC5/sources/GRBs/MgtBurst_bright_complex` | unchanged model; simulate with the time-shifted DC5 inputs (DC3/DC4 event file: COSI-SMEX/DC4/Data/Sources/MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz) — LC flux: correct (burst average) |
 
 Not included in DC5 (random draw, seed 3662968627): GRB_MGF070201, GRB_MGF070222, GRB_MGF231115A. Four of the seven DC4 magnetar bursts are kept (half, rounded up).
 
@@ -249,6 +251,6 @@ MEGAlib scales a light curve so that its mean over the light curve's time range 
 With the fix alone, narrow + broad bulge + DC4 central source = 2.80e-4 + 7.40e-4 + 0.80e-4 = 1.10e-3 ph cm⁻² s⁻¹, i.e. the intended ≈1.09e-3. In DC5 (BB × 0.85) the bulge total is 9.9e-4, within 1σ of the SPI bulge value. The DC3 originals were left untouched as the record of what was simulated for DC3/DC4.
 
 ## Notes
-- **LMC_511, M31_511, Virgo_511:** the DC4 definitions were simulated outside cosi-sim and differ from the DC3 `*_Gaussian_511` files. Virgo_511 (reused) reuses the DC4 event file directly. LMC_511 and M31_511 (modified) are replaced by the alternative DC3 Gaussian definitions plus a small additional change, documented in their READMEs.
+- **LMC_511, M31_511, Virgo_511:** the DC4 definitions were simulated outside cosi-sim and differ from the DC3 `*_Gaussian_511` files. Virgo_511 (reused) is simulated from the DC3 library model `DC3/sources/511/Virgo_Gaussian_511` (2.7° Gaussian at (l, b) = (284°, 74°), 511 keV line, 4.63e-7 ph/cm²/s). LMC_511 and M31_511 (modified) are replaced by the alternative DC3 Gaussian definitions plus a small additional change, documented in their READMEs.
 - Several DC4 maps and light curves are stored as `.dat.gz` in cosi-sim (thin-disk maps, magnetar light curves, including the copies in DC5/sources/Galactic/1RXSJ170849 and magnetar2), and so are the beam files of the local particle events. As for DC4, gunzip them in place before running the pipeline. All other DC5 files are used as-is.
 - Science-team inputs (due Nov 15) will be added as a follow-up to this directory.
