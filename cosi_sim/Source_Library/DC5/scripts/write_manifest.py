@@ -68,6 +68,8 @@ U = {
 }
 assert set(U) == set(draw["removed"] + draw["modified"] + draw["reused"]), set(U) ^ set(draw["removed"] + draw["modified"] + draw["reused"])
 
+VIRGO = "DC3/sources/511/Virgo_Gaussian_511"   # library model used for the reused Virgo_511
+
 # DC5 paths of modified / bug-fixed units
 D5 = {
  "Positrons_In_Flight_Annihilation": ["DC5/sources/511/Positrons_In_Flight_Annihilation"],
@@ -158,10 +160,10 @@ for u, comps in U.items():
                 rows.append(("reused (bug-fixed)", lab, q, "re-simulate: same model, Flux keyword corrected to the time average over the light curve" + lc_note(q)))
             elif u in LC_TIMECHUNK:
                 rows.append(("reused", lab, p, "re-simulate with the same source file (time-chunk light-curve bug)"))
-            elif p.startswith("("):
-                rows.append(("reused", lab, "(no library file)", f"reuse DC4 event file {w}"))
+            elif u == "Virgo_511":   # DC4 definition not in cosi-sim: the DC3 library model is used
+                rows.append(("reused", lab, VIRGO, "simulate the DC3 library model (the DC4 definition was simulated outside cosi-sim)"))
             else:
-                rows.append(("reused", lab, p, f"reuse DC4/DC3 event file {w}" + lc_note(p)))
+                rows.append(("reused", lab, p, f"simulate the same source file (DC3/DC4 event file: {w})" + lc_note(p)))
 for q in NEW: rows.append(("new", os.path.basename(q), q, "simulate DC5 source file" + lc_note(q)))
 for lab, d in GRB_BN:
     g = grbdraw["grbs"][d]["dc5"]
@@ -171,7 +173,7 @@ for lab, d, w in MAGNETAR:
     if d in grbdraw["magnetar_kept"]:
         ev = f"{w}{lab}{sfx}" if w == W3 else f"{W4}MgtBurst_bright_complex_unbinned_data_filtered_with_SAAcut.fits.gz"
         rows.append(("magnetar burst (unchanged)", lab, "DC5/sources/GRBs/" + d,
-                     f"unchanged model; simulate with the time-shifted DC5 inputs (or reuse event file {ev})" + lc_note("DC5/sources/GRBs/" + d)))
+                     f"unchanged model; simulate with the time-shifted DC5 inputs (DC3/DC4 event file: {ev})" + lc_note("DC5/sources/GRBs/" + d)))
     else:
         rows.append(("removed", lab, "-", "magnetar burst not included in DC5 (half of the DC4 magnetar bursts kept)"))
 
@@ -187,7 +189,6 @@ srcs = [r[2] for r in rows if r[0] not in ("removed", "replaced") and r[2].start
 srcs = [x for r in srcs for x in r.split(", ")]
 with open(os.path.join(ROOT, "DC5_mock_dataset_src_list.txt"), "w") as f:
     f.write("# DC5 mock dataset: cosi-sim src_list entries (one simulation per entry, as for DC3/DC4).\n")
-    f.write("# Virgo_511 has no library file: its DC4 event file is reused directly (see DC5_mock_dataset_manifest.md).\n")
     f.write("[\n" + ",\n".join(f"'{s}'" for s in srcs) + "\n]\n")
 with open(os.path.join(ROOT, "DC5_mock_dataset_manifest.md"), "w") as f:
     f.write("# DC5 mock dataset manifest\n\nEvery component of the DC5 mock dataset, its origin in the DC4 mock dataset, the cosi-sim source path, and what is needed to produce it.\n\n")
