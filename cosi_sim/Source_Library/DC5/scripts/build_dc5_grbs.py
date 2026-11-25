@@ -5,20 +5,17 @@ Usage: python3 build_dc5_grbs.py <cosi-sim repo root> <DC5_grb_draw.json>
 
 For each DC4 GRB_bn burst, DC5/sources/GRBs/<name>/ gets
   <name>.source           same structure as the DC3 file; new Spectrum and Polarization lines
-  <name>_spectrum.dat     only for Band spectra with E0 <= Emin (see below)
   <name>_lightcurve.dat   DC3 light curve with all times shifted to the DC5 trigger time
   README_DC5.md           model, DC4 -> DC5 changes, geometry, references
 
-Band spectra: the draw gives Epeak, but cosima's Band function takes E0 (N(E) = E^alpha exp(-E/E0) below
-the break (alpha - beta) E0, so Epeak = (2 + alpha) E0) and requires E0 > Emin. The source file gets
-E0 = Epeak / (2 + alpha); where E0 <= Emin the same Band spectrum is tabulated over Emin-Emax in
-<name>_spectrum.dat (Spectrum File), with the same Flux.
+Band spectra: the draw gives Epeak; the source file gets cosima's E0 = Epeak / (2 + alpha) (grb_band.py).
 
 Run scripts/make_sim_time_inputs.py afterwards: it adds the time-shifted MEGAlib inputs and points the
 source files to the shifted light curves (rerunning this script resets them to absolute times).
 """
 import os, sys, re, json
-import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from grb_band import band_e0
 
 REPO, DRAW = sys.argv[1], sys.argv[2]
 LIB = os.path.join(REPO, "cosi_sim", "Source_Library")
@@ -32,41 +29,14 @@ REFS = """- [Poolakkil et al. 2021, ApJ 913, 60 — Fermi GBM GRB spectral catal
 - [Fermi GBM burst catalog (HEASARC FERMIGBRST)](https://heasarc.gsfc.nasa.gov/W3Browse/fermi/fermigbrst.html) (original burst `{name}`)
 """
 
-def band_e0(sp):
-    """E0 (keV) of a drawn Band spectrum [Band, Emin, Emax, alpha, beta, Epeak]: Epeak / (2 + alpha)."""
-    return float(sp[5]) / (2 + float(sp[3]))
-
-
-def band(e, a, b, e0):
-    """cosima's Band function (MCSource::BandFunction), photons per keV (unnormalized)."""
-    eb = (a - b) * e0
-    return np.where(e <= eb, e ** a * np.exp(-e / e0), eb ** (a - b) * np.exp(b - a) * e ** b)
-
-
-def spectrum_line(name, sp, flux, d):
-    """Spectrum keyword value for the source file; writes <name>_spectrum.dat when E0 <= Emin."""
-    path = os.path.join(d, name + "_spectrum.dat")
+def spectrum_line(sp):
+    """Spectrum keyword value and a comment; Band spectra get cosima's E0 = Epeak/(2+alpha) (grb_band.py)."""
     if sp[0] != "Band":
         return " ".join(sp), None
-    emin, emax, a, b = float(sp[1]), float(sp[2]), float(sp[3]), float(sp[4])
-    e0 = band_e0(sp)
-    note = f"# Band: Epeak = {float(sp[5]):.2f} keV; cosima takes E0 = Epeak/(2+alpha) = {e0:.2f} keV"
-    if e0 > emin:
-        if os.path.exists(path):
-            os.remove(path)
-        return f"Band {sp[1]} {sp[2]} {sp[3]} {sp[4]} {e0:.2f}", note
-    e = np.unique(np.concatenate([np.geomspace(emin, emax, 400), [(a - b) * e0] if emin < (a - b) * e0 < emax else []]))
-    y = band(e, a, b, e0)
-    y *= flux / np.trapezoid(y, e) if hasattr(np, "trapezoid") else flux / np.trapz(y, e)
-    with open(path, "w") as f:
-        f.write("#Format: <DP> <Energy in keV> <Spectrum in ph cm^-2 s^-1 keV^-1>\n")
-        f.write(f"#Band function (cosima's form): alpha {a}, beta {b}, Epeak {float(sp[5]):.2f} keV, E0 {e0:.2f} keV;\n")
-        f.write(f"#tabulated because cosima's Band keyword needs E0 > Emin. Flux ({emin:g} - {emax:g} keV): {flux:.6g} ph/cm^2/s\n\n")
-        f.write("IP LOGLOG\n")
-        for x, v in zip(e, y):
-            f.write(f"DP {x:.4f} {v:.6e}\n")
-        f.write("EN\n")
-    return f"File {name}_spectrum.dat", note + f" <= Emin: Band tabulated in {name}_spectrum.dat"
+    e0 = band_e0(float(sp[3]), float(sp[5]))
+    assert e0 > float(sp[1]), sp            # cosima requires E0 > Emin (apply_grb_band_rule.py)
+    return (f"Band {sp[1]} {sp[2]} {sp[3]} {sp[4]} {e0:.2f}",
+            f"# Band: Epeak = {float(sp[5]):.2f} keV; cosima takes E0 = Epeak/(2+alpha) = {e0:.2f} keV")
 
 
 os.makedirs(OUT, exist_ok=True)
@@ -80,7 +50,7 @@ for name, g in draw["grbs"].items():
     s = re.sub(r"^(\s*%s\.Orientation\s+).*$" % name,
                lambda m: m.group(1) + f"Galactic Fixed {d5['b']:.4f} {d5['l']:.4f}", s, flags=re.M)
     s = re.sub(r"^(\s*%s\.Flux\s+).*$" % name, lambda m: m.group(1) + f"{d5['flux']:.6g}", s, flags=re.M)
-    spec, note = spectrum_line(name, d5["spectrum"], d5["flux"], d)
+    spec, note = spectrum_line(d5["spectrum"])
     s = re.sub(r"^(\s*%s\.Spectrum\s+).*$" % name,
                lambda m: (note + "\n" if note else "") + m.group(1) + spec, s, flags=re.M)
     s = re.sub(r"^(\s*%s\.Polarization\s+).*$" % name,
@@ -102,14 +72,14 @@ for name, g in draw["grbs"].items():
 
     sp4, sp5 = d4["spectrum"], d5["spectrum"]
     if sp5[0] == "Band":
-        e0_5 = band_e0(sp5)
         spec_tab = ("| Band alpha | {} | {} |\n| Band beta | {} | {} |\n| Epeak (keV) | {:.1f} | {:.1f} |\n"
-                    "| E0 = Epeak/(2+alpha) (keV; cosima's Band parameter) | {:.1f} | {:.1f}{} |\n"
+                    "| E0 = Epeak/(2+alpha) (keV; cosima's Band parameter) | {:.1f} | {:.1f} |\n"
                     .format(f"{float(sp4[3]):.3f}", sp5[3], f"{float(sp4[4]):.3f}", sp5[4],
-                            (2 + float(sp4[3])) * float(sp4[5]), float(sp5[5]), float(sp4[5]), e0_5,
-                            f" (below {float(sp5[1]):g} keV: tabulated in `{name}_spectrum.dat`)" if e0_5 <= float(sp5[1]) else ""))
+                            (2 + float(sp4[3])) * float(sp4[5]), float(sp5[5]), float(sp4[5]), band_e0(float(sp5[3]), float(sp5[5]))))
     else:
         spec_tab = "| Power-law index | {:.3f} | {} |\n".format(float(sp4[3]), sp5[3])
+    rd = d5.get("epeak_cosima_redraw_from")
+    redraw = f" (here: {rd:.2f} keV, E0 {rd / (2 + float(sp5[3])):.1f} keV, was drawn first)" if rd else ""
     txt = f"""# {name} — DC5
 
 **DC5 status:** modified (time, position, flux, spectral and polarization parameters)
@@ -138,7 +108,7 @@ The light curve is the DC3 light curve, unchanged in shape, with every time stam
 - **Time:** all DC5 GRBs fall in days 4-7 of the observation (3-7 days after the start of the DC4 orientation file), so they overlap the week of background simulations with ACS data and come after the activation build-up. The whole burst plus a 5 min margin ends before 1836092100.0 (7 days after the start of the orientation file). The time is random within the window, with >= 1 h separation from any other DC5 GRB.
 - **Position:** placed at a target off-axis angle (angle between the COSI z-axis and the source) of {d5['target_offaxis']:.1f} deg, at a random azimuth around the z-axis at the trigger time. The targets are the DC4 GRB off-axis values jittered by up to +-3 deg and randomly reassigned, so the DC5 set reproduces the DC4 distribution. Required: off-axis angle <= 60 deg during the whole burst, zenith angle <= 100 deg (well above the ~113 deg Earth-occultation limit), livetime > 0 (no SAA) from 5 min before to 5 min after the burst, and an off-axis change < 3 deg during the burst (no slew).
 - **Flux:** DC4 photon flux (100 keV-10 MeV, time-averaged over the light curve) times a log-uniform factor in [0.5, 2]. For the two DC4 bursts above 100 ph/cm2/s, which are already artificially bright, the factor is in [0.5, 1].
-- **Spectrum:** same spectral model as DC4; parameters drawn from the Fermi GBM 10-year catalog fluence-spectrum distributions ({'short' if name == 'bn080802386' else 'long'} GRBs): alpha and log10(Epeak) Gaussian around the catalog medians (long: alpha = -0.84, Epeak = 144 keV; short: alpha = -0.46, Epeak = 413 keV), beta Gaussian around -2.3 (sigma 0.3), with cuts to keep alpha > beta and Epeak in a range COSI can constrain. cosima's Band function takes E0 = Epeak/(2+alpha) (the DC3/DC4 files give E0, so the DC4 column lists Epeak = (2+alpha) E0); where E0 is below the 100 keV lower bound of the spectrum, which cosima's Band keyword does not allow, the same Band spectrum is tabulated over 100 keV-10 MeV in a spectrum file. For power-law bursts the index follows the high-energy (beta) distribution, since COSI only sees the spectrum above 100 keV.
+- **Spectrum:** same spectral model as DC4; parameters drawn from the Fermi GBM 10-year catalog fluence-spectrum distributions ({'short' if name == 'bn080802386' else 'long'} GRBs): alpha and log10(Epeak) Gaussian around the catalog medians (long: alpha = -0.84, Epeak = 144 keV; short: alpha = -0.46, Epeak = 413 keV), beta Gaussian around -2.3 (sigma 0.3), with cuts to keep alpha > beta and Epeak in a range COSI can constrain. cosima's Band function takes E0 = Epeak/(2+alpha) (cosima reads the value in the DC3/DC4 files as E0, so the DC4 column lists Epeak = (2+alpha) E0) and requires E0 above the 100 keV lower bound of the spectrum: where E0 would be lower, Epeak was drawn again from the same distribution{redraw}. For power-law bursts the index follows the high-energy (beta) distribution, since COSI only sees the spectrum above 100 keV.
 - **Polarization:** the DC4 GRB polarization fractions are spread uniformly between 0 and 0.9; DC5 fractions are drawn from the same distribution (stratified uniform on [0, 0.9]). The angle is uniform in [0, 180) deg.
 
 ## References
@@ -147,4 +117,7 @@ The light curve is the DC3 light curve, unchanged in shape, with every time stam
 _Select it in inputs.yaml as `DC5/sources/GRBs/{name}`._
 """
     open(os.path.join(d, "README_DC5.md"), "w").write(txt)
+    sp_file = os.path.join(d, name + "_spectrum.dat")
+    if os.path.exists(sp_file):
+        os.remove(sp_file)
     print("wrote", name)
