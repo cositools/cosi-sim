@@ -34,13 +34,10 @@ Modes (chosen automatically):
           With particle_germanium: true in the config, each such source is also set up
           in grb mode with the standard geometry in <sim_root>/<class>_Ge/<name>, so the
           event is in the Compton (germanium) data as well.
-    flux  source with a repeating light curve: num_sims parallel runs over the full
-          exposure, every .Flux in the copied source file divided by num_sims (flux chunks).
-          Choose "time" in the source list to simulate a repeating light curve in time
-          chunks instead: every chunk keeps the full light curve and the Flux, and cosima
-          keeps the phase continuous across chunks (the light curve must start at 0).
     time  everything else: the exposure split into num_sims time chunks
           (cosi_sim.pipeline.make_orientation_bins, as run_parallel_sims.py).
+          A repeating light curve keeps the full light curve and the Flux in every chunk;
+          cosima keeps the phase continuous across chunks (the light curve must start at 0).
           A light curve that does not repeat is cut into the chunks
           (cosi_sim.pipeline.lightcurve_chunks): each chunk gets its own light curve and
           flux (Flux x chunk mean / mean of the light curve), and the chunks are chosen
@@ -291,9 +288,7 @@ def detect_mode(src):
         return "acs"
     if "GRBs" in parts[:-1]:
         return "grb"
-    if any(lightcurve_flags(library_source_file(src))):
-        return "flux"
-    return "time"
+    return "time"          # also for repeating light curves (flux only if their time chunks cannot work)
 
 
 def class_name(src, cfg):
@@ -718,9 +713,8 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         if src not in eval(f.read()):
             raise SetupError("not in Source_Library/master_source_list.txt")
 
-    if component:
-        mode = mode or ("flux" if any(lightcurve_flags(lib_file, component)) else "time")
-    mode = mode or detect_mode(src)
+    auto = mode is None
+    mode = mode or ("time" if component else detect_mode(src))
     name = os.path.basename(src)
     run_name = "%s__%s" % (name, component) if component else name
     cls = class_name(src, cfg) + class_suffix
@@ -752,16 +746,19 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
 
     lc_flags = lightcurve_flags(lib_file, component)
     repeating_time = mode == "time" and any(lc_flags)
+    flux_note = None
     if repeating_time:
-        # Opt-in (mode "time" in the source list): every chunk keeps the full repeating light
-        # curve and the Flux. cosima folds absolute times into the light curve, so the phase is
-        # continuous across chunks and each chunk gets Flux x the light-curve integral over it.
-        if not all(lc_flags):
-            raise SetupError("time chunks: this source has both repeating and non-repeating light curves; "
-                             "use flux mode")
+        # Every chunk keeps the full repeating light curve and the Flux. cosima folds absolute times
+        # into the light curve, so the phase is continuous across chunks and each chunk gets
+        # Flux x the light-curve integral over it.
         problems = check_repeating_for_time_chunks(lib_file, ori_range, component)
-        if problems:
-            raise SetupError("time chunks for a repeating light curve: " + "; ".join(problems))
+        if not all(lc_flags):
+            problems.insert(0, "this source has both repeating and non-repeating light curves")
+        if problems and not auto:
+            raise SetupError("time chunks for a repeating light curve: " + "; ".join(problems) + "; use flux mode")
+        if problems:                        # automatic mode: flux chunks instead
+            mode, repeating_time = "flux", False
+            flux_note = "flux chunks, since time chunks cannot be used: " + "; ".join(problems)
 
     # Light curves that do not repeat must match the orientation file (bursts: lie inside it):
     problems = check_lightcurves(lib_file, ori_range, burst=single)
@@ -890,6 +887,8 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     if lc_chunks:
         msg += ("\n    light curve: %d time chunks with equal expected photons over [%.1f, %.1f] s; "
                 "flux of each chunk from the light curve" % (lc_chunks["chunks"], lc_chunks["start"], lc_chunks["stop"]))
+    if flux_note:
+        msg += "\n    " + flux_note
     if repeating_time:
         msg += "\n    repeating light curve: time chunks with the full light curve and the unchanged Flux in every chunk"
     if mode == "acs":

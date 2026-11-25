@@ -34,7 +34,7 @@ DC5/sources/Galactic/cygX3
 DC5/sources/Galactic/magnetar2
 DC5/sources/GRBs/bn081207680
 DC5/sources/ParticleEvents/LOCLPAR0000
-DC4/sources/Galactic/Crab      flux
+DC5/sources/Galactic/1RXSJ170849   flux
 ```
 
 Sources can also be given on the command line instead of `--list`.
@@ -45,8 +45,8 @@ The mode is chosen from the library source file:
 
 | Mode | When | Simulation | Notes |
 |---|---|---|---|
-| `time` | no light curve, or light curves that do not repeat | `num_sims` time chunks, one array task each | no light curve: orientation bins from `cosi_sim.pipeline.make_orientation_bins`, as `run_parallel_sims.py` (+1 chunk if the orientation file does not divide evenly). Light curve: see [Light curves](#light-curves) |
-| `flux` | a repeating light curve (`Lightcurve File true`) | `num_sims` runs of the full exposure | every `.Flux` in the copied source file is divided by `num_sims` (the library file is not changed); choose `time` in the source list for time chunks instead, see [Light curves](#light-curves) |
+| `time` | every source that is not a burst or particle event | `num_sims` time chunks, one array task each | orientation bins from `cosi_sim.pipeline.make_orientation_bins`, as `run_parallel_sims.py` (+1 chunk if the orientation file does not divide evenly). Light curves: see [Light curves](#light-curves) |
+| `flux` | only if given in the source list, or for a repeating light curve whose time chunks cannot work (setup says why) | `num_sims` runs of the full exposure | every `.Flux` in the copied source file is divided by `num_sims` (the library file is not changed) |
 | `grb` | source under a `GRBs/` category | one job | uses the `*_normed.ori` in the source directory |
 | `acs` | source under a `ParticleEvents*` category | one job | as `grb`, with `PreTriggerMode EveryEventWithHits` and no revan; see [Particle events](#particle-events-acs) |
 
@@ -54,7 +54,7 @@ Each sim runs exactly the steps of `run_sims.py`: `define_sim()`, `run_cosima(se
 
 ## Sources with several components
 
-A source whose file has more than one component and a repeating light curve (e.g. `DC4/sources/Galactic/Crab`: the nebula and three pulsar components; `DC5/sources/Galactic/PSRB1509`: three pulsed bands) is split automatically. Each component is set up as its own run, `<class>/<source>__<component>`, with only that component in its source file and its own mode and chunking: a mode after the source in the source list applies to every component, otherwise each component gets its automatic mode (`flux` for a repeating light curve, `time` otherwise). Use `time` for these sources: each component then runs in time chunks.
+A source whose file has more than one component and a repeating light curve (e.g. `DC4/sources/Galactic/Crab`: the nebula and three pulsar components; `DC5/sources/Galactic/PSRB1509`: three pulsed bands) is split automatically. Each component is set up as its own run, `<class>/<source>__<component>`, with only that component in its source file and its own mode and chunking: a mode after the source in the source list applies to every component, otherwise each component runs in time chunks.
 
 The run `<class>/<source>` combines them. It has no simulations of its own; `submit` submits its components (also when you give only `<class>/<source>`), and `status`, `check`, `resubmit` and `cancel` on it act on the components. Each component's post-processing job only checks its sims (resubmitting failures). The last component to finish runs the combined steps in `<class>/<source>`: `merge` (a tra file listing the tra files of every sim of every component), then mimrec + overflow filter, plots, cosipy and copy as for any other source, so there is one extracted tra file and one final file for the source. If a component is resubmitted, the combined steps run again once it is done. To run them by hand: `run_pipeline.py finish <class>/<source>`.
 
@@ -84,7 +84,7 @@ Each job then runs `modify_sim_times(..., t_ref)`, so the events get their absol
 
 Each `Simulations/sim_<i>` holds the chunk's `GalacticScan.ori` and `Sources/` (source file and light curves). Each job only reads its own short light curve, which is much faster than a flux chunk that walks the whole light curve.
 
-**Time chunks for repeating light curves (opt-in).** Repeating light curves use `flux` mode unless you put `time` after the source in the source list. The source then gets the standard `num_sims` time chunks, and every chunk uses the full light curve and the unchanged `Flux`. cosima folds the absolute time into a repeating light curve, counted from its first time stamp, so the phase is continuous across chunks and each chunk gets `Flux` × the light-curve integral over its own time range. Each repeating light curve must start at 0 (`setup_sims.py` checks this), and a source cannot mix repeating and non-repeating light curves. Each job covers only its chunk instead of the full exposure; cosima still searches a light curve from its start for every photon, so very long light-curve files (e.g. the magnetars) stay slow per photon. `flux` stays the default until this has been compared with flux chunks in real MEGAlib.
+**Time chunks for repeating light curves.** A repeating light curve gets the standard `num_sims` time chunks, and every chunk uses the full light curve and the unchanged `Flux`. cosima folds the absolute time into a repeating light curve, counted from its first time stamp, so the phase is continuous across chunks and each chunk gets `Flux` × the light-curve integral over its own time range. Each repeating light curve must start at 0, and a source cannot mix repeating and non-repeating light curves (sources with several components are split, see above); otherwise `setup_sims.py` uses flux chunks and says why. Each job covers only its chunk instead of the full exposure; cosima still searches a light curve from its start for every photon, so very long light-curve files (e.g. the magnetars) are slower per photon. Put `flux` after the source in the source list to use flux chunks anyway.
 
 **Start and stop times.** A light curve that does not repeat must have the same start and stop times as the orientation file of the simulation. For bursts (`grb` mode), it must lie inside it. A repeating light curve must not need more than 2^31 repeats to reach the orientation times. Otherwise `setup_sims.py` skips the source and says why (also with `--dry-run`); `Setup.setup_srcs()` stops with the same error.
 
