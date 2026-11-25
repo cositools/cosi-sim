@@ -43,7 +43,7 @@ g_rows = []
 for n, g in sorted(gd["grbs"].items(), key=lambda kv: kv[1]["dc5"]["t0"]):
     d4, d5 = g["dc4"], g["dc5"]
     if d5["spectrum"][0] == "Band":
-        s4 = f"Band {float(d4['spectrum'][3]):.2f} / {float(d4['spectrum'][4]):.2f} / {float(d4['spectrum'][5]):.0f}"
+        s4 = f"Band {float(d4['spectrum'][3]):.2f} / {float(d4['spectrum'][4]):.2f} / {(2 + float(d4['spectrum'][3])) * float(d4['spectrum'][5]):.0f}"
         s5 = f"Band {float(d5['spectrum'][3]):.2f} / {float(d5['spectrum'][4]):.2f} / {float(d5['spectrum'][5]):.0f}"
     else:
         s4 = f"PL {float(d4['spectrum'][3]):.2f}"; s5 = f"PL {float(d5['spectrum'][3]):.2f}"
@@ -151,7 +151,7 @@ All 11 DC4 `GRB_bn` bursts keep their light-curve shape and spectral model. Thei
 
 **Flux.** The time-averaged photon flux (100 keV–10 MeV) is the DC4 value times a log-uniform factor in [0.5, 2]. For bn090424592 and bn080802386, which DC3/DC4 had already made artificially bright (> 100 ph/cm²/s), the factor is in [0.5, 1] so they do not get brighter.
 
-**Spectra.** Same spectral model as in DC4 (10 Band, 1 power law). Band parameters are drawn from the Fermi GBM 10-year spectral catalog (Poolakkil et al. 2021, fluence spectra): long bursts α ~ N(−0.84, 0.35) in [−1.5, −0.3], log Epeak ~ N(log 144 keV, 0.38 dex) in [60, 1200] keV; the short burst bn080802386 α ~ N(−0.46, 0.45), log Epeak ~ N(log 413 keV, 0.35 dex); β ~ N(−2.3, 0.3) in [−3.2, −1.95]. The power-law index of bn100612726 follows the high-energy slope distribution, N(2.3, 0.25) in [1.9, 2.9], because COSI only sees the spectrum above 100 keV.
+**Spectra.** Same spectral model as in DC4 (10 Band, 1 power law). Band parameters are drawn from the Fermi GBM 10-year spectral catalog (Poolakkil et al. 2021, fluence spectra): long bursts α ~ N(−0.84, 0.35) in [−1.5, −0.3], log Epeak ~ N(log 144 keV, 0.38 dex) in [60, 1200] keV; the short burst bn080802386 α ~ N(−0.46, 0.45), log Epeak ~ N(log 413 keV, 0.35 dex); β ~ N(−2.3, 0.3) in [−3.2, −1.95]. The power-law index of bn100612726 follows the high-energy slope distribution, N(2.3, 0.25) in [1.9, 2.9], because COSI only sees the spectrum above 100 keV. cosima's `Band` keyword takes E0 = Epeak/(2+α), not Epeak, and needs E0 above the 100 keV lower bound: the source files give E0, and bn090424592, bn131122490 and bn161004964 (E0 = 88, 53 and 43 keV) use the same Band spectrum tabulated over 100 keV–10 MeV (`<name>_spectrum.dat`). The DC3/DC4 files also give E0, so the DC4 Epeaks in the table are (2+α)·E0.
 
 **Polarization.** The DC4 polarization fractions are spread uniformly between 0 and 0.9 ({', '.join(f'{x:.1f}' for x in pf4)}). The DC5 fractions are drawn from the same distribution, stratified uniform on [0, 0.9] ({', '.join(f'{x:.2f}' for x in pf5)}). Angles are uniform in [0, 180) deg.
 
