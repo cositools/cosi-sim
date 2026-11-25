@@ -16,7 +16,8 @@ bn170405777.Beam            FarFieldPointSource 0.0 0.0
 bn170405777.Orientation     Galactic Fixed -44.5965 51.6392
 
 # Spectrum 
-bn170405777.Spectrum        Band 100 10000 -0.3612 -2.3324 1046.47
+# Band: Epeak = 1046.47 keV; cosima takes E0 = Epeak/(2+alpha) = 638.56 keV
+bn170405777.Spectrum        Band 100 10000 -0.3612 -2.3324 638.56
 
 # Average photon flux in photon/cm2/s
 bn170405777.Flux            0.288924

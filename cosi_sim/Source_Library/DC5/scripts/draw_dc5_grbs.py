@@ -22,10 +22,12 @@ import os, sys, re, json, random, secrets
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from ori_tools import load_ori, geometry
+from grb_band import draw_epeak, epeak_for_cosima
 
 REPO, ORI = sys.argv[1], sys.argv[2]
 SEED = int(sys.argv[3]) if len(sys.argv) > 3 else secrets.randbits(32)
 rng = np.random.default_rng(SEED)
+rng_e0 = np.random.default_rng(SEED + 1)    # only for Epeak values cosima's Band keyword cannot take (grb_band.py)
 LIB = os.path.join(REPO, "cosi_sim", "Source_Library")
 SRC = os.path.join(LIB, "DC3", "sources", "GRBs")
 
@@ -128,10 +130,10 @@ for g in grbs:
 def draw_band(short):
     if short:   # short GRBs: alpha -0.46 (+0.68 -0.37), Epeak 413 (+651 -263) keV
         a = float(np.clip(rng.normal(-0.46, 0.45), -1.2, -0.05))
-        ep = float(np.clip(10 ** rng.normal(np.log10(413), 0.35), 150, 2000))
+        ep = draw_epeak(rng, True)
     else:       # long GRBs: alpha -0.84 (+0.48 -0.35), Epeak 144 (+229 -85) keV
         a = float(np.clip(rng.normal(-0.84, 0.35), -1.5, -0.3))
-        ep = float(np.clip(10 ** rng.normal(np.log10(144), 0.38), 60, 1200))
+        ep = draw_epeak(rng, False)
     # beta: BEST fluence sample -2.20 (+0.26 -0.29); long-GRB tail toward steep values
     b = float(np.clip(rng.normal(-2.3, 0.3), -3.2, -1.95))
     return a, b, ep
@@ -140,6 +142,7 @@ for g in grbs:
     sp = g["spectrum"]
     if sp[0] == "Band":
         a, b, ep = draw_band(g["name"] in SHORT)
+        ep = epeak_for_cosima(round(a, 4), round(ep, 2), float(sp[1]), g["name"] in SHORT, rng_e0)
         g["spectrum_new"] = ["Band", sp[1], sp[2], f"{a:.4f}", f"{b:.4f}", f"{ep:.2f}"]
     elif sp[0] == "PowerLaw":
         # MEGAlib power law index (positive). Above ~100 keV the photon index of GBM bursts is set by the
