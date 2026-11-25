@@ -8,6 +8,7 @@
 
 # Imports:
 import os,sys,shutil 
+import shlex
 import yaml
 import pandas as pd
 import numpy as np
@@ -148,7 +149,7 @@ class Simulate:
     
         return
     
-    def run_cosima(self, seed="none", verbosity=0, output_name="cosima"):
+    def run_cosima(self, seed="none", verbosity=0, output_name="cosima", drop_lines=None):
         
         """
         input definitions:
@@ -159,6 +160,9 @@ class Simulate:
             - Default is same as cosima default (0). 
         output_name: Name of cosima output file.
             - Set to 'none' for no output file. 
+        drop_lines: Optional list of strings; terminal output lines containing
+            any of them are not shown or written (e.g. "New Modulo", which cosima
+            prints at every repeat of a repeating light curve).
         """
 
         # Make print statement:
@@ -186,6 +190,11 @@ class Simulate:
             output = "| tee %s_terminal_output.txt" %output_name
         if output_name == "none":
             output = ""
+
+        # Drop lines from the terminal output (before tee):
+        if drop_lines:
+            output = "| grep --line-buffered -v -F %s %s" % (
+                " ".join("-e %s" % shlex.quote(d) for d in drop_lines), output)
 
         # Run executable:
         if seed != "none":

@@ -34,17 +34,20 @@ Modes (chosen automatically):
           With particle_germanium: true in the config, each such source is also set up
           in grb mode with the standard geometry in <sim_root>/<class>_Ge/<name>, so the
           event is in the Compton (germanium) data as well.
-    flux  source with a repeating light curve: num_sims parallel runs over the full
-          exposure, every .Flux in the copied source file divided by num_sims (flux chunks).
-          Choose "time" in the source list to simulate a repeating light curve in time
-          chunks instead: every chunk keeps the full light curve and the Flux, and cosima
-          keeps the phase continuous across chunks (the light curve must start at 0).
     time  everything else: the exposure split into num_sims time chunks
           (cosi_sim.pipeline.make_orientation_bins, as run_parallel_sims.py).
+          A repeating light curve keeps the full light curve and the Flux in every chunk;
+          cosima keeps the phase continuous across chunks (the light curve must start at 0).
           A light curve that does not repeat is cut into the chunks
           (cosi_sim.pipeline.lightcurve_chunks): each chunk gets its own light curve and
           flux (Flux x chunk mean / mean of the light curve), and the chunks are chosen
           with equal expected photons, so times without emission get no chunk.
+
+A source with more than one component and a repeating light curve (e.g. DC4 Crab, DC5 PSRB1509)
+is split: each component is set up as its own run in <sim_root>/<class>/<name>__<component>
+(only that component in its source file; its own mode and chunking, the source-list mode
+applies to all), and <sim_root>/<class>/<name> combines them: when all components are checked,
+its post-processing makes one tra file of all their sims and runs mimrec, plots, cosipy and copy.
 
 Sources with normalized times (a sim_time_reference.txt in the library
 directory, see cosi_sim.pipeline.time_reference) are simulated in times t - t_ref
@@ -88,7 +91,7 @@ REQUIRED_CONFIG = ["sim_root", "products_dir", "inputs_template", "cosipy_templa
 SLURM_DEFAULTS = {"extra_directives": [], "sim_time": "0:55:00", "sim_mem": "3G",
                   "flux_time": "0:55:00", "flux_mem": "3G", "grb_time": "2:00:00", "grb_mem": "8G",
                   "post_time": "12:00:00", "post_mem": "32G", "start_jitter": 60,
-                  "array_throttle": None, "max_retries": 2, "max_jobs": None}
+                  "array_throttle": None, "max_retries": 2, "max_jobs": None, "max_log_size": "1G"}
 
 
 class SetupError(Exception):
@@ -205,17 +208,57 @@ def active_lines(path):
         return [l for l in f if l.strip() and not l.lstrip().startswith("#")]
 
 
-def lightcurve_flags(path):
-    """Repeat flags (True/False) of the active Lightcurve lines of a source file."""
+def lightcurve_flags(path, component=None):
+    """Repeat flags (True/False) of the active Lightcurve lines of a source file (or of one component)."""
     flags = []
     for line in active_lines(path):
-        m = re.match(r"\s*\S+\.Lightcurve\s+File\s+(\S+)", line)
-        if m:
-            flags.append(m.group(1).lower() == "true")
+        m = re.match(r"\s*(\S+)\.Lightcurve\s+File\s+(\S+)", line)
+        if m and component in (None, m.group(1)):
+            flags.append(m.group(2).lower() == "true")
     return flags
 
 
-def check_repeating_for_time_chunks(source_file, ori_range):
+def source_components(path):
+    """Names of the components (<run>.Source <name> lines) of a source file, in order."""
+    names = []
+    for line in active_lines(path):
+        m = re.match(r"\s*\S+\.Source\s+(\S+)", line)
+        if m and m.group(1) not in names:
+            names.append(m.group(1))
+    return names
+
+
+def split_components(src):
+    """Components to simulate separately, or [] to simulate the source as one run.
+
+    A source with more than one component and a repeating light curve is split: each
+    component is simulated as its own run (with its own mode and chunking) and the events
+    are combined afterwards. One source file with several repeating light curves (and
+    possibly a steady component) can neither be cut into time chunks nor run quickly in
+    flux chunks.
+    """
+    lib_file = library_source_file(src)
+    names = source_components(lib_file)
+    return names if len(names) > 1 and any(lightcurve_flags(lib_file)) else []
+
+
+def keep_component(path, component, components):
+    """Reduce a copied source file to one component (drops the lines of the others)."""
+    others = set(components) - {component}
+    kept = []
+    for line in open(path):
+        split = line.split()
+        if split and not line.lstrip().startswith("#"):
+            if split[0].split(".")[0] in others:
+                continue
+            if split[0].endswith(".Source") and len(split) > 1 and split[1] in others:
+                continue
+        kept.append(line)
+    with open(path, "w") as f:
+        f.writelines(kept)
+
+
+def check_repeating_for_time_chunks(source_file, ori_range, component=None):
     """Problems with simulating the repeating light curves of a source in time chunks.
 
     cosima starts each chunk at its first orientation time and moves the start to the first
@@ -225,8 +268,9 @@ def check_repeating_for_time_chunks(source_file, ori_range):
     """
     problems = []
     lc_dir = os.path.dirname(os.path.abspath(source_file))
+    only = component
     for component, repeats, name in lightcurves(source_file):
-        if not repeats:
+        if not repeats or only not in (None, component):
             continue
         t0, _ = lightcurve_time_range(os.path.join(lc_dir, name))
         if t0 != 0:
@@ -244,9 +288,7 @@ def detect_mode(src):
         return "acs"
     if "GRBs" in parts[:-1]:
         return "grb"
-    if any(lightcurve_flags(library_source_file(src))):
-        return "flux"
-    return "time"
+    return "time"          # also for repeating light curves (flux only if their time chunks cannot work)
 
 
 def class_name(src, cfg):
@@ -392,7 +434,8 @@ def run_sims_py(cfg, t_ref, file_name, chunk_sources=False, revan=True, pre_trig
             "    f.write(\"%d\\n\" % seed)\n"
             + ("instance.define_sim(pre_trigger_mode=%r)\n" % pre_trigger_mode if pre_trigger_mode
                else "instance.define_sim()\n")
-            + "instance.run_cosima(seed=seed)\n")
+            + "# cosima prints a line at every repeat of a repeating light curve (MFunction::FindX):\n"
+            "instance.run_cosima(seed=seed, drop_lines=[\"New Modulo\"])\n")
     if t_ref is not None:
         text += ("\n# Shift the sim times back to absolute times (the run used t - t_ref):\n"
                  "instance.modify_sim_times(\"%s.inc1.id1.sim.gz\", %r)\n"
@@ -429,11 +472,33 @@ def post_megalib_py(cfg, sim_name):
 
 def post_cosipy_py(label):
     return ("# Post-processing step 2 (cosipy environment), written by setup_sims.py.\n"
+            "import numpy as np\n"
             "from cosipy import UnBinnedData\n\n"
             "analysis = UnBinnedData(\"cosipy_inputs.yaml\")\n"
             "savefile = %s\n"
-            "analysis.read_tra(output_name=savefile)\n"
+            "analysis.read_tra(output_name=savefile)\n\n"
+            "# Events in time order (the tra file is not, e.g. for flux chunks or combined components;\n"
+            "# recent cosipy versions sort in read_tra already):\n"
+            "times = analysis.cosi_dataset[\"TimeTags\"]\n"
+            "if np.any(np.diff(times) < 0):\n"
+            "    order = np.argsort(times, kind=\"stable\")\n"
+            "    for key in analysis.cosi_dataset:\n"
+            "        analysis.cosi_dataset[key] = analysis.cosi_dataset[key][order]\n"
+            "    analysis.write_unbinned_output(savefile)\n"
+            "    print(\"Sorted %%d events by time.\" %% len(times))\n\n"
             "analysis.cut_SAA_events(output_name=savefile + \"_with_SAAcut\")\n" % json.dumps(label))
+
+
+def watched(cfg, run_dir, command):
+    """command, run under watch_logs.py when slurm.max_log_size is set."""
+    limit = cfg["slurm"].get("max_log_size")
+    if not limit:
+        return command
+    return ("# Stop the job if its log files grow above slurm.max_log_size:\n"
+            "%s %s --limit %s --marker Output/log_limit_exceeded.txt --slurm-logs %s "
+            "--logs 'Output/*terminal_output*.txt' -- %s"
+            % (cfg["orchestrator_python"], os.path.join(AUTOMATION_DIR, "watch_logs.py"), limit,
+               os.path.join(run_dir, "logs"), command))
 
 
 def write_job_scripts(run_dir, cfg, state):
@@ -445,7 +510,7 @@ def write_job_scripts(run_dir, cfg, state):
             sbatch_header(cfg, name, slurm["grb_time"], slurm["grb_mem"], "sim_KIND.%j")
             + "\n#The MEGAlib environment first needs to be sourced:\n" + source_env(cfg["megalib_env"])
             + "\n#Run the simulation in the source directory:\n"
-            + "cd %s\nexport MPLBACKEND=Agg\npython run_sims.py\n" % run_dir)
+            + "cd %s\nexport MPLBACKEND=Agg\n%s\n" % (run_dir, watched(cfg, run_dir, "python run_sims.py")))
     else:
         mode_time = slurm["flux_time"] if state["mode"] == "flux" else slurm["sim_time"]
         mode_mem = slurm["flux_mem"] if state["mode"] == "flux" else slurm["sim_mem"]
@@ -459,11 +524,14 @@ def write_job_scripts(run_dir, cfg, state):
             + "cd %s\n" % run_dir
             + "cp run_sims.py inputs.yaml Simulations/sim_$SLURM_ARRAY_TASK_ID\n"
             + "cd Simulations/sim_$SLURM_ARRAY_TASK_ID\n"
-            + "export MPLBACKEND=Agg\npython run_sims.py\n")
+            + "export MPLBACKEND=Agg\n%s\n" % watched(cfg, run_dir, "python run_sims.py"))
     files["postprocess.sh"] = (
         sbatch_header(cfg, name + "_post", slurm["post_time"], slurm["post_mem"], "post_KIND.%j")
         + ("\n# Check the sim (resubmitting a failure), then copy the .sim.gz file. Safe to rerun by hand.\n"
            if state["mode"] == "acs" else
+           "\n# Check the sims (resubmitting failures). When all components of %s are done, the\n"
+           "# last one runs the combined post-processing in %s. Safe to rerun by hand.\n"
+           % (state["source"], state.get("combine_into")) if state.get("component") else
            "\n# Check the sims (resubmitting failures), then mimrec, overflow filter,\n"
            "# cosipy and copy of the final file. Safe to rerun by hand.\n")
         + "cd %s\n" % run_dir
@@ -471,7 +539,7 @@ def write_job_scripts(run_dir, cfg, state):
     files["run_sims.py"] = run_sims_py(cfg, state.get("t_ref"), state["file_name"], bool(state.get("lightcurve_chunks")),
                                        revan=state["mode"] != "acs",
                                        pre_trigger_mode=ACS_PRE_TRIGGER_MODE if state["mode"] == "acs" else None)
-    if state["mode"] != "acs":
+    if state["mode"] != "acs" and not state.get("component"):
         files["post_megalib.py"] = post_megalib_py(cfg, state["sim_name"])
         files["post_cosipy.py"] = post_cosipy_py(state["output_label"])
         files["post_plots.py"] = POST_PLOTS_PY
@@ -553,12 +621,91 @@ def write_combined_tra(run_dir, state):
         f.write("EN")
 
 
-def run_dir_for(src, cfg, class_suffix=""):
-    return os.path.join(cfg["sim_root"], class_name(src, cfg) + class_suffix, os.path.basename(src))
+def run_dir_for(src, cfg, class_suffix="", component=None):
+    name = os.path.basename(src)
+    return os.path.join(cfg["sim_root"], class_name(src, cfg) + class_suffix,
+                        "%s__%s" % (name, component) if component else name)
 
 
-def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=False, class_suffix=""):
-    """Set up one source. class_suffix: appended to the class directory (germanium runs of particle events)."""
+COMBINED_SIM_NAME = "combined"
+
+
+def setup_combined(src, cfg, template_text, components, force=False, dry_run=False):
+    """The run directory that combines the components of a split source.
+
+    It has no simulations of its own. When every component's sims are checked, the last
+    component's post-processing job runs its steps: a combined tra file listing the tra files
+    of all component sims, then mimrec + overflow filter, plots, cosipy and copy, as for any
+    other source, so there is one extracted tra file and one final file for the source.
+    """
+    name = os.path.basename(src)
+    cls = class_name(src, cfg)
+    run_dir = run_dir_for(src, cfg)
+    comp_dirs = [run_dir_for(src, cfg, component=c) for c in components]
+    if os.path.isfile(os.path.join(run_dir, STATE_FILE)):
+        existing = load_state(run_dir)
+        if existing["source"] != src or existing["mode"] != "combined":
+            raise SetupError("%s is already used by %s; use another sim_root or class_map for this source"
+                             % (run_dir, existing["source"]))
+        if not force:
+            raise SetupError("already set up in %s (stage: %s); use --force to redo it" % (run_dir, existing["stage"]))
+    if dry_run:
+        print("%-50s %-5s -> %s  (combines %d components)" % (src, "comb.", run_dir, len(components)))
+        return
+    os.makedirs(run_dir, exist_ok=True)
+    os.makedirs(os.path.join(run_dir, "logs"), exist_ok=True)
+    out = os.path.join(run_dir, "Output")
+    if os.path.isdir(out):
+        shutil.rmtree(out)
+    os.makedirs(out)
+    with open(os.path.join(run_dir, "inputs.yaml"), "w") as f:
+        f.write(set_yaml_keys(template_text, {"run_dir": run_dir, "src_list": [src], "num_sims": int(cfg["num_sims"]),
+                                              "parallel_time_sims": False, "lightcurve": False,
+                                              "mcosima": False, "clear_sims": True}))
+    filtered = "Output/%s.inc1.id1.extracted.filtered.tra.gz" % COMBINED_SIM_NAME
+    with open(cfg["cosipy_template"]) as f:
+        cosipy_text = f.read()
+    with open(os.path.join(run_dir, "cosipy_inputs.yaml"), "w") as f:
+        f.write(set_yaml_keys(cosipy_text, {"data_file": filtered}))
+    label = cfg["output_label"].format(source=name)
+    state = {
+        "source": src, "source_name": name, "class": cls, "mode": "combined", "run_dir": run_dir,
+        "components": comp_dirs, "njobs": 0, "num_sims": int(cfg["num_sims"]),
+        "file_name": COMBINED_SIM_NAME, "sim_name": COMBINED_SIM_NAME,
+        "filtered_tra": filtered, "output_label": label, "products_dir": cfg["products_dir"],
+        "megalib_env": cfg["megalib_env"], "cosipy_env": cfg["cosipy_env"],
+        "revan_geometry": cfg["revan_geometry"], "slurm": cfg["slurm"],
+        "stage": "setup", "attempt": 0, "completed": [], "jobs": [],
+        "history": ["%s  set up: combines the components %s" % (now(), ", ".join(components))],
+    }
+    slurm = cfg["slurm"]
+    files = {
+        "post_megalib.py": post_megalib_py(cfg, COMBINED_SIM_NAME),
+        "post_cosipy.py": post_cosipy_py(label),
+        "post_plots.py": POST_PLOTS_PY,
+        "postprocess.sh": (sbatch_header(cfg, name + "_post", slurm["post_time"], slurm["post_mem"], "post_KIND.%j")
+                           + "\n# Combined post-processing of the components (run automatically by the last\n"
+                             "# component's post-processing job). Safe to rerun by hand.\n"
+                           + "cd %s\n" % run_dir
+                           + "%s %s finish %s\n" % (cfg["orchestrator_python"],
+                                                    os.path.join(AUTOMATION_DIR, "run_pipeline.py"), run_dir)),
+    }
+    for fname, text in files.items():
+        path = os.path.join(run_dir, fname)
+        with open(path, "w") as f:
+            f.write(text)
+        if fname.endswith(".sh"):
+            os.chmod(path, 0o755)
+    save_state(run_dir, state)
+    print("%-50s comb. -> %s\n    combines %d components: %s"
+          % (src, run_dir, len(components), ", ".join(os.path.basename(d) for d in comp_dirs)))
+
+
+def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=False, class_suffix="",
+                 component=None, combine_into=None):
+    """Set up one source. class_suffix: appended to the class directory (germanium runs of particle events).
+    component: simulate only this component of the source file, in <class>/<source>__<component>; its
+    events are combined with the other components in combine_into (see setup_combined)."""
     lib_file = library_source_file(src)
     if not os.path.isfile(lib_file):
         raise SetupError("not in the source library (%s not found)" % lib_file)
@@ -566,19 +713,22 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         if src not in eval(f.read()):
             raise SetupError("not in Source_Library/master_source_list.txt")
 
-    mode = mode or detect_mode(src)
+    auto = mode is None
+    mode = mode or ("time" if component else detect_mode(src))
     name = os.path.basename(src)
+    run_name = "%s__%s" % (name, component) if component else name
     cls = class_name(src, cfg) + class_suffix
-    run_dir = os.path.join(cfg["sim_root"], cls, name)
+    run_dir = os.path.join(cfg["sim_root"], cls, run_name)
     scratch = scratch_dir_for(run_dir, cfg)
     num_sims = int(cfg["num_sims"])
 
     if os.path.isfile(os.path.join(run_dir, STATE_FILE)):
         existing = load_state(run_dir)
-        if existing["source"] != src:
+        if existing["source"] != src or existing.get("component") != component:
             # Never let one library source replace another (e.g. DC2 and DC4 Galactic/Crab):
             raise SetupError("%s is already used by %s; use another sim_root or class_map for this source"
-                             % (run_dir, existing["source"]))
+                             % (run_dir, existing["source"] + (" (component %s)" % existing["component"]
+                                                               if existing.get("component") else "")))
         if not force:
             raise SetupError("already set up in %s (stage: %s); use --force to redo it"
                              % (run_dir, existing["stage"]))
@@ -594,18 +744,21 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         o0, o1 = orientation_time_range(template["orientation_file"])
         ori_range = (o0 - t_ref, o1 - t_ref) if t_ref is not None else (o0, o1)
 
-    lc_flags = lightcurve_flags(lib_file)
+    lc_flags = lightcurve_flags(lib_file, component)
     repeating_time = mode == "time" and any(lc_flags)
+    flux_note = None
     if repeating_time:
-        # Opt-in (mode "time" in the source list): every chunk keeps the full repeating light
-        # curve and the Flux. cosima folds absolute times into the light curve, so the phase is
-        # continuous across chunks and each chunk gets Flux x the light-curve integral over it.
+        # Every chunk keeps the full repeating light curve and the Flux. cosima folds absolute times
+        # into the light curve, so the phase is continuous across chunks and each chunk gets
+        # Flux x the light-curve integral over it.
+        problems = check_repeating_for_time_chunks(lib_file, ori_range, component)
         if not all(lc_flags):
-            raise SetupError("time chunks: this source has both repeating and non-repeating light curves; "
-                             "use flux mode")
-        problems = check_repeating_for_time_chunks(lib_file, ori_range)
-        if problems:
-            raise SetupError("time chunks for a repeating light curve: " + "; ".join(problems))
+            problems.insert(0, "this source has both repeating and non-repeating light curves")
+        if problems and not auto:
+            raise SetupError("time chunks for a repeating light curve: " + "; ".join(problems) + "; use flux mode")
+        if problems:                        # automatic mode: flux chunks instead
+            mode, repeating_time = "flux", False
+            flux_note = "flux chunks, since time chunks cannot be used: " + "; ".join(problems)
 
     # Light curves that do not repeat must match the orientation file (bursts: lie inside it):
     problems = check_lightcurves(lib_file, ori_range, burst=single)
@@ -615,7 +768,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     if dry_run:
         gz = gunzip_library_files(src, dry_run=True)
         note = "  (times - t_ref %r)" % t_ref if t_ref is not None else ""
-        print("%-50s %-5s -> %s%s%s%s" % (src, mode, run_dir, note,
+        print("%-50s %-5s -> %s%s%s%s" % (src + (" [%s]" % component if component else ""), mode, run_dir, note,
                                         "  (gunzip %s)" % ", ".join(gz) if gz else "",
                                         "  (%s in %s)" % ("logs/" if single else "Simulations/, logs/", scratch) if scratch else ""))
         return
@@ -649,7 +802,7 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
     with open(cfg["cosipy_template"]) as f:
         cosipy_text = f.read()
     filtered = "Output/%s.inc1.id1.extracted.filtered.tra.gz" % sim_name
-    if mode != "acs":
+    if mode != "acs" and not component:
         with open(os.path.join(run_dir, "cosipy_inputs.yaml"), "w") as f:
             f.write(set_yaml_keys(cosipy_text, {"data_file": filtered}))
 
@@ -662,6 +815,8 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         raise SetupError("Setup.setup_srcs() failed")
     finally:
         os.chdir(home)
+    if component:
+        keep_component(os.path.join(run_dir, "Sources", name + ".source"), component, source_components(lib_file))
 
     flux_scaling = scale_fluxes(os.path.join(run_dir, "Sources"), num_sims) if mode == "flux" else []
 
@@ -676,8 +831,9 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
             t_ref = shift = orientation_time_range(lc_ori)[0]
             sim_name = "fixed_times"
             filtered = "Output/%s.inc1.id1.extracted.filtered.tra.gz" % sim_name
-            with open(os.path.join(run_dir, "cosipy_inputs.yaml"), "w") as f:
-                f.write(set_yaml_keys(cosipy_text, {"data_file": filtered}))
+            if not component:
+                with open(os.path.join(run_dir, "cosipy_inputs.yaml"), "w") as f:
+                    f.write(set_yaml_keys(cosipy_text, {"data_file": filtered}))
         try:
             lc_chunks = write_chunks(os.path.join(run_dir, "Sources", name + ".source"), os.path.join(run_dir, "Sources"),
                                      lc_ori, num_sims, lambda k: os.path.join(sims, "sim_%d" % k), t_shift=shift)
@@ -699,10 +855,11 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
         njobs = 1
 
     label = (cfg["grb_output_label"] if mode == "grb" else cfg["output_label"]).format(source=name)
-    if mode == "acs":
+    if mode == "acs" or component:
         filtered, label = None, None
     state = {
-        "source": src, "source_name": name, "class": cls, "mode": mode, "run_dir": run_dir,
+        "source": src, "source_name": run_name, "class": cls, "mode": mode, "run_dir": run_dir,
+        "component": component, "combine_into": combine_into,
         "njobs": njobs, "num_sims": num_sims, "file_name": file_name, "sim_name": sim_name,
         "filtered_tra": filtered, "output_label": label, "products_dir": cfg["products_dir"],
         "megalib_env": cfg["megalib_env"], "cosipy_env": cfg["cosipy_env"],
@@ -722,13 +879,16 @@ def setup_source(src, mode, cfg, template_text, template, force=False, dry_run=F
             os.rmdir(os.path.join(run_dir, "Orientation_Bins"))
     save_state(run_dir, state)
 
-    msg = "%-50s %-5s %5d job%s -> %s" % (src, mode, njobs, "s" if njobs > 1 else " ", run_dir)
+    msg = "%-50s %-5s %5d job%s -> %s" % (src + (" [%s]" % component if component else ""), mode, njobs,
+                                            "s" if njobs > 1 else " ", run_dir)
     if flux_scaling:
         msg += "\n    flux / %d: %s" % (num_sims, ", ".join(
             "%s %.4g -> %.4g" % (c["keyword"], c["flux"], c["scaled"]) for c in flux_scaling))
     if lc_chunks:
         msg += ("\n    light curve: %d time chunks with equal expected photons over [%.1f, %.1f] s; "
                 "flux of each chunk from the light curve" % (lc_chunks["chunks"], lc_chunks["start"], lc_chunks["stop"]))
+    if flux_note:
+        msg += "\n    " + flux_note
     if repeating_time:
         msg += "\n    repeating light curve: time chunks with the full light curve and the unchanged Flux in every chunk"
     if mode == "acs":
@@ -761,30 +921,47 @@ def main(argv=None):
 
     # Runs: each source, plus a germanium run (grb mode, standard geometry) for particle events
     # if particle_germanium is set:
+    # A source with several components and a repeating light curve is split into one run per
+    # component plus a run that combines them (split_components):
     runs = []
     for src, mode in entries:
-        runs.append((src, mode, ""))
         try:
             acs = (mode or detect_mode(src)) == "acs"
+            components = split_components(src)
         except OSError:
-            acs = False                      # not in the library: reported by setup_source
+            acs, components = False, []      # not in the library: reported by setup_source
+        if components:
+            runs += [(src, mode, "", c) for c in components]
+            runs.append((src, mode, "", components))
+            continue
+        runs.append((src, mode, "", None))
         if acs and cfg["particle_germanium"]:
-            runs.append((src, "grb", "_Ge"))
+            runs.append((src, "grb", "_Ge", None))
     failed = []
     targets = {}
-    for src, mode, suffix in runs:
-        run_dir = run_dir_for(src, cfg, suffix)
+    for src, mode, suffix, comp in runs:
+        run_dir = run_dir_for(src, cfg, suffix, comp if isinstance(comp, str) else None)
         if run_dir in targets and targets[run_dir] != src:
             sys.exit("%s and %s would both use %s; simulate them in separate sim_roots (or use class_map)."
                      % (targets[run_dir], src, run_dir))
         targets[run_dir] = src
-    for src, mode, suffix in runs:
+    skipped = set()
+    for src, mode, suffix, comp in runs:
         try:
-            setup_source(src, mode, cfg, template_text, template, force=args.force, dry_run=args.dry_run,
-                         class_suffix=suffix)
+            if isinstance(comp, list):                   # the combining run, after its components
+                if src in skipped:
+                    raise SetupError("not set up, since a component failed")
+                setup_combined(src, cfg, template_text, comp, force=args.force, dry_run=args.dry_run)
+            else:
+                setup_source(src, mode, cfg, template_text, template, force=args.force, dry_run=args.dry_run,
+                             class_suffix=suffix, component=comp,
+                             combine_into=run_dir_for(src, cfg) if comp else None)
         except SetupError as err:
-            print("%-50s SKIPPED: %s" % (src + (" (germanium run)" if suffix else ""), err))
+            what = (" (germanium run)" if suffix else "" if comp is None else
+                    " (combined)" if isinstance(comp, list) else " [%s]" % comp)
+            print("%-50s SKIPPED: %s" % (src + what, err))
             failed.append(src)
+            skipped.add(src)
     print()
     print("%d of %d runs %s." % (len(runs) - len(failed), len(runs),
                                  "checked" if args.dry_run else "set up"))
