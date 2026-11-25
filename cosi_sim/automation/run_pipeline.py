@@ -39,6 +39,14 @@ Rolling submission (optional): with slurm.max_jobs in the config, or
 post-processing job submits the next waiting sources once its own sims have
 left the queue, so a whole data challenge can be submitted with one command.
 
+A split source (several components with a repeating light curve, see setup_sims.py) has
+one run per component, which only checks its sims, and a combining run with the steps
+merge (one tra file listing the sims of all components), mimrec, plots, cosipy and copy;
+the last component to finish runs them.
+
+Simulation jobs run under watch_logs.py and are stopped if their log files grow above
+slurm.max_log_size; such sims are reported and not resubmitted automatically.
+
 Particle events for the ACS (acs mode) have two steps: check (cosima finished and the
 time-fixed .sim.gz file is complete) and copy (the .sim.gz file to
 <products_dir>/ACS/<class>/).
@@ -64,6 +72,9 @@ import sys
 STATE_FILE = "automation.json"
 STEPS = ["check", "mimrec", "plots", "cosipy", "copy"]
 ACS_STEPS = ["check", "copy"]
+COMPONENT_STEPS = ["check"]                              # a component of a split source
+COMBINED_STEPS = ["merge", "mimrec", "plots", "cosipy", "copy"]   # the run combining the components
+LOG_LIMIT_MARKER = "log_limit_exceeded.txt"              # written in Output/ by watch_logs.py
 SINGLE_JOB_MODES = ("grb", "acs")      # one simulation job in the run directory
 AUTOMATION_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -94,7 +105,7 @@ def save_state(run_dir, state):
 TOUCHED_SIM_ROOTS = set()
 STATUS_FILE = "pipeline_status.txt"
 PROBLEM_STAGES = ("error", "post_not_submitted", "cancelled")       # and every failed_* stage
-ACTIVE_STAGES = ("waiting", "submitted", "resubmitted", "checking", "mimrec", "plots", "cosipy")
+ACTIVE_STAGES = ("waiting", "submitted", "resubmitted", "checking", "components", "merge", "mimrec", "plots", "cosipy")
 
 
 def sim_root_of(run_dir):
@@ -124,7 +135,7 @@ def write_status_file(sim_root):
         message = message.strip()
         if message.startswith(name):                                     # submission messages start with the name
             message = message[len(name):].strip()
-        rows.append((group, name, state.get("mode", "?"), stage, state.get("attempt", 0),
+        rows.append((group, name, mode_label(state), stage, state.get("attempt", 0),
                      state.get("updated", when), message))
     rows.sort()
     counts = {}
@@ -201,9 +212,17 @@ def find_run_dirs(targets, max_depth=4):
                 dirs[:] = []
             else:
                 dirs[:] = sorted(d for d in dirs if d not in ("Simulations", "Output", "Sources", "logs"))
+    # The components of a combining run (split sources) come with it:
+    expanded = []
+    for d in found:
+        expanded.append(d)
+        try:
+            expanded += load_state(d).get("components") or []
+        except (OSError, ValueError):
+            pass
     # Keep order, drop duplicates:
     seen = set()
-    return [d for d in found if not (d in seen or seen.add(d))]
+    return [d for d in expanded if not (d in seen or seen.add(d))]
 
 
 def tail_lines(path, nbytes=16384):
@@ -230,17 +249,43 @@ def compress_ranges(indices):
     return ",".join(parts)
 
 
+def is_combined(state):
+    return state.get("mode") == "combined"
+
+
+def mode_label(state):
+    return "comb." if is_combined(state) else state.get("mode", "?")
+
+
+def component_states(state):
+    return [load_state(d) for d in state.get("components", [])]
+
+
 def sim_output_dirs(state):
     """(index, Output directory) for every sim of this source."""
     run_dir = state["run_dir"]
+    if is_combined(state):
+        return []
     if state["mode"] in SINGLE_JOB_MODES:
         return [(0, os.path.join(run_dir, "Output"))]
     return [(i, os.path.join(run_dir, "Simulations", "sim_%d" % i, "Output"))
             for i in range(state["njobs"])]
 
 
+def log_limit_reason(output_dir):
+    """The message of watch_logs.py if it stopped this sim, else None."""
+    path = os.path.join(output_dir, LOG_LIMIT_MARKER)
+    if not os.path.isfile(path):
+        return None
+    with open(path) as f:
+        return "stopped: " + f.read().strip()
+
+
 def check_one_sim(output_dir, tra_name):
     """Same criteria as Simulate.check_revan_parallel. Returns (ok, reason, n_compton)."""
+    stopped = log_limit_reason(output_dir)
+    if stopped:
+        return False, stopped, None
     tra = os.path.join(output_dir, tra_name)
     log = os.path.join(output_dir, "revan_terminal_output.txt")
     if not os.path.isfile(tra):
@@ -267,6 +312,9 @@ def check_one_sim(output_dir, tra_name):
 
 def check_sim_file(output_dir, sim_name):
     """acs mode: the .sim.gz file is complete (ends with the TS line). Returns (ok, reason, n_events)."""
+    stopped = log_limit_reason(output_dir)
+    if stopped:
+        return False, stopped, None
     path = os.path.join(output_dir, sim_name)
     if not os.path.isfile(path):
         return False, "no sim file (%s)" % sim_name, None
@@ -286,6 +334,10 @@ def check_sim_file(output_dir, sim_name):
 
 
 def steps_for(state):
+    if is_combined(state):
+        return COMBINED_STEPS
+    if state.get("component"):
+        return COMPONENT_STEPS
     return ACS_STEPS if state["mode"] == "acs" else STEPS
 
 
@@ -293,8 +345,23 @@ def event_label(state):
     return "events" if state["mode"] == "acs" else "Compton events"
 
 
+def total_jobs(state):
+    return sum(c["njobs"] for c in component_states(state)) if is_combined(state) else state["njobs"]
+
+
 def check_sims(state):
-    """Check every sim of a source. Returns (failed indices, report lines, event counts)."""
+    """Check every sim of a source. Returns (failed indices, report lines, event counts).
+
+    For a combining run: the sims of all its components (indices count through them)."""
+    if is_combined(state):
+        failed, report, counts, offset = [], [], [], 0
+        for comp in component_states(state):
+            f, r, c = check_sims(comp)
+            failed += [offset + i for i in f]
+            report += ["%s: %s" % (comp["component"], line) for line in r]
+            counts += c
+            offset += comp["njobs"]
+        return failed, report, counts
     if state["mode"] == "acs":
         check = lambda out: check_sim_file(out, "%s.inc1.id1.sim.gz" % state["sim_name"])  # noqa: E731
     else:
@@ -502,6 +569,9 @@ def enqueue(run_dirs, max_jobs, force=False):
     for run_dir in run_dirs:
         state = load_state(run_dir)
         name = "%s/%s" % (state["class"], state["source_name"])
+        if is_combined(state):
+            mark_combined_submitted(state, force)
+            continue
         if state["stage"] not in ("setup",) and not force:
             print("%-40s skipped (stage: %s; use --force to submit again)" % (name, state["stage"]))
             continue
@@ -545,6 +615,14 @@ def fill_for(state):
 # Commands
 # ---------------------------------------------------------------------------
 
+def mark_combined_submitted(state, force=False):
+    """A combining run has no jobs of its own: its components are submitted."""
+    if state["stage"] in ("setup",) or force:
+        update_state(state["run_dir"], stage="components", completed=[],
+                     message="components submitted; combined when all are done (%s)"
+                             % ", ".join(os.path.basename(d) for d in state["components"]))
+
+
 def cmd_submit(args):
     run_dirs = find_run_dirs(args.targets)
     if not run_dirs:
@@ -569,6 +647,8 @@ def cmd_submit(args):
         if args.dry_run:
             for run_dir in run_dirs:
                 state = load_state(run_dir)
+                if is_combined(state):
+                    continue
                 print("    [dry run] queue %s/%s (%d jobs)" % (state["class"], state["source_name"],
                                                              jobs_needed(state)))
             print("    [dry run] sources are submitted while your SLURM jobs stay <= %d" % max_jobs)
@@ -580,12 +660,18 @@ def cmd_submit(args):
     for run_dir in run_dirs:
         state = load_state(run_dir)
         name = "%s/%s" % (state["class"], state["source_name"])
+        if is_combined(state):
+            if not args.dry_run:
+                mark_combined_submitted(state, args.force)
+            continue
         if state["stage"] not in ("setup",) and not args.force:
             print("%-40s skipped (stage: %s; use --force to submit again)" % (name, state["stage"]))
             continue
         depend = previous if args.chain else None
         if not args.dry_run:
             update_state(run_dir, stage="submitted", attempt=0, completed=[])
+            if args.force:
+                reset_combined(state)
         try:
             sim_id, post_id = submit_sim_jobs(state, depend_on=depend, dry_run=args.dry_run)
         except SubmitError as err:
@@ -608,7 +694,7 @@ def cmd_check(args):
         state = load_state(run_dir)
         failed, report, counts = check_sims(state)
         name = "%s/%s" % (state["class"], state["source_name"])
-        print("%s: %d/%d sims ok" % (name, state["njobs"] - len(failed), state["njobs"]))
+        print("%s: %d/%d sims ok" % (name, total_jobs(state) - len(failed), total_jobs(state)))
         if counts:
             print("    %s per sim: mean %.1f, min %g, max %g"
                   % (event_label(state), sum(counts) / len(counts), min(counts), max(counts)))
@@ -631,9 +717,9 @@ def cmd_status(args):
             ok = "-"
         else:
             failed, _, _ = check_sims(state)
-            ok = "%d/%d" % (state["njobs"] - len(failed), state["njobs"])
+            ok = "%d/%d" % (total_jobs(state) - len(failed), total_jobs(state))
         final = state.get("final_file") or ""
-        print("%-42s %-5s %-6d %-11s %-18s %s" % (name, state["mode"], state["njobs"], ok,
+        print("%-42s %-5s %-6d %-11s %-18s %s" % (name, mode_label(state), total_jobs(state), ok,
                                                 state["stage"], os.path.basename(final)))
     queues = list(dict.fromkeys(load_state(d).get("queue_file") for d in run_dirs if load_state(d).get("queue_file")))
     active = ("submitted", "resubmitted", "checking", "mimrec", "cosipy")
@@ -752,6 +838,21 @@ def _finish(args):
     logs = os.path.join(run_dir, "logs")
     os.makedirs(logs, exist_ok=True)
 
+    # 0. Combining run (split source): all components checked, then one tra file listing all their sims.
+    if is_combined(state):
+        comps = component_states(state)
+        waiting = [c["source_name"] for c in comps if "check" not in c.get("completed", [])]
+        if waiting:
+            print("%s/%s: waiting for %d of %d components (%s); the last one to finish runs this step."
+                  % (state["class"], state["source_name"], len(waiting), len(comps), ", ".join(waiting)))
+            return 0
+        if "merge" in todo:
+            commit(stage="merge")
+            write_combined_list(state, comps)
+            completed.append("merge")
+            commit(message="combined tra file of %d components (%d sims)"
+                           % (len(comps), sum(c["njobs"] for c in comps)), completed=list(completed))
+
     # 1. Check the sims, resubmitting failures:
     if "check" in todo:
         commit(stage="checking")
@@ -762,6 +863,13 @@ def _finish(args):
                 f.write("%s per sim: mean %.1f, min %g, max %g\n"
                         % (event_label(state), sum(counts) / len(counts), min(counts), max(counts)))
             f.write("\n".join(report) + "\n")
+        stopped = [i for i, out in sim_output_dirs(state) if i in failed and log_limit_reason(out)]
+        if stopped:
+            return fail(run_dir, "failed_log_limit",
+                        "%d sims (%s) were stopped because their log files grew above slurm.max_log_size; "
+                        "not resubmitted. See check_report.txt and the terminal output of those sims; after "
+                        "fixing the cause: run_pipeline.py resubmit %s"
+                        % (len(stopped), compress_ranges(stopped), run_dir))
         if failed:
             retries = state["slurm"].get("max_retries", 2)
             attempt = state.get("attempt", 0)
@@ -787,6 +895,11 @@ def _finish(args):
         commit(message="all %d sims ok" % state["njobs"], completed=list(completed))
         # The sims have left the SLURM queue: let waiting sources use the slots.
         fill_for(state)
+
+    # A component of a split source: done; the last component runs the combined steps.
+    if state.get("component"):
+        commit(stage="done", message="component done; events are combined in %s" % state["combine_into"])
+        return combine_if_ready(state["combine_into"])
 
     # acs mode: copy the .sim.gz file
     if state["mode"] == "acs" and "copy" in todo:
@@ -873,6 +986,51 @@ def _finish(args):
     return 0
 
 
+def write_combined_list(state, comps):
+    """Output/combined.inc1.id1.tra.gz: an IN line for the tra file of every sim of every component."""
+    out = os.path.join(state["run_dir"], "Output")
+    os.makedirs(out, exist_ok=True)
+    path = os.path.join(out, "%s.inc1.id1.tra.gz" % state["sim_name"])
+    with gzip.open(path, "wt") as f:
+        f.write("TYPE TRA\n\n")
+        for comp in comps:
+            for _, sim_out in sim_output_dirs(comp):
+                f.write("IN %s\n" % os.path.join(sim_out, "%s.inc1.id1.tra.gz" % comp["sim_name"]))
+        f.write("EN")
+    return path
+
+
+def combine_if_ready(combined_dir):
+    """Run the combined post-processing if every component is checked (called by each component).
+
+    A lock makes sure only one component job runs it; a job that finds it running leaves it.
+    """
+    with open(os.path.join(combined_dir, "combine.lock"), "w") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            print("The combined post-processing of %s is running in another job." % combined_dir)
+            return 0
+        except OSError:
+            pass                                  # file system without locking
+        state = load_state(combined_dir)
+        if state.get("stage") == "done" or state.get("stage") in ("merge", "mimrec", "plots", "cosipy"):
+            return 0
+        try:
+            return _finish(argparse.Namespace(run_dir=combined_dir, from_step=None, no_resubmit=False))
+        except Exception as err:
+            update_state(combined_dir, stage="error",
+                         message="ERROR: combined post-processing stopped: %s: %s (see logs/)" % (type(err).__name__, err))
+            raise
+
+
+def reset_combined(state):
+    """A component is simulated again: its combining run starts over when all are done."""
+    if state.get("combine_into"):
+        update_state(state["combine_into"], stage="components", completed=[],
+                     message="component %s resubmitted; combined again when all are done" % state["component"])
+
+
 def cmd_finish(args):
     try:
         return _finish(args)
@@ -911,6 +1069,13 @@ def cmd_fill(args):
 def cmd_resubmit(args):
     run_dir = os.path.abspath(args.run_dir)
     state = load_state(run_dir)
+    if is_combined(state):
+        codes = []
+        for comp in state["components"]:
+            codes.append(cmd_resubmit(argparse.Namespace(run_dir=comp, all=args.all, dry_run=args.dry_run)))
+        if not args.dry_run:
+            update_state(run_dir, stage="components", completed=[], message="components resubmitted")
+        return max(codes or [0])
     failed, _, _ = check_sims(state)
     if not failed and not args.all:
         print("No failed sims. To continue the post-processing run: run_pipeline.py finish %s" % run_dir)
@@ -920,6 +1085,7 @@ def cmd_resubmit(args):
     if not args.dry_run:
         # Automatic retries start again:
         update_state(run_dir, stage="resubmitted", completed=[], attempt=0)
+        reset_combined(state)
     try:
         sim_id, post_id = submit_sim_jobs(state, indices=indices, dry_run=args.dry_run, note=what)
     except SubmitError as err:
@@ -940,6 +1106,9 @@ def cmd_cancel(args):
             update_state(run_dir, stage="setup", message="removed from the submission queue")
             continue
         jobs = state.get("jobs", [])
+        if is_combined(state):
+            update_state(run_dir, stage="cancelled", message="components cancelled")
+            continue
         if not jobs:
             continue
         ids = [j for j in (jobs[-1].get("sim"), jobs[-1].get("post")) if j]
@@ -978,7 +1147,8 @@ def main(argv=None):
 
     s = sub.add_parser("finish", help="check, mimrec, filter, cosipy, copy (run by postprocess.sh)")
     s.add_argument("run_dir")
-    s.add_argument("--from", dest="from_step", choices=STEPS, help="restart from this step")
+    s.add_argument("--from", dest="from_step", choices=list(dict.fromkeys(STEPS + COMBINED_STEPS)),
+                   help="restart from this step")
     s.add_argument("--no-resubmit", action="store_true", help="do not resubmit failed sims")
     s.set_defaults(func=cmd_finish)
 

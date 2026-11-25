@@ -50,7 +50,17 @@ The mode is chosen from the library source file:
 | `grb` | source under a `GRBs/` category | one job | uses the `*_normed.ori` in the source directory |
 | `acs` | source under a `ParticleEvents*` category | one job | as `grb`, with `PreTriggerMode EveryEventWithHits` and no revan; see [Particle events](#particle-events-acs) |
 
-Each sim runs exactly the steps of `run_sims.py`: `define_sim()`, `run_cosima(seed=random)` (the seed is saved in `cosima_seed.txt`), `run_revan(geo_file=revan_geometry)`.
+Each sim runs exactly the steps of `run_sims.py`: `define_sim()`, `run_cosima(seed=random)` (the seed is saved in `cosima_seed.txt`), `run_revan(geo_file=revan_geometry)`. The `New Modulo` line that cosima prints at every repeat of a repeating light curve is left out of the terminal output.
+
+## Sources with several components
+
+A source whose file has more than one component and a repeating light curve (e.g. `DC4/sources/Galactic/Crab`: the nebula and three pulsar components; `DC5/sources/Galactic/PSRB1509`: three pulsed bands) is split automatically. Each component is set up as its own run, `<class>/<source>__<component>`, with only that component in its source file and its own mode and chunking: a mode after the source in the source list applies to every component, otherwise each component gets its automatic mode (`flux` for a repeating light curve, `time` otherwise). Use `time` for these sources: each component then runs in time chunks.
+
+The run `<class>/<source>` combines them. It has no simulations of its own; `submit` submits its components (also when you give only `<class>/<source>`), and `status`, `check`, `resubmit` and `cancel` on it act on the components. Each component's post-processing job only checks its sims (resubmitting failures). The last component to finish runs the combined steps in `<class>/<source>`: `merge` (a tra file listing the tra files of every sim of every component), then mimrec + overflow filter, plots, cosipy and copy as for any other source, so there is one extracted tra file and one final file for the source. If a component is resubmitted, the combined steps run again once it is done. To run them by hand: `run_pipeline.py finish <class>/<source>`.
+
+## Log size limit
+
+Every simulation job runs under `watch_logs.py`, which adds up the sizes of the job's cosima/revan terminal output and its SLURM output and error files every 10 s. Above `slurm.max_log_size` (default `1G` per job; `null` turns it off) the job is stopped and the reason is written to `Output/log_limit_exceeded.txt` in the sim directory. The check reports such sims, and they are not resubmitted automatically (stage `failed_log_limit`): look at the terminal output, fix the cause, then `run_pipeline.py resubmit <run_dir>`.
 
 ## Particle events (ACS)
 
@@ -85,7 +95,7 @@ For each source, `submit` sends the simulation job (array or single) and a post-
 1. **check**: each sim must have `<name>.inc1.id1.tra.gz` and a revan terminal output ending with "Event reconstruction finished" (the `check_revan_parallel` criteria). Failed sims are resubmitted automatically as a smaller array, together with a new post-processing job, up to `slurm.max_retries` times. The result is in `check_report.txt`.
 2. **mimrec**: in the MEGAlib environment, `run_mimrec(extract_root=True)` on the combined tra file, then `OverflowFilter.py`.
 3. **plots**: in the MEGAlib environment, `plot_spectrum`, `plot_lc` and `plot_image` from the mimrec extraction. The figures (`spectra.pdf`, `LCs.pdf`, `sim_image.png`) go to `<products_dir>/Images/<class>/<source>/`. If a plot fails, the history says so and the pipeline continues; `finish` makes the missing plots later.
-4. **cosipy**: in the cosipy environment, `UnBinnedData.read_tra` and `cut_SAA_events`.
+4. **cosipy**: in the cosipy environment, `UnBinnedData.read_tra` and `cut_SAA_events`. If the events are not in time order (flux chunks, combined components), they are sorted by time first, so the final file is always time ordered.
 5. **copy**: the `*_with_SAAcut` file goes to `products_dir`.
 
 Each environment is sourced in a fresh login shell, as after logging in again, so the environment you submitted from does not carry over (your `~/.bashrc` is loaded, as at a normal login). Progress is stored in `<run_dir>/automation.json`. Logs are in `<run_dir>/logs/`.
