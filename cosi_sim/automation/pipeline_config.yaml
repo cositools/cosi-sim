@@ -96,6 +96,11 @@ slurm:
   # Failed sims are resubmitted automatically up to this many times.
   max_retries: 2
 
+  # A simulation job is stopped if its log files (cosima/revan terminal output and its
+  # SLURM output/error files) grow above this size; it is then not resubmitted.
+  # null = no limit.
+  max_log_size: "1G"
+
   # Rolling submission (optional). SLURM limits how many jobs you may have
   # pending + running at once, counting every array task (Palmetto 2: 3000,
   # QOS "normal", MaxSubmitPU). With max_jobs set, `run_pipeline.py submit`
